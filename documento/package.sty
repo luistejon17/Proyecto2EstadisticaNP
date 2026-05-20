@@ -1,0 +1,135 @@
+%\todo[inline, color=blue!10]{\textbf{Teorema: } 
+
+%General packages
+\usepackage[spanish, es-nodecimaldot]{babel}
+\linespread{1.5}
+\usepackage{color}
+\usepackage[margin=1.5cm, top=2cm, bottom=2cm]{geometry}
+
+%Usefull packages
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{cancel}
+\usepackage{fancyhdr}
+
+%Math packages
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{ mathrsfs }
+\usepackage{ bbold }
+%General shorcuts
+\newcommand{\ninf}{_{n=1}^\infty }
+\newcommand{\nun}{_{n=1} }
+\newcommand{\nin}{{n\in\N} }
+\newcommand{\s}{\subseteq}
+\newcommand{\su}{\supseteq}
+\newcommand{\x}{$x$ }
+\newcommand{\n}{$n$ }
+\newcommand{\y}{$y$ }
+\newcommand{\X}{$X$ }
+\newcommand{\Y}{$Y$ }
+\newcommand{\f}{$f(x)$ }
+\newcommand{\fd}{$f'(x)$ }
+\newcommand{\fdd}{$f''(x)$ }
+\newcommand{\g}{$g(x)$ }
+\newcommand{\gd}{$g'(x)$ }
+\newcommand{\gdd}{$g''(x)$ }
+\newcommand{\lef}{\left(}
+\newcommand{\ri}{\right)}
+\newcommand{\m}{\cdot}
+\newcommand{\ex}{\newpage\item }
+\newcommand{\es}{\emptyset}
+
+%Shorcuts Topology
+\newcommand{\cc}[1]{\overline{#1}}
+\newcommand{\ii}[1]{%
+  {\kern0pt#1}^{\mathrm{o}}%
+}
+\newcommand{\res}[1]{_{\downharpoonright_{#1}}}
+
+%Shortcuts leters
+\newcommand{\fii}{\varphi}
+\newcommand{\la}{\lambda}
+\newcommand{\me}{\mu^*}
+\newcommand{\si}{\sigma}
+\newcommand{\ta}{\uptau}
+\newcommand{\om}{\Omega }
+\newcommand{\e}{\varepsilon }
+\newcommand{\et}{\theta }
+\newcommand{\al}{\mathcal{A} }
+\newcommand{\ka}{\mathcal{K} }
+\newcommand{\rr}{\mathcal{R} }
+\newcommand{\ep}{\mathcal{E} }
+\newcommand{\un}{\mathcal{U} }
+\newcommand{\sig}{\mathcal{S} }
+\newcommand{\mo}{\mathfrak{M} }
+\newcommand{\lp}{\mathscr{L} }
+
+%Todo configuration
+\setlength {\marginparwidth }{2cm}
+
+% Problem list configuration
+\newcounter{ex}
+\newenvironment{exercises}
+  {
+  \begin{list} 
+     {{\textbf{Ejercicio} \arabic{ex} .}}
+    {\usecounter{ex}
+     \setlength{\labelsep}{1em}
+     \setlength{\itemsep}{1pt}
+     \setlength{\leftmargin}{3em}
+     \setlength{\rightmargin}{0cm}
+     \setlength{\itemindent}{0em} }
+     
+     \let\olditem\item % Store the old definition of \item
+     \renewcommand\item{% Redefine \item to include \clearpage
+     \bigskip
+    \olditem}}
+{\end{list}}
+
+%Symbols
+\DeclareMathSymbol{\Z}{\mathbin}{AMSb}{"5A}
+\DeclareMathSymbol{\R}{\mathbin}{AMSb}{"52}
+\DeclareMathSymbol{\N}{\mathbin}{AMSb}{"4E}
+\DeclareMathSymbol{\Q}{\mathbin}{AMSb}{"51}
+\DeclareMathSymbol{\p}{\mathbin}{AMSb}{"50}
+\DeclareMathSymbol{\E}{\mathbin}{AMSb}{"45}
+%Fancy Info
+
+\newcommand{\start}[4]{\vspace*{-1cm}
+\hrule width \hsize \kern 1mm \hrule width \hsize height 2pt 
+\begin{center}
+   \parbox[c]{.32\textwidth}{
+   Gabriel Sánchez\\
+   Juan David Duarte\\
+   Luis Tejón }
+   \hspace*{\fill}
+   \parbox[c]{.35\textwidth}{\centering
+   Estadística no Paramétrica\\    
+   Proyecto II}
+   \hspace*{\fill}
+   \parbox[c]{.3\textwidth}{
+   \begin{flushleft}
+      Bogotá D.C., Colombia\\
+      #2/2026
+   \end{flushleft}}
+\end{center}
+\hrule width \hsize height 2pt \kern 1mm \hrule width \hsize 
+
+\bigskip
+}
+
+%Fancy Code
+\lstset{
+language = R,
+commentstyle= \color{purple},
+numbers= left,
+keywordstyle=\color{teal},
+basicstyle=\ttfamily\footnotesize,
+frame=single,
+showspaces=false,
+showstringspaces=false,
+literate={á}{{\'a}}1 {é}{{\'e}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {í}{{\'i}}1  {±}{{$\pm$}}1 {σ}{{$\sigma$}}1 {µ}{{$\mu$}}1,
+}

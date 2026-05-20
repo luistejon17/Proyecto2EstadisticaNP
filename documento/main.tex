@@ -1,0 +1,88 @@
+\documentclass[11pt]{article}
+\usepackage{package}
+\usepackage{cite}
+\usepackage{threeparttable}
+\usepackage{booktabs}
+
+\usepackage{float}
+
+\usepackage{wrapfig}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{color}
+\usepackage{soul}
+\usepackage{hyperref}
+\usepackage{float}
+
+\setlength{\parindent}{0pt}
+\tcbset{
+  algobox/.style={
+    enhanced,
+    sharp corners,
+    boxrule=0.8pt,
+    colframe=black,
+    colback=white,
+    fonttitle=\bfseries,
+    title={Algoritmo Forward–Backward},
+    before skip=10pt,
+    after skip=10pt,
+  }
+}
+
+\newcommand{\mv}{\hat{\theta}}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    columns=fullflexible
+}
+
+\makeatother
+\begin{document}
+\start{Estadística no paramétrica}{27/05}{Proyecto 2}{4245} 
+
+\bigskip
+
+
+% =========================================================
+\section*{Introducción}
+\input{0 - Intro}
+
+% =========================================================
+\section{Marco teórico}
+\label{marco_teorico}
+\input{1 - Estadisticos}
+
+% =========================================================
+\section{Metodología}
+\input{2 - metodologia}
+
+% =========================================================
+\newpage
+\section{Implementación}
+
+\input{3 - implementacion}
+
+% =========================================================
+\newpage
+\section{Resultados}
+\input{4 - resultados}
+
+% =========================================================
+\section{Discusión}
+\input{5 - discusion}
+
+% =========================================================
+\section{Conclusiones}
+\input{6 - conclusiones}
+
+% =========================================================
+%\section*{Apéndice}
+%\input{7 - apendice}
+\newpage
+\bibliography{ref}
+\bibliographystyle{plain}
+
+\end{document}
