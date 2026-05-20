@@ -15,24 +15,35 @@ $$T_n = \sqrt{n} \| F_n - sF_n(\tilde{\theta}) \|_\infty$$
 
 Basado en una integral de penalización sobre la función característica empírica:
 
-$$S_n = \int_{-\infty}^{\infty} \| c_n(t)e^{-it\hat{\theta}} - c_s^\theta(t) \|^q w(t) \, dt$$
+$$S_n = \int_{-\infty}^{\infty} \| c_n(t)e^{-it\hat{\theta}} - c_s(t) \|^q w(t) \, dt$$
+
+donde $c_s(t) = \|c_n(t)\|$ (el factor $e^{-it\hat{\theta}}$ no cambia la norma).
 
 ### Estimadores del centro de simetría
 
 Ambos tests consideran tres alternativas para estimar el centro de simetría θ:
-- **argmin**: minimizador del estadístico
+- **argmin**: minimizador del estadístico — para Tn se varía θ̃ en (2); para Sn se varía θ en un intervalo J
 - **mediana**: `median(X₁, ..., Xₙ)`
 - **media afeitada**: `Xα(X₁, ..., Xₙ)`
+
+## Diseño de experimentos
+
+- **Bajo H₀ (simetría):** Distribución Uniforme (intervalo no centrado en cero) y Cauchy con parámetro de localización distinto de cero.
+- **Bajo Hₐ (asimetría, para medir potencia):** Gamma, Weibull o Pareto.
+- Distintos tamaños muestrales `n` (ajustar según nivel de potencia observado).
+- Bootstrap con `B = 500` remuestras para obtener p-valores.
+- **Para Sn:** probar distintas funciones de peso `w(t)` y ambas opciones `q = 1` y `q = 2`.
 
 ## Estructura del repositorio
 
 ```
-├── main.py                        # Código principal de simulación
-├── proyecto2_2026.pdf             # Enunciado del proyecto
+├── main.py                                    # Código principal de simulación
+├── proyecto2_2026 (actualizado).pdf           # Enunciado actualizado
+├── proyecto2_2026.pdf                         # Enunciado original
 └── documento/
-    ├── main.tex                   # Documento LaTeX principal
-    ├── package.sty                # Estilos
-    ├── ref.bib                    # Bibliografía
+    ├── main.tex                               # Documento LaTeX principal
+    ├── package.sty                            # Estilos
+    ├── ref.bib                                # Bibliografía
     ├── 0 - Intro.tex
     ├── 1 - Estadisticos.tex
     ├── 2 - metodologia.tex
@@ -41,15 +52,13 @@ Ambos tests consideran tres alternativas para estimar el centro de simetría θ:
     ├── 5 - discusion.tex
     ├── 6 - conclusiones.tex
     ├── 7 - apendice.tex
-    └── figs/                      # Figuras del documento
+    └── figs/                                  # Figuras del documento
 ```
 
-## Diseño de experimentos
+## Entrega
 
-- **Bajo H₀ (simetría):** Distribución Uniforme (intervalo no centrado en cero) y Cauchy con parámetro de localización distinto de cero.
-- **Bajo Hₐ (asimetría, para medir potencia):** Gamma, Weibull o Pareto.
-- Se consideran distintos tamaños muestrales `n`.
-- Bootstrap con `B = 500` remuestras para obtener p-valores.
+**Fecha límite:** miércoles 27 de mayo de 2026 a las 11 pm — subir a Actividades de BN.
+**Valor:** 20 pts.
 
 ## Referencias
 
