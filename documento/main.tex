@@ -86,3 +86,73 @@
 \bibliographystyle{plain}
 
 \end{document}
+
+
+\section*{Checklist del Proyecto 2: Estadística No Paramétrica}
+
+\subsection*{Fase 1: Estructura y Configuración del Repositorio}
+\begin{itemize}
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Migrar plantilla LaTeX del Proyecto 1 y limpiar contenido obsoleto.
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Configurar repositorio GitHub y sincronización Overleaf vía git.
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Crear y configurar archivo \texttt{.gitignore} en la raíz.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Crear estructura modular en Python (\texttt{config.py}, \texttt{distribuciones.py}, \texttt{simetrizacion.py}, \texttt{tests\_simetria.py}, \texttt{bootstrap.py}).
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Separar la lógica de ejecución en Jupyter Notebooks (\texttt{0\_generar\_muestras}, \texttt{1\_procesar\_estadisticos}, \texttt{2\_graficos}).
+\end{itemize}
+
+\subsection*{Fase 2: Implementación Matemática}
+\begin{itemize}
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar la simetrización empírica $sF_n(\theta)$ definida en la fórmula (1) del enunciado.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar el estadístico $T_n = \sqrt{n}\|F_n - sF_n(\tilde{\theta})\|_\infty$ (Schuster–Barker).
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar la función característica empírica $c_n(t)$.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar el estadístico $S_n$ con parámetros configurables $q$ y $w(t)$ (fórmula (5) del enunciado).
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar los tres estimadores del centro de simetría para $T_n$: argmin $T_n$, mediana, media afeitada.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar los tres estimadores del centro de simetría para $S_n$: argmin $S_n$ (sobre intervalo $J$), mediana, media afeitada.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar el procedimiento bootstrap para $T_n$ con $B = 500$ remuestras.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementar el procedimiento bootstrap para $S_n$ con $B = 500$ remuestras.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Definir y parametrizar al menos tres funciones de peso $w(t)$ candidatas (e.g.\ densidad normal, exponencial doble, indicadora acotada).
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Verificar con pruebas pequeñas que $T_n$ coincide con cálculo manual sobre muestras simétricas controladas.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Verificar con pruebas pequeñas que $S_n$ coincide con cálculo manual para $q=1$ y $q=2$.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Agregar medición de tiempo de ejecución por test, estimador y configuración.
+\end{itemize}
+
+\subsection*{Fase 3: Diseño y Ejecución de Simulaciones}
+\begin{itemize}
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Generadores de muestras bajo $H_0$: Uniforme en intervalo no centrado en cero y Cauchy con localización $\neq 0$.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Generadores de muestras bajo $H_a$: Gamma, Weibull y Pareto (asimétricas para medir potencia).
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Estudio piloto para fijar los tamaños muestrales $n$ adecuados (ni todos al 100\% ni todos sin potencia).
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Diseñar la matriz experimental: 2 tests $\times$ 3 estimadores $\times$ $w(t)$ candidatas $\times$ $q\in\{1,2\}$ $\times$ distribuciones $\times$ tamaños $n$.
+    \item[\textbf{[ ]}] (Cualquiera) Ejecutar simulaciones definitivas con $B=500$ y número de réplicas Monte Carlo $R$ acordado.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Almacenar resultados de potencia, error Tipo I y tiempos en formato reproducible (CSV/Parquet).
+\end{itemize}
+
+\subsection*{Fase 4: Visualización y Gráficos}
+\begin{itemize}
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Gráfico de tasa de Error Tipo I bajo $H_0$ (Uniforme y Cauchy) con banda de fluctuación esperada $\sigma_{\hat\alpha}$.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Heatmap de potencia empírica por test, estimador de $\theta$ y distribución alternativa.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Comparativa de potencia para distintas $w(t)$ dentro de $S_n$.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Comparativa de potencia para $q=1$ vs.\ $q=2$ en $S_n$.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Gráfico de tiempos de ejecución promedio por test y configuración.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Scatter plot de Costo Computacional vs.\ Potencia promedio.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Densidades teóricas de las distribuciones empleadas (ilustrativo).
+\end{itemize}
+
+\subsection*{Fase 5: Redacción del Informe}
+\begin{itemize}
+    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Redactar la Introducción (sección 0): problema de simetría univariada y enfoque bootstrap.
+    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Marco Teórico (sección 1): definición de simetría, simetrización empírica $sF_n(\theta)$ y motivación de $T_n$.
+    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Marco Teórico: función característica empírica $c_n(t)$ y propiedad clave $c(t)\in\mathbb{R}\iff X$ simétrica en $0$.
+    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Marco Teórico: definición de $S_n$, justificación de $c_s(t)=\|c_n(t)\|$ y rol de $w(t)$ y $q$.
+    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Enunciar el resultado teórico de Arcones \& Giné \cite{arcones1991} que justifica la validez del bootstrap (sin demostración).
+    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Discusión teórica: probar que $X$ es simétrica en $\theta$ si y solo si $c(t) = e^{it\theta}c_0(t)$ con $c_0$ real.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Redactar Metodología (sección 2): protocolo Monte Carlo y descripción de los tres estimadores del centro de simetría.
+    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Redactar Implementación (sección 3): fragmentos clave del código suficientemente explicados y comentados.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Redactar Resultados (sección 4): cumplimiento del nivel bajo $H_0$, potencia bajo $H_a$ y tiempos.
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Responder con soporte visual: ¿Qué test ($T_n$ vs $S_n$) tiene mayor potencia y en qué escenarios?
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Responder con soporte visual: ¿Qué estimador del centro de simetría funciona mejor?
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Responder con soporte visual: ¿Cómo afectan las distintas $w(t)$ y la elección de $q$ al desempeño de $S_n$?
+    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Responder con soporte visual: ¿Cuál es el tradeoff entre costo computacional y potencia?
+    \item[\textbf{[ ]}] \textcolor{purple}{(Todos)} Redactar Discusión (sección 5): interpretación integrada de resultados, complejidad computacional, robustez del nivel.
+    \item[\textbf{[ ]}] \textcolor{purple}{(Todos)} Concluir (sección 6): ¿Cuál de los dos tests es preferible considerando potencia, nivel y costo?
+    \item[\textbf{[ ]}] \textcolor{purple}{(Todos)} Revisión final del documento (ortografía, coherencia notacional, citas).
+    \item[\textbf{[ ]}] (Cualquiera) Subir el informe y código a Bloque Neón antes del \textbf{miércoles 27 de mayo de 2026 a las 11:00 pm}.
+\end{itemize}
