@@ -1,0 +1,143 @@
+
+La traducción del diseño metodológico a código se hizo en Python, apoyándose en \texttt{NumPy} y \texttt{SciPy} para el cálculo numérico, \texttt{matplotlib} y \texttt{seaborn} para las gráficas, y el módulo \texttt{concurrent.futures} de la librería estándar para la paralelización del estudio Monte Carlo. El código completo y los notebooks de reproducción están disponibles en el repositorio del proyecto: \url{https://github.com/luistejon17/Proyecto2EstadisticaNP}.
+
+Para mantener el código mantenible y testeable, se separó la lógica en módulos según su responsabilidad:
+\begin{itemize}
+  \item \texttt{src/distributions.py}: generadores de muestras para las cinco distribuciones de la Sección~2.2.
+  \item \texttt{src/statistics\_ks.py}: cálculo vectorizado de $T_n(\theta)$ y los tres estimadores del centro.
+  \item \texttt{src/bootstrap\_ks.py}: procedimiento bootstrap completo para $T_n$ (estadístico observado, remuestreo de $sF_n(\hat\theta)$ y p-valor).
+  \item \texttt{src/characteristic\_fn.py}: función característica empírica, estadístico $S_n$ vectorizado, funciones de peso $w(t)$ y estimadores.
+  \item \texttt{src/bootstrap\_sn.py}: procedimiento bootstrap para $S_n$.
+  \item \texttt{src/simulation\{,\_sn\}.py} y \texttt{src/simulation\{,\_sn\}\_parallel.py}: orquestación del estudio Monte Carlo, en versión secuencial y paralela.
+  \item \texttt{src/plotting\{,\_sn\}.py}: rutinas de visualización (heatmaps RdYlGn, bandas $\sigma$ para el Error Tipo I, curvas de potencia).
+  \item \texttt{notebooks/}: cuadernos Jupyter que sirven como punto de entrada para correr las simulaciones y reproducir las figuras.
+\end{itemize}
+
+\subsection{Estadístico \texorpdfstring{$T_n$}{T\_n} (Schuster--Barker)}
+
+La diferencia $F_n(x)-sF_n(x;\theta)$ es una función escalera que solo cambia en los puntos del conjunto $\{X_i\}\cup\{2\theta-X_i\}$, por lo que el supremo se alcanza necesariamente en alguno de esos $2n$ puntos. Usando la identidad
+\[
+F_n(x)-sF_n(x;\theta) \;=\; \tfrac{1}{2}\bigl(F_n(x) - 1 + F_n((2\theta-x)^-)\bigr),
+\]
+la implementación vectoriza el cálculo sobre $K$ valores de $\theta$ simultáneamente con dos llamadas a \texttt{searchsorted} sobre la muestra ordenada:
+
+\begin{lstlisting}[language=Python]
+def Tn_multi(sample, thetas):
+    x_sorted = np.sort(sample)
+    n = x_sorted.size
+    refl = 2.0 * thetas[:, None] - x_sorted[None, :]
+    grid = np.concatenate([np.broadcast_to(x_sorted, refl.shape),
+                           refl], axis=1)              # (K, 2n)
+
+    Fn       = np.searchsorted(x_sorted, grid, side='right') / n
+    arg      = 2.0 * thetas[:, None] - grid
+    Fn_minus = np.searchsorted(x_sorted, arg,  side='left')  / n
+
+    diff = 0.5 * (Fn - 1.0 + Fn_minus)
+    return np.sqrt(n) * np.max(np.abs(diff), axis=1)
+\end{lstlisting}
+
+Esto evita los $\mathcal{O}(K\cdot 4n^2)$ del enfoque ingenuo y reduce el cómputo a $\mathcal{O}(K\cdot n\log n)$ amortizado, lo que es crítico para el estimador $\hat\theta_{\min}$ porque debe evaluar $T_n$ sobre toda una rejilla.
+
+\subsection{Estadístico \texorpdfstring{$S_n$}{S\_n} (función característica empírica)}
+
+La integral de penalización \eqref{eq:Sn} se aproxima por cuadratura trapezoidal sobre un grid uniforme $\{t_1,\dots,t_K\}$ con $K=301$. La clave para que el barrido sobre $\theta$ sea barato es la siguiente: dado que $c_n(t)=a_n(t)+i\,b_n(t)$ no depende de $\theta$, se tiene
+\[
+\bigl|c_n(t)e^{-it\theta}-c_s(t)\bigr|^2 \;=\; 2|c_n(t)|\bigl(|c_n(t)|-A_n(t;\theta)\bigr),\qquad A_n(t;\theta)=a_n(t)\cos(t\theta)+b_n(t)\sin(t\theta).
+\]
+Por lo tanto $a_n,b_n,|c_n|$ se precalculan una vez por muestra, y luego se barren los $M$ valores de $\theta$ con costo $\mathcal{O}(MK)$ en vez de $\mathcal{O}(MKn)$:
+
+\begin{lstlisting}[language=Python]
+def Sn_multi_theta(sample, thetas, w_fn, q=2, t_grid=None):
+    if t_grid is None: t_grid = make_t_grid(w_fn)
+    arg_raw = t_grid[:, None] * sample[None, :]          # (K, n)
+    a_n = np.mean(np.cos(arg_raw), axis=1)               # (K,)
+    b_n = np.mean(np.sin(arg_raw), axis=1)               # (K,)
+    abs_cn = np.sqrt(a_n**2 + b_n**2)                    # (K,)
+
+    tth = t_grid[:, None] * thetas[None, :]              # (K, M)
+    A = a_n[:, None]*np.cos(tth) + b_n[:, None]*np.sin(tth)
+    diff_sq = 2.0 * abs_cn[:, None] * (abs_cn[:, None] - A)
+    np.maximum(diff_sq, 0.0, out=diff_sq)                # estabilidad
+
+    integrand = diff_sq if q == 2 else np.sqrt(diff_sq)
+    return np.trapezoid(integrand * w_fn.fn(t_grid)[:, None],
+                        t_grid, axis=0)                   # (M,)
+\end{lstlisting}
+
+En perfiles preliminares esta vectorización redujo el tiempo de $\hat\theta_{\min,S_n}$ en aproximadamente un orden de magnitud frente a una implementación basada en bucles puros.
+
+\subsection{Estimadores del centro de simetría}
+
+La mediana y la media afeitada se implementan directamente con \texttt{numpy.median} y \texttt{scipy.stats.trim\_mean(\,\cdot\,, proportiontocut=0.1)}. El estimador $\hat\theta_{\min}$ requiere optimizar una función no convexa (con potenciales mínimos locales), por lo que se aplica una búsqueda en dos etapas: (i)~evaluación vectorizada de $T_n$ (resp.\ $S_n$) sobre un grid uniforme de 40--60 puntos en el rango muestral ampliado un 10\%, y (ii)~refinamiento Brent (método \texttt{bounded} de \texttt{scipy.optimize.minimize\_scalar}) en un intervalo local alrededor del mínimo del grid. Esto da una precisión de $10^{-6}$ en pocos milisegundos:
+
+\begin{lstlisting}[language=Python]
+def theta_argmin(sample, bracket=None, n_grid=60):
+    lo, hi = sample.min(), sample.max()
+    pad = 0.1 * (hi - lo)
+    grid = np.linspace(lo - pad, hi + pad, n_grid)
+    vals = Tn_multi(sample, grid)                # vectorizado
+    k = int(np.argmin(vals))
+    res = minimize_scalar(
+        lambda th: Tn_statistic(sample, th),
+        bounds=(grid[max(k-1, 0)], grid[min(k+1, n_grid-1)]),
+        method='bounded', options={'xatol': 1e-6},
+    )
+    return float(res.x)
+\end{lstlisting}
+
+\subsection{Procedimiento bootstrap}
+
+Ambos tests comparten el mismo esqueleto bootstrap: dada una muestra y un estimador del centro, (i)~se calcula el estadístico observado, (ii)~se genera el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$ (que es exactamente el soporte de $sF_n(\hat\theta)$), (iii)~se remuestrea con reemplazo $B$ veces y se recalculan el estimador y el estadístico, y (iv)~se obtiene el p-valor con la corrección de continuidad estándar:
+\[
+\hat p \;=\; \frac{1 + \#\{b:\, T_n^{*(b)} \ge T_n^{\text{obs}}\}}{B + 1}.
+\]
+\begin{lstlisting}[language=Python]
+def bootstrap_test_Tn(sample, estimator='argmin', B=500, rng=None):
+    rng = rng or np.random.default_rng()
+    est_fn = ESTIMATORS[estimator]
+    theta_hat = est_fn(sample)
+    T_obs = Tn_statistic(sample, theta_hat)
+    support = np.concatenate([sample, 2*theta_hat - sample])
+
+    T_boot = np.empty(B)
+    for b in range(B):
+        y = rng.choice(support, size=sample.size, replace=True)
+        T_boot[b] = Tn_statistic(y, est_fn(y))
+
+    p_val = (1.0 + np.sum(T_boot >= T_obs)) / (B + 1.0)
+    return BootstrapResult(T_obs, p_val, theta_hat, T_boot, estimator, B)
+\end{lstlisting}
+
+La función análoga \texttt{bootstrap\_test\_Sn} sigue exactamente el mismo patrón intercambiando $T_n$ por $S_n$ y pasando $(w,q,t\_grid)$ adicionales.
+
+\subsection{Paralelización del estudio Monte Carlo}
+
+Cada celda del diseño experimental (distribución $\times$ $n$ $\times$ estimador $\times$ $(q,w)$ para $S_n$) requiere $R$ réplicas independientes; en total $1\,800$ tareas para $T_n$ y $14\,400$ para $S_n$. Como cada réplica es independiente, se paralelizan con \texttt{ProcessPoolExecutor} usando $\#\text{cores}-1$ workers. Para garantizar reproducibilidad y evitar correlación entre semillas, a cada tarea $k$ se le asigna la semilla $\texttt{seed} + k$:
+
+\begin{lstlisting}[language=Python]
+def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
+    spec = _SPEC_REGISTRY[spec_idx]
+    rng = np.random.default_rng(base_seed + task_idx)
+    sample = spec.sampler(n, rng)
+    t0 = time.perf_counter()
+    res = bootstrap_test_Tn(sample, estimator=estimator, B=B, rng=rng)
+    return {'dist': spec.name, 'n': n, 'estimator': estimator,
+            'statistic': res.statistic, 'p_value': res.p_value,
+            'time_s': time.perf_counter() - t0,
+            'under_h0': spec.under_h0}
+\end{lstlisting}
+
+El registro global \texttt{\_SPEC\_REGISTRY} evita serializar las \texttt{DistSpec} (que contienen closures no pickleables) en cada envío de tarea: se inicializa una vez por proceso worker. Con 11 cores activos, el estudio completo de $T_n$ (1\,800 tests bootstrap, $B=500$) corre en $\sim 1.5$ minutos y el de $S_n$ (14\,400 tests, integrales sobre $K=301$) en $\sim 2.5$ horas.
+
+\subsection{Verificación empírica con pruebas unitarias}
+
+Antes de lanzar el estudio masivo se desarrollaron pruebas unitarias para verificar la corrección de cada componente. Los tests más importantes son:
+\begin{itemize}
+  \item \textbf{Vectorización contra referencia ingenua}: se compara \texttt{Tn\_multi} y \texttt{Sn\_multi\_theta} contra una implementación naive en bucles puros, en muestras pequeñas; deben coincidir hasta tolerancia $10^{-10}$.
+  \item \textbf{Invariancia por traslación}: $T_n$ y $S_n$ evaluados en $\theta=c$ sobre la muestra $X$ deben coincidir con los evaluados en $\theta=0$ sobre $X-c$.
+  \item \textbf{Pesos integran a 1}: se verifica $\int w(t)\,dt = 1$ por cuadratura, dentro de tolerancia.
+  \item \textbf{$\hat\theta_{\min}$ recupera el centro}: en muestras grandes simétricas (Normal, Uniforme) el argmin de $T_n$ y $S_n$ debe estar a menos de $0.1$ del verdadero centro.
+  \item \textbf{Sanidad del bootstrap}: bajo $H_0$ los p-valores empíricos son aproximadamente uniformes en $(0,1)$ (la figura del p-valor en la sección de resultados sirve como verificación visual); bajo $H_a$ con $n$ grande la potencia tiende a $1$.
+\end{itemize}
+Las pruebas se encuentran en \texttt{tests/} y se ejecutan con \texttt{pytest -q}.
