@@ -1,0 +1,49 @@
+
+Las figuras siguientes complementan el análisis de la Sección~\ref{sec:estim-theta}
+presentando dos aspectos prácticos del estimador $\hat\theta_{\min}$:
+su costo computacional relativo frente a $\hat\theta_{\mathrm{med}}$ y $\hat\theta_\alpha$,
+y la calidad estadística (sesgo y RMSE) bajo la hipótesis nula con distribución conocida.
+
+% -----------------------------------------------------------
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../results/figures/apendice_costo.png}
+  \caption{
+    \textbf{Costo computacional.}
+    Tiempo mediano por ejecución del test bootstrap ($B=500$ remuestras) en función
+    de $n$, escala log--log.  La banda sombreada indica el rango intercuartílico
+    sobre todas las réplicas y distribuciones.
+    Izquierda: $T_n$; derecha: $S_n$ (promediado sobre todas las configuraciones
+    $(q,w)$).
+    En ambos tests $\hat\theta_{\min}$ es más lento que $\hat\theta_{\mathrm{med}}$
+    y $\hat\theta_\alpha$, pues cada iteración bootstrap requiere $B{+}1$
+    optimizaciones adicionales.  Para $T_n$ el costo crece como $O(n^{5/2}\log n)$
+    (búsqueda local en promedios de Walsh); para $S_n$ con $q=2$ se usa
+    \texttt{L-BFGS-B} con gradiente analítico, cuyo costo por iteración es $O(K)$
+    y converge en $\sim 15$ pasos.
+  }
+  \label{fig:apendice-costo}
+\end{figure}
+
+% -----------------------------------------------------------
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../results/figures/apendice_calidad.png}
+  \caption{
+    \textbf{Calidad de estimación de $\theta$ bajo $H_0$.}
+    Distribución Uniforme$(1,3)$ con $\theta=2$.
+    Fila superior: sesgo $\hat{E}[\hat\theta]-\theta$ con bandas $\pm 1$ error
+    estándar Monte Carlo.
+    Fila inferior: RMSE$(\hat\theta)$ en escala logarítmica.
+    Para $S_n$ se emplea la configuración de referencia $q=2$,
+    $w=\mathcal{N}(0,1)$.
+    En $T_n$, $\hat\theta_{\min}$ alcanza el menor RMSE en todos los $n$,
+    seguido de $\hat\theta_\alpha$ y $\hat\theta_{\mathrm{med}}$.
+    En $S_n$, los tres estimadores son comparables; $\hat\theta_{\min}$ presenta
+    ventaja marginal solo para $n$ grandes.
+    Los tres son asintóticamente insesgados: el sesgo en todos los casos
+    es indistinguible de cero dentro de la precisión Monte Carlo ($R=300$ réplicas
+    para $T_n$, $R=200$ para $S_n$).
+  }
+  \label{fig:apendice-calidad}
+\end{figure}
