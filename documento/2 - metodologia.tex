@@ -1,7 +1,7 @@
 
 \subsection{Protocolo Monte Carlo}
 
-Para estimar el nivel y la potencia de cada test se repite $R$ veces el siguiente experimento: (i)~generar $X_1,\dots,X_n$ i.i.d.\ de la distribución de interés; (ii)~calcular el p-valor $p_r$ del test mediante $B=500$ remuestras bootstrap de $sF_n(\hat\theta)$; (iii)~registrar $I_r=\mathbf{1}\{p_r\le\alpha\}$. La tasa de rechazo empírica
+Para estimar el nivel y la potencia de cada test se repite $R$ veces el siguiente experimento: (i)~generar $X_1,\dots,X_n$ i.i.d.\ de la distribución de interés; (ii)~calcular el p-valor $p_r$ del test mediante $B=199$ remuestras bootstrap de $sF_n(\hat\theta)$; (iii)~registrar $I_r=\mathbf{1}\{p_r\le\alpha\}$. La tasa de rechazo empírica
 \[
 \hat\pi_n \;=\; \frac{1}{R}\sum_{r=1}^{R} I_r
 \]
@@ -28,7 +28,7 @@ Los tamaños de muestra son $n\in\{20,40,80,160\}$, elegidos para que la potenci
 
 \subsection{Estimadores del centro de simetría}
 
-Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker (1987):
+Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker~\cite{schuster1987bootstrap}:
 \begin{itemize}
   \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$). La Sección~\ref{sec:estim-theta} detalla los esquemas numéricos. Dado que el bootstrap repite el cálculo de $\hat\theta_{\min}$ en cada una de las $B$ remuestras, se adopta un esquema de \emph{dos fases}:
   \begin{enumerate}

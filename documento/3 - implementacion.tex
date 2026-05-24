@@ -132,7 +132,7 @@ Ambos tests comparten el mismo esqueleto bootstrap: (i)~calcular el estadístico
 Para el estimador argmin, la fase~2 de la sección anterior se activa automáticamente: el estimador interior usa $\hat\theta_{\min}$ de la muestra original como pivote y $k=n$ Walsh averages.
 
 \begin{lstlisting}[language=Python]
-def bootstrap_test_Tn(sample, estimator='argmin', B=500, rng=None):
+def bootstrap_test_Tn(sample, estimator='argmin', B=199, rng=None):
     rng = rng or np.random.default_rng()
     est_fn = ESTIMATORS[estimator]
     theta_hat = est_fn(sample)          # fase 1: pivote = mediana, k = 8n
@@ -156,7 +156,33 @@ def bootstrap_test_Tn(sample, estimator='argmin', B=500, rng=None):
     return BootstrapResult(T_obs, p_val, theta_hat, T_boot, estimator, B)
 \end{lstlisting}
 
-La función análoga \texttt{bootstrap\_test\_Sn} sigue el mismo patrón; para $q=2$ el punto de partida de \texttt{L-BFGS-B} en las remuestras también se fija en $\hat\theta_{\min}$ de la muestra original.
+La función \texttt{bootstrap\_test\_Sn} sigue un patrón similar pero con una optimización adicional: para los estimadores mediana y media afeitada, cuyo cálculo se vectoriza trivialmente sobre el eje de réplicas, se genera la matriz de remuestras $(B,n)$ de una vez y se evalúa $S_n$ en lote mediante \texttt{\_sn\_boot\_batch}. Esta función itera sobre mini-lotes de tamaño $B_\text{sub}=\lfloor200\,\text{MB}/(K\cdot n\cdot 8)\rfloor$ para no exceder $\sim\!200$~MB de RAM:
+
+\begin{lstlisting}[language=Python]
+def _sn_boot_batch(Y, thetas, w_fn, q, t_grid):
+    """Evalua S_n para B remuestras (B,n) con thetas (B,)."""
+    B_total, n = Y.shape; K = t_grid.size
+    w_vals = w_fn.fn(t_grid)              # (K,)
+    B_sub = max(1, int(200_000_000 // (K * n * 8)))
+    S_boot = np.empty(B_total)
+    for start in range(0, B_total, B_sub):
+        end = min(start + B_sub, B_total)
+        Yb = Y[start:end]; tb = thetas[start:end]
+        arg = t_grid[None,:,None] * Yb[:,None,:]  # (bs,K,n)
+        a_n = np.mean(np.cos(arg), axis=2)        # (bs,K)
+        b_n = np.mean(np.sin(arg), axis=2)
+        abs_cn = np.sqrt(a_n**2 + b_n**2)
+        tth = t_grid[None,:] * tb[:,None]          # (bs,K)
+        A = a_n*np.cos(tth) + b_n*np.sin(tth)
+        diff_sq = 2.0*abs_cn*(abs_cn - A)
+        np.maximum(diff_sq, 0.0, out=diff_sq)
+        integrand = diff_sq if q==2 else np.sqrt(diff_sq)
+        S_boot[start:end] = np.trapezoid(
+            integrand * w_vals[None,:], t_grid, axis=1)
+    return S_boot
+\end{lstlisting}
+
+Para el estimador argmin, la optimización iterativa (\texttt{L-BFGS-B}) impide vectorizar: se mantiene el bucle secuencial, con el punto de partida de \texttt{L-BFGS-B} en las remuestras fijado en $\hat\theta_{\min}$ de la muestra original.
 
 \subsection{Paralelización del estudio Monte Carlo}
 
@@ -174,7 +200,7 @@ def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
             'time_s': time.perf_counter() - t0,
             'under_h0': spec.under_h0}
 \end{lstlisting}
- Con 11 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=500$) corre en $\approx 4$--$5$ minutos y el de $S_n$ ($60\,000$ tests, $K=301$) en $\approx 1.5$--$2$ horas.
+ Con 11 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=199$) corre en $\approx 4$ minutos y el de $S_n$ ($60\,000$ tests, $K=301$, $B=199$) en $\approx 20$--$30$ minutos. La reducción de $B=500$ a $B=199$ y la vectorización del bucle bootstrap para los estimadores mediana y media afeitada (eliminando el bucle de Python y evaluando $S_n$ en lote sobre matrices $(B,K,n)$) son las principales ganancias de velocidad.
 
 \subsection{Verificación empírica con pruebas unitarias}
 

@@ -4,15 +4,26 @@ Una variable aleatoria $X$ es simétrica respecto a $\theta$ si $P(A)=P(2\theta-
 \[
 sF_n(x;\theta) \;=\; \frac{1}{2n}\sum_{i=1}^{n}\bigl(\delta_{X_i}+\delta_{2\theta-X_i}\bigr)(x),
 \]
-es decir, la cdf empírica de los $2n$ puntos $\{X_i,\,2\theta-X_i\}_{i\le n}$, simétrica por construcción. Para cuantificar la discrepancia entre $F_n$ y $sF_n(\,\cdot\,;\hat\theta)$, Schuster y Barker (1987) propusieron
+es decir, la cdf empírica de los $2n$ puntos $\{X_i,\,2\theta-X_i\}_{i\le n}$, simétrica por construcción. Para cuantificar la discrepancia entre $F_n$ y $sF_n(\,\cdot\,;\hat\theta)$, Schuster y Barker~\cite{schuster1987bootstrap} propusieron
 \begin{equation}\label{eq:Tn}
 T_n \;=\; \sqrt{n}\,\bigl\|F_n - sF_n(\hat\theta)\bigr\|_\infty,
 \qquad \|G\|_\infty=\sup_{x\in\mathbb{R}}|G(x)|,
 \end{equation}
 con $\hat\theta$ un estimador del centro. Si $F$ es simétrica $T_n$ es pequeño; en caso contrario $sF_n(\hat\theta)$ debe distorsionar mucho a $F_n$ y $T_n$ crece.
 
-La distribución nula de $T_n$ depende de la $F$ desconocida, por lo que el cuantil de rechazo se aproxima vía bootstrap: para $b=1,\dots,B$ se remuestrea $X_1^{*(b)},\dots,X_n^{*(b)}\sim sF_n(\hat\theta)$ (la distribución simétrica más cercana a los datos), se recalcula $\hat\theta^{*(b)}$ sobre la remuestra y se obtiene $T_n^{*(b)}=\sqrt{n}\,\|F_n^{*(b)}-sF_n^{*(b)}(\hat\theta^{*(b)})\|_\infty$. El p-valor se aproxima por la fracción $\#\{b:T_n^{*(b)}\ge T_n\}/B$ (en la práctica usamos la corrección $(1+\#\{\cdot\})/(B+1)$). La consistencia de este procedimiento la justifican Arcones y Giné (1991).
+La distribución nula de $T_n$ depende de la $F$ desconocida, por lo que el cuantil de rechazo se aproxima vía bootstrap: para $b=1,\dots,B$ se remuestrea $X_1^{*(b)},\dots,X_n^{*(b)}\sim sF_n(\hat\theta)$ (la distribución simétrica más cercana a los datos), se recalcula $\hat\theta^{*(b)}$ sobre la remuestra y se obtiene $T_n^{*(b)}=\sqrt{n}\,\|F_n^{*(b)}-sF_n^{*(b)}(\hat\theta^{*(b)})\|_\infty$. El p-valor se aproxima por la fracción $\#\{b:T_n^{*(b)}\ge T_n\}/B$ (en la práctica usamos la corrección $(1+\#\{\cdot\})/(B+1)$). La consistencia de este procedimiento la justifican Arcones y Giné~\cite{arcones1991bootstrap}.
 
+\begin{teorema}[Arcones y Giné, 1991~\cite{arcones1991bootstrap}]\label{thm:arcones-gine}
+Sea $X_1,\dots,X_n$ i.i.d.\ con distribución continua $F$ simétrica respecto a $\theta_0$, y sea $\hat\theta_n$ un estimador débilmente consistente de $\theta_0$. Entonces, cuando $n\to\infty$,
+\[
+\sup_{t\ge 0}\bigl|P^*\!\bigl(T_n^*\le t\bigr)-P(T_n\le t)\bigr|\;\xrightarrow{P}\;0,
+\]
+donde $T_n^*=\sqrt{n}\,\|F_n^*-sF_n^*(\hat\theta_n^*)\|_\infty$ y $P^*$ es la probabilidad condicional dados $X_1,\dots,X_n$. En consecuencia: bajo $H_0$ el p-valor bootstrap $\to U(0,1)$ (nivel asintótico $\alpha$ garantizado); bajo $H_a$ el p-valor $\to 0$ (consistencia del test). El resultado análogo vale para $S_n$.
+\end{teorema}
+
+\begin{observacion}[Selección de $B$: Hall y Wilson, 1991~\cite{hall1991bootstrap}]\label{obs:hall-wilson}
+El p-valor $\hat p_B=\bigl(1+\#\{b:T_n^{*(b)}\ge T_n\}\bigr)/(B+1)$ toma valores en $\{1/(B+1),\dots,1\}$. Para evitar sesgo de discretización al nivel $\alpha$, se exige $\alpha(B+1)\in\mathbb{Z}$. Para $\alpha=0{.}05$: $B\in\{19,\,39,\,99,\,199,\,499,\dots\}$. Con $R=300$ réplicas el error Monte Carlo es $\mathrm{SE}_R\approx1{.}3\%$; el error de discretización $1/(B+1)=0{.}5\%$ para $B=199$ es despreciable. Se adopta $\boxed{B=199}$ ($B+1=200$, $0{.}05\times 200=10\in\mathbb{Z}$).
+\end{observacion}
 
 \subsection{La función característica empírica}
 
@@ -28,7 +39,7 @@ $(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y$, de la igualdad $\varphi_Y(t) =
 $(\Leftarrow)$ Si $\varphi_X(t)=e^{it\theta}c_0(t)$ con $c_0$ real, entonces $\varphi_Y(t):=e^{-it\theta}\varphi_X(t)=c_0(t)$ es real, luego $\varphi_Y(t)=\overline{\varphi_Y(t)}=\varphi_Y(-t)$. Por unicidad de la función característica, $Y\overset{d}{=}-Y$, es decir $X-\theta\overset{d}{=}-(X-\theta)$.
 \end{proof}
 
-Dada una muestra $X_1,\dots,X_n$, la función característica empírica es $c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$ (misma magnitud, parte imaginaria nula), el estadístico de penalización propuesto es
+Dada una muestra $X_1,\dots,X_n$, la función característica empírica~\cite{feuerverger1977empirical} es $c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$ (misma magnitud, parte imaginaria nula), el estadístico de penalización propuesto por Csörgő y Heathcote~\cite{csorgo1987symmetry} es
 \begin{equation}\label{eq:Sn}
 S_n \;=\; \int_{-\infty}^{\infty}\bigl|c_n(t)e^{-it\hat\theta}-c_s(t)\bigr|^q\,w(t)\,dt,
 \end{equation}
@@ -36,7 +47,7 @@ con $q\in\{1,2\}$ y $w$ una densidad simétrica. Bajo $H_0$ la parte imaginaria 
 
 \subsection{Estimación del centro de simetría}\label{sec:estim-theta}
 
-Ambos estadísticos requieren un estimador $\hat\theta$ del centro. Consideramos tres candidatos clásicos (Schuster y Barker, 1987): la mediana muestral $\hat\theta_{\mathrm{med}}=\mathrm{med}(X_1,\dots,X_n)$, la media afeitada $\hat\theta_\alpha=\bar X_{0.1}$, y el \emph{minimizador} del estadístico,
+Ambos estadísticos requieren un estimador $\hat\theta$ del centro. Consideramos tres candidatos clásicos \cite{schuster1987bootstrap}: la mediana muestral $\hat\theta_{\mathrm{med}}=\mathrm{med}(X_1,\dots,X_n)$, la media afeitada $\hat\theta_\alpha=\bar X_{0.1}$, y el \emph{minimizador} del estadístico,
 \[
 \hat\theta_{\min} \;=\; \arg\min_{\theta\in\mathbb{R}} M_n(\theta),
 \qquad M_n\in\{T_n,\,S_n\}.
@@ -58,7 +69,7 @@ La función $\theta\mapsto T_n(\theta)$ es constante a trozos con discontinuidad
 \end{proposicion}
 
 \begin{proof}
-A partir de la identidad de Schuster y Barker (1987)[cite: 156, 157]:
+A partir de la identidad de Schuster y Barker~\cite{schuster1987bootstrap}:
 $$F_n(x)-sF_n(x;\theta) = \frac{1}{2}\bigl(F_n(x)-1+F_n((2\theta-x)^-)\bigr).$$
 Dado $\theta$, la diferencia define una función escalonada en $x$ con saltos en $\{X_i\} \cup \{2\theta-X_i\}$. El valor del supremo $T_n(\theta)$ está determinado exclusivamente por el orden relativo de estos $2n$ puntos.
 
@@ -99,7 +110,7 @@ con $B_n(t;\theta)=-a_n(t)\sin(t\theta)+b_n(t)\cos(t\theta)$. Como $|a_n|,|b_n|\
 \[
 \bigl|\partial_\theta g(t,\theta)\bigr|\,w(t) \;\le\; 4|t|\,w(t),
 \]
-y $\int 4|t|w(t)\,dt<\infty$ por hipótesis. El Teorema de convergencia dominada (regla de Leibniz, ver p.\,ej. Folland \emph{Real Analysis}, Thm.\,2.27) permite intercambiar derivada e integral, obteniendo
+y $\int 4|t|w(t)\,dt<\infty$ por hipótesis. El Teorema de convergencia dominada (regla de Leibniz, ver p.\,ej. Folland~\cite{folland1999real}, Thm.\,2.27) permite intercambiar derivada e integral, obteniendo
 \[
 \frac{\partial S_n}{\partial \theta} \;=\; \int \partial_\theta g(t,\theta)\,w(t)\,dt \;=\; -2\int t\,|c_n(t)|\,B_n(t;\theta)\,w(t)\,dt.
 \]
@@ -119,8 +130,8 @@ La existencia del gradiente \eqref{eq:grad-Sn} habilita métodos iterativos de d
 \[
 \theta^{(k+1)} \;=\; \theta^{(k)} - \eta_k\, S_n'(\theta^{(k)}), \qquad k=0,1,2,\dots
 \]
-con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-BFGS-B} (Byrd et al., 1995), un método de quasi-Newton de memoria limitada que aproxima el Hessiano $S_n''$ a partir de los últimos $m$ pares $(\Delta\theta,\Delta S_n')$ y elige $\eta_k$ por búsqueda lineal con condiciones de Wolfe. En dimensión $1$, esto se reduce esencialmente a la regla de la secante
+con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-BFGS-B}~\cite{byrd1995limited}, un método de quasi-Newton de memoria limitada que aproxima el Hessiano $S_n''$ a partir de los últimos $m$ pares $(\Delta\theta,\Delta S_n')$ y elige $\eta_k$ por búsqueda lineal con condiciones de Wolfe. En dimensión $1$, esto se reduce esencialmente a la regla de la secante
 \[
 \theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
 \]
-salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto (Nocedal y Wright, \emph{Numerical Optimization}, Thm.\,3.7), de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.
+salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto (Nocedal y Wright~\cite{nocedal2006numerical}, Thm.\,3.7), de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.

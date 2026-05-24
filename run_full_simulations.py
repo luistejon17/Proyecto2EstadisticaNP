@@ -39,12 +39,13 @@ ALL_SPECS = H0_SPECS + HA_SPECS
 
 def run_tn():
     print("=" * 60)
-    print("TEST 1: T_n  (B=500, R=300, n=20/40/80/160, 11 workers)")
+    print("TEST 1: T_n  (B=199, R=300, n=20/40/80/160, 11 workers)")
+    print("  B=199: alpha*(B+1)=0.05*200=10 in Z (Hall & Wilson 1991)")
     print("=" * 60)
     config = SimConfig(
         sample_sizes=(20, 40, 80, 160),
         estimators=("argmin", "median", "trimmed"),
-        B=500, R=300, alpha=0.05, seed=2026,
+        B=199, R=300, alpha=0.05, seed=2026,
     )
     total = len(ALL_SPECS) * len(config.sample_sizes) * len(config.estimators) * config.R
     print(f"Total tareas: {total}  |  Workers: {N_WORKERS}")
@@ -63,11 +64,12 @@ def run_tn():
 
 def run_sn():
     print("=" * 60)
-    print("TEST 2: S_n  (B=500, R=200, n=20/40/80/160, 11 workers)")
+    print("TEST 2: S_n  (B=199, R=200, n=20/40/80/160, 11 workers)")
     print("  q=2: argmin + median + trimmed  (L-BFGS-B con gradiente)")
     print("  q=1: median + trimmed           (argmin excluido: q=1 no")
     print("       tiene gradiente analitico, la busqueda en grid es")
     print("       imprecisa y el costo es prohibitivo en el bootstrap)")
+    print("  B=199: alpha*(B+1)=0.05*200=10 in Z (Hall & Wilson 1991)")
     print("=" * 60)
 
     WEIGHTS = ("gauss_1.0", "gauss_0.5", "laplace_1.0")
@@ -78,7 +80,7 @@ def run_sn():
         estimators=("argmin", "median", "trimmed"),
         qs=(2,),
         weight_names=WEIGHTS,
-        B=500, R=200, alpha=0.05, seed=2026, n_t_grid=301,
+        B=199, R=200, alpha=0.05, seed=2026, n_t_grid=301,
     )
     # q=1: solo median y trimmed (argmin excluido)
     config_q1 = SimConfigSn(
@@ -86,7 +88,7 @@ def run_sn():
         estimators=("median", "trimmed"),
         qs=(1,),
         weight_names=WEIGHTS,
-        B=500, R=200, alpha=0.05, seed=2026, n_t_grid=301,
+        B=199, R=200, alpha=0.05, seed=2026, n_t_grid=301,
     )
 
     total_q2 = (len(ALL_SPECS) * len(config_q2.sample_sizes)
