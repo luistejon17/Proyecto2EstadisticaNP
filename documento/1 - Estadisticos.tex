@@ -1,6 +1,127 @@
+\subsection{Un estadístico de remuestreo tipo Kolmogorov-Smirnov}
+Una variable aleato
+
+\[
+P(A)=P(2\theta-A),
+\qquad \forall A \text{ medible}.
+\]
+
+Esta definición expresa que la probabilidad asignada a una región situada a la derecha de \(\theta\) coincide con la probabilidad de su reflejo respecto al mismo punto. En consecuencia, si una distribución posee simetría alrededor de \(\theta\), entonces la transformación \(X\mapsto 2\theta-X\) deja invariante la ley de la variable aleatoria.
+
+Dada una muestra \(X_1,\dots,X_n\), la distribución empírica se define como
+
+\[
+F_n(x)=\frac{1}{n}\sum_{i=1}^{n}\mathbf{1}_{\{X_i\leq x\}},
+\]
+
+la cual constituye un estimador no paramétrico de la distribución subyacente \(F\). Si la distribución poblacional es simétrica alrededor de \(\theta\), entonces la distribución empírica también debería reflejar aproximadamente dicha propiedad. Motivados por esta idea, Schuster y Barker proponen construir una versión ``simetrizada'' de la distribución empírica:
+
+\[
+sF_n(\theta)=
+\frac{1}{2}
+\sum_{i=1}^{n}
+\left(
+\delta_{X_i}
++
+\delta_{2\theta-X_i}
+\right),
+\]
+
+donde \(\delta_x\) representa la medida de Dirac concentrada en el punto \(x\). Esta construcción añade, para cada observación \(X_i\), su reflejo respecto al centro \(\theta\), produciendo así una distribución empírica perfectamente simétrica.
+
+La motivación central del procedimiento es comparar qué tan alejada se encuentra la distribución empírica observada de su versión simetrizada. Si los datos provienen de una distribución simétrica, entonces \(F_n\) y \(sF_n(\theta)\) deberían ser cercanas; por el contrario, bajo asimetría, la simetrización requiere modificaciones importantes sobre la distribución empírica y la discrepancia entre ambas aumenta.
+
+Para cuantificar esta diferencia se utiliza el estadístico
+
+\[
+T_n=
+\sqrt{n}
+\,
+\|F_n-sF_n(\hat{\theta})\|_{\infty},
+\]
+
+donde
+
+\[
+\|G\|_{\infty}
+=
+\sup_{x\in\mathbb{R}}|G(x)|
+\]
+
+denota la norma supremo y \(\hat{\theta}\) corresponde a un estimador del centro de simetría. En este proyecto se consideran tres alternativas para estimar dicho centro:
+
+\begin{itemize}
+    \item El minimizador de \(T_n\), es decir,
+    \[
+    \hat{\theta}
+    =
+    \arg\min_{\theta} T_n;
+    \]
+
+    \item La mediana muestral;
+
+    \item Una media recortada (trimmed mean).
+\end{itemize}
+
+La interpretación del estadístico \(T_n\) es análoga a la del test clásico de Kolmogorov--Smirnov: mide la discrepancia máxima entre dos distribuciones acumuladas. En este caso, la comparación se realiza entre la distribución empírica original y su versión simétrica estimada. Valores pequeños de \(T_n\) sugieren compatibilidad con la hipótesis de simetría, mientras que valores grandes indican evidencia contra dicha hipótesis.
+
+Sin embargo, la distribución nula de \(T_n\) depende de la distribución desconocida \(F\), incluso bajo simetría, lo cual dificulta derivar cuantiles exactos mediante teoría clásica. Para resolver este problema se utiliza un procedimiento bootstrap. La idea consiste en generar nuevas muestras desde la distribución simetrizada \(sF_n(\hat{\theta})\), la cual representa la aproximación simétrica más cercana a los datos observados bajo la hipótesis nula.
+
+Para cada réplica bootstrap \(b=1,\dots,B\), se genera una muestra
+
+\[
+X_1^{*(b)},\dots,X_n^{*(b)}
+\sim sF_n(\hat{\theta}),
+\]
+
+y posteriormente se calcula el estadístico bootstrap
+
+\[
+T_n^{*(b)}
+=
+\sqrt{n}
+\,
+\|F_n^{*(b)}-sF_n^{*(b)}(\hat{\theta}^{*(b)})\|_{\infty},
+\]
+
+donde \(F_n^{*(b)}\) es la distribución empírica bootstrap y \(\hat{\theta}^{*(b)}\) el estimador del centro de simetría obtenido de la muestra remuestreada. La colección de valores
+
+\[
+T_n^{*(1)},\dots,T_n^{*(B)}
+\]
+
+permite aproximar la distribución nula del estadístico y calcular p-valores de manera no paramétrica.
+
+Este enfoque resulta especialmente atractivo porque evita depender de aproximaciones asintóticas difíciles de derivar y permite adaptar automáticamente la inferencia a la forma de la distribución subyacente. Además, el procedimiento facilita comparar el efecto de distintas elecciones para el estimador del centro de simetría y analizar el desempeño del test en términos de nivel, potencia y complejidad computacional frente a distribuciones simétricas y asimétricas.
+
+
 \subsection{La función característica empírica}
+Para una variable aleatoria real \(X\), su función característica se define como
+
+\[
+\varphi_X(t)=\mathbb{E}(e^{itX}), \qquad t\in\mathbb{R},
+\]
+
+donde \(i=\sqrt{-1}\). Utilizando la identidad de Euler,
+
+\[
+e^{itX}=\cos(tX)+i\sin(tX),
+\]
+
+puede escribirse la función característica en términos de sus partes real e imaginaria:
+
+\[
+\varphi_X(t)=\mathbb{E}(\cos(tX))+i\mathbb{E}(\sin(tX)).
+\]
+
+Una propiedad particularmente importante es que, si \(X\sim \mathrm{sim}(\theta)\), entonces
+
+\[
+\varphi_X(t)=e^{it\theta}\varphi_0(t),
+\]
 
 
+donde \(\varphi_0(t)\) es una función real. Este hecho se demuestra a continuación:
 
 \begin{theorem}
 Sea $X$ una variable aleatoria con función característica
@@ -130,3 +251,35 @@ X-\theta \overset{d}{=} -(X-\theta),
 es decir, $X$ es simétrica respecto a $\theta$.
 
 \end{proof}
+
+Esta caracterización permite conectar la noción de simetría con propiedades de la función característica y facilita la construcción de estadísticos basados en ella.
+
+Dada una muestra \(X_1,\dots,X_n\), la versión empírica de la función característica se define como
+
+\[
+c_n(t)=\frac{1}{n}\sum_{j=1}^{n} e^{itX_j},
+\]
+
+la cual actúa como un estimador no paramétrico de \(\varphi_X(t)\). Bajo simetría, y luego de centrar adecuadamente los datos mediante un estimador \(\hat{\theta}\), la función \(c_n(t)e^{-it\hat{\theta}}\) debería comportarse aproximadamente como una función real. A partir de esta idea se define una versión ``simetrizada''
+
+\[
+c_s(t)=|c_n(t)|,
+\]
+
+la cual conserva la magnitud de la función característica empírica, pero elimina su componente imaginaria. La idea central de esta construcción es que \(c_s(t)\) puede interpretarse como la aproximación simétrica más cercana a \(c_n(t)e^{-it\hat{\theta}}\) en términos de módulo.
+
+Con base en estas ideas, el proyecto considera el estadístico
+
+\[
+S_n=
+\int_{-\infty}^{\infty}
+\left|
+c_n(t)e^{-it\hat{\theta}}-c_s(t)
+\right|^q
+w(t)\,dt,
+\]
+
+el cual mide la discrepancia global entre la función característica empírica centrada y su versión simétrica. Si los datos provienen de una distribución simétrica, ambas funciones deberían encontrarse cercanas y el valor de \(S_n\) tendería a ser pequeño; en cambio, si existe asimetría, la componente imaginaria significativa incrementará la distancia entre ambas funciones, produciendo valores grandes del estadístico.
+
+Los parámetros \(q\) y \(w(t)\) determinan la sensibilidad del procedimiento frente a distintos tipos de desviaciones de simetría. El exponente \(q\in\{1,2\}\) controla la forma en que se penalizan las discrepancias: \(q=1\) produce una medida más robusta y menos sensible a diferencias extremas localizadas, mientras que \(q=2\) amplifica discrepancias grandes y otorga mayor peso a desviaciones pronunciadas. Por otro lado, la función peso \(w(t)\) regula la importancia relativa de distintas regiones de frecuencia. Dado que valores grandes de \(t\) suelen introducir mayor variabilidad numérica en la función característica empírica, la elección de \(w(t)\) permite priorizar regiones donde la información sobre simetría tiene más peso. Así, distintas elecciones de \(w(t)\) pueden afectar tanto la potencia estadística como el comportamiento computacional del test.
+
