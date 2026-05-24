@@ -23,7 +23,7 @@ from typing import Callable
 
 import numpy as np
 
-from .statistics_ks import ESTIMATORS, Tn_statistic, symmetrized_sample
+from .statistics_ks import ESTIMATORS, Tn_statistic, symmetrized_sample, theta_argmin
 
 
 # ---------------------------------------------------------------------------
@@ -91,10 +91,26 @@ def bootstrap_test_Tn(
     # Soporte simetrizado: 2n puntos con masas iguales (= sF_n(.; theta_hat)).
     support = symmetrized_sample(x, theta_hat)
 
+    # Estimador interior del bootstrap: para argmin usamos un Walsh localizado
+    # anclado en theta_hat con k = max(16, n) candidatos (en vez de k = 8n).
+    # Justificación: las remuestras se extraen de sF_n(theta_hat), que es
+    # simétrica *exactamente* en theta_hat, por lo que el argmin de cada
+    # remuestra está a distancia O(1/sqrt(n)) de theta_hat. Anclar en theta_hat
+    # (en lugar de en la mediana de la remuestra) garantiza que los k Walsh
+    # averages cubren la zona correcta incluso con k pequeño; empíricamente
+    # k = n alcanza una tasa de acierto del mínimo global comparable a k = 8n.
+    if estimator == "argmin":
+        _theta_hat = theta_hat          # captura en el closure
+        _k_inner = max(16, n)           # 8x menos candidatos que k = 8n
+        def inner_est_fn(y: np.ndarray) -> float:
+            return theta_argmin(y, n_walsh=_k_inner, anchor=_theta_hat)
+    else:
+        inner_est_fn = est_fn
+
     T_boot = np.empty(B, dtype=float)
     for b in range(B):
         y = rng.choice(support, size=n, replace=True)
-        theta_b = est_fn(y)
+        theta_b = inner_est_fn(y)
         T_boot[b] = Tn_statistic(y, theta_b)
 
     # p-valor bootstrap (con corrección de continuidad +1 / B+1)

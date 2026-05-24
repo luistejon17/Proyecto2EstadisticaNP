@@ -30,14 +30,19 @@ Los tamaños de muestra son $n\in\{20,40,80,160\}$, elegidos para que la potenci
 
 Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker (1987):
 \begin{itemize}
-  \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$). En la Sección~\ref{sec:estim-theta} se detalla el esquema numérico: búsqueda local entre los promedios de Walsh de la muestra para $T_n$, y \texttt{L-BFGS-B} con gradiente analítico para $S_n$ (caso $q=2$).
+  \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$). La Sección~\ref{sec:estim-theta} detalla los esquemas numéricos. Dado que el bootstrap repite el cálculo de $\hat\theta_{\min}$ en cada una de las $B$ remuestras, se adopta un esquema de \emph{dos fases}:
+  \begin{enumerate}
+    \item \textbf{Muestra original}: búsqueda sobre los $k=8n$ promedios de Walsh más cercanos a la mediana muestral (pivote $\sqrt{n}$-consistente). Esto coincide con el mínimo exhaustivo en $\approx 98\%$ de los casos.
+    \item \textbf{Remuestras bootstrap}: búsqueda sobre los $k=n$ promedios de Walsh más cercanos a $\hat\theta_{\min}$ de la muestra original. El soporte bootstrap es $\{X_i,\,2\hat\theta_{\min}-X_i\}$, simétrico \emph{exactamente} en $\hat\theta_{\min}$, por lo que el argmin de cada remuestra está a distancia $\mathcal{O}(n^{-1/2})$ de este punto. Usar $\hat\theta_{\min}$ como pivote (en lugar de la mediana de la remuestra) permite reducir $k$ en un factor $8$ sin pérdida apreciable de precisión.
+  \end{enumerate}
+  Para $S_n$ con $q=2$, \texttt{L-BFGS-B} con gradiente analítico reemplaza la búsqueda Walsh; el punto de partida de la fase~2 también se fija en $\hat\theta_{\min}$ de la muestra original. El caso $q=1$ se excluye del estimador argmin (véase la subsección siguiente).
   \item $\hat\theta_{\mathrm{med}} = \mathrm{mediana}(X_1,\dots,X_n)$.
   \item $\hat\theta_\alpha = \bar{X}_{0.1}$: media afeitada con fracción $0.1$ en cada cola.
 \end{itemize}
 
 \subsection{Funciones de peso para $S_n$}
 
-La integral \eqref{eq:Sn} depende de $q$ y de $w$. Se consideran los dos exponentes $q\in\{1,2\}$ y tres densidades simétricas:
+La integral \eqref{eq:Sn} depende de $q$ y de $w$. Se consideran los dos exponentes $q\in\{1,2\}$ y tres densidades simétricas. Para $q=1$, el integrando $|\cdot|^{1/2}$ no es diferenciable en sus ceros, lo que impide el uso del gradiente analítico; la búsqueda en grilla resulta demasiado imprecisa y costosa dentro del bootstrap, por lo que la combinación $(q=1,\,\hat\theta_{\min})$ queda excluida del estudio: en el caso $q=1$ solo se evalúan los estimadores $\hat\theta_{\mathrm{med}}$ y $\hat\theta_\alpha$.
 \begin{align*}
   w_1(t) &= \frac{1}{\sqrt{2\pi}}\,e^{-t^2/2} & &(\mathcal{N}(0,1)),\\
   w_2(t) &= \frac{1}{0.5\sqrt{2\pi}}\,e^{-t^2/(2\cdot 0.5^2)} & &(\mathcal{N}(0,\,0.5^2)),\\

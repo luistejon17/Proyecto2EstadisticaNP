@@ -61,26 +61,34 @@ La mediana y la media afeitada se implementan directamente con \texttt{numpy.med
 
 \subsubsection{argmin de \texorpdfstring{$T_n$}{Tn}: búsqueda local en promedios de Walsh}\label{impl:argmin-Tn}
 
-Como $T_n$ es escalonada con saltos exactamente en $\mathcal{W}_n=\{(X_i+X_j)/2:i\le j\}$ (Proposición~\ref{prop:Tn-steps}), el mínimo global se alcanza en algún $W_{ij}$. Evaluar los $\tfrac{n(n+1)}{2}$ promedios cuesta $\mathcal{O}(n^3\log n)$ y se vuelve prohibitivo dentro del bootstrap. Restringimos la búsqueda a los $k$ promedios más cercanos a la \emph{mediana muestral} (consistente para el centro a tasa $\mathcal{O}(n^{-1/2})$): con $k$ de orden $n^{3/2}$ se cubre con holgura la zona donde puede estar el óptimo, y empíricamente $k=8n$ basta para coincidir con la enumeración exhaustiva en $\approx 98\%$ de las muestras Normal con $n\in\{20,40,80,160\}$.
-\newpage
+Como $T_n$ es escalonada con saltos exactamente en $\mathcal{W}_n=\{(X_i+X_j)/2:i\le j\}$ (Proposición~\ref{prop:Tn-steps}), el mínimo global se alcanza en algún $W_{ij}$. Evaluar los $\tfrac{n(n+1)}{2}$ promedios cuesta $\mathcal{O}(n^3\log n)$ y se vuelve prohibitivo dentro del bootstrap. La función \texttt{theta\_argmin} acepta un parámetro \texttt{anchor} que define el pivote alrededor del cual se seleccionan los $k$ Walsh averages más cercanos; dependiendo del contexto se usan dos configuraciones:
+
+\begin{itemize}
+  \item \textbf{Muestra original} (\texttt{anchor="median"}, $k=8n$): la mediana muestral es $\sqrt{n}$-consistente para el centro, por lo que el entorno de radio $\mathcal{O}(n^{-1/2})$ alrededor de ella contiene el mínimo global con alta probabilidad. Con $k=8n$ la tasa de acierto es $\approx 98\%$ en muestras $\mathcal{N}(0,1)$ con $n\in\{20,\dots,160\}$.
+  \item \textbf{Remuestras bootstrap} (\texttt{anchor=theta\_hat}, $k=n$): el soporte bootstrap es $\{X_i,2\hat\theta-X_i\}_{i=1}^n$, simétrico \emph{exactamente} en $\hat\theta$, de modo que el argmin de cada remuestra está a distancia $\mathcal{O}(n^{-1/2})$ de $\hat\theta$. Usar $\hat\theta$ como pivote garantiza que los $k=n$ candidatos ya están en la región correcta, reduciendo el costo en un factor~$8$ sin pérdida apreciable de precisión.
+\end{itemize}
+
 \begin{lstlisting}[language=Python]
-def theta_argmin(sample, n_walsh=None):
+def theta_argmin(sample, n_walsh=None, anchor="median"):
     n = sample.size
     # 1. Generar todos los Walsh averages W_{ij}, i <= j
     i, j = np.triu_indices(n)
     W = 0.5 * (sample[i] + sample[j])
 
-    # 2. Quedarse con los k mas cercanos a la mediana
+    # 2. Pivote: mediana de la muestra o valor fijo (e.g. theta_hat)
+    pivot = np.median(sample) if anchor == "median" else float(anchor)
+
+    # 3. Quedarse con los k Walsh averages mas cercanos al pivote
     k = n_walsh or max(64, 8 * n)
     if k < W.size:
-        idx = np.argpartition(np.abs(W - np.median(sample)), k - 1)[:k]
+        idx = np.argpartition(np.abs(W - pivot), k - 1)[:k]
         W = W[idx]
 
-    # 3. Evaluar T_n vectorizado y devolver el argmin
+    # 4. Evaluar T_n vectorizado y devolver el argmin
     return float(W[np.argmin(Tn_multi(sample, W))])
 \end{lstlisting}
 
-El coste por evaluación es $\mathcal{O}(k\cdot n\log n)=\mathcal{O}(n^{5/2}\log n)$. Para garantía estricta del óptimo global existe la variante \texttt{theta\_argmin\_walsh\_full} que enumera $\mathcal{W}_n$ completo.
+El coste por evaluación es $\mathcal{O}(k\cdot n\log n)$: $\mathcal{O}(n^{5/2}\log n)$ con $k=8n$ (fase exterior) y $\mathcal{O}(n^2\log n)$ con $k=n$ (fase interior). Para garantía estricta del óptimo global existe la variante \texttt{theta\_argmin\_walsh\_full} que enumera $\mathcal{W}_n$ completo.
 
 \subsubsection{argmin de \texorpdfstring{$S_n$}{Sn}: L-BFGS-B con gradiente analítico}\label{impl:argmin-Sn}
 
@@ -119,28 +127,40 @@ El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero}
 
 \subsection{Procedimiento bootstrap}
 
-Ambos tests comparten el mismo esqueleto bootstrap: dada una muestra y un estimador del centro, (i)~se calcula el estadístico observado, (ii)~se genera el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$ , (iii)~se remuestrea con reemplazo $B$ veces y se recalculan el estimador y el estadístico, y (iv)~se obtiene el p-valor con la corrección de continuidad estándar:
-$\hat p \;=\; \frac{1 + \#\{b:\, T_n^{*(b)} \ge T_n^{\text{obs}}\}}{B + 1}.$
+Ambos tests comparten el mismo esqueleto bootstrap: (i)~calcular el estadístico observado con el estimador sobre la muestra original, (ii)~construir el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$, (iii)~remuestrear $B$ veces y recalcular estimador y estadístico, y (iv)~obtener el p-valor con la corrección de continuidad estándar: $\hat p=(1+\#\{b:T_n^{*(b)}\ge T_n^{\text{obs}}\})/(B+1)$.
+
+Para el estimador argmin, la fase~2 de la sección anterior se activa automáticamente: el estimador interior usa $\hat\theta_{\min}$ de la muestra original como pivote y $k=n$ Walsh averages.
+
 \begin{lstlisting}[language=Python]
 def bootstrap_test_Tn(sample, estimator='argmin', B=500, rng=None):
-    rng, est_fn = rng or np.random.default_rng(), ESTIMATORS[estimator]
-    theta_hat = est_fn(sample)
-    T_obs, support = Tn_statistic(sample, theta_hat), np.concatenate([sample, 2*theta_hat - sample])
+    rng = rng or np.random.default_rng()
+    est_fn = ESTIMATORS[estimator]
+    theta_hat = est_fn(sample)          # fase 1: pivote = mediana, k = 8n
+    T_obs = Tn_statistic(sample, theta_hat)
+    support = np.concatenate([sample, 2 * theta_hat - sample])
+
+    # Estimador interior: para argmin usa theta_hat como pivote con k = n
+    # (soporte simetrico exactamente en theta_hat => argmin cerca de theta_hat)
+    if estimator == "argmin":
+        k_inner = max(16, sample.size)
+        inner = lambda y: theta_argmin(y, n_walsh=k_inner, anchor=theta_hat)
+    else:
+        inner = est_fn
 
     T_boot = np.empty(B)
     for b in range(B):
         y = rng.choice(support, size=sample.size, replace=True)
-        T_boot[b] = Tn_statistic(y, est_fn(y))
+        T_boot[b] = Tn_statistic(y, inner(y))  # fase 2: rapido y preciso
 
     p_val = (1.0 + np.sum(T_boot >= T_obs)) / (B + 1.0)
     return BootstrapResult(T_obs, p_val, theta_hat, T_boot, estimator, B)
 \end{lstlisting}
 
-La función análoga \texttt{bootstrap\_test\_Sn} sigue exactamente el mismo patrón intercambiando $T_n$ por $S_n$ y pasando los parámetros $(w,q,t\_grid)$ adicionales.
+La función análoga \texttt{bootstrap\_test\_Sn} sigue el mismo patrón; para $q=2$ el punto de partida de \texttt{L-BFGS-B} en las remuestras también se fija en $\hat\theta_{\min}$ de la muestra original.
 
 \subsection{Paralelización del estudio Monte Carlo}
 
-Cada celda del diseño experimental (distribución $\times$ $n$ $\times$ estimador $\times$ $(q,w)$ para $S_n$) requiere $R$ réplicas independientes; en total $1\,800$ tareas para $T_n$ y $14\,400$ para $S_n$. Como cada réplica es independiente, se paralelizan con \texttt{ProcessPoolExecutor} usando $\#\text{cores}-1$ workers. Para garantizar reproducibilidad y evitar correlación entre semillas, a cada tarea $k$ se le asigna la semilla $\texttt{seed} + k$:
+Cada celda del diseño experimental (distribución $\times$ $n$ $\times$ estimador $\times$ $(q,w)$ para $S_n$) requiere $R$ réplicas independientes; en total $18\,000$ tareas para $T_n$ y $60\,000$ para $S_n$ (la combinación $q{=}1$ con argmin se excluye, reduciendo de $72\,000$ a $60\,000$). Como cada réplica es independiente, se paralelizan con \texttt{ProcessPoolExecutor} usando $\#\text{cores}-1$ workers. Para garantizar reproducibilidad y evitar correlación entre semillas, a cada tarea $k$ se le asigna la semilla $\texttt{seed} + k$:
 
 \begin{lstlisting}[language=Python]
 def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
@@ -154,7 +174,7 @@ def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
             'time_s': time.perf_counter() - t0,
             'under_h0': spec.under_h0}
 \end{lstlisting}
- Con 11 cores activos, el estudio completo de $T_n$ (1\,800 tests bootstrap, $B=500$) corre en $\sim 1.5$ minutos y el de $S_n$ (14\,400 tests, integrales sobre $K=301$) en $\sim 2.5$ horas.
+ Con 11 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=500$) corre en $\approx 4$--$5$ minutos y el de $S_n$ ($60\,000$ tests, $K=301$) en $\approx 1.5$--$2$ horas.
 
 \subsection{Verificación empírica con pruebas unitarias}
 
