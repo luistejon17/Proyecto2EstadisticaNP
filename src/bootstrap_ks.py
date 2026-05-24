@@ -92,16 +92,17 @@ def bootstrap_test_Tn(
     support = symmetrized_sample(x, theta_hat)
 
     # Estimador interior del bootstrap: para argmin usamos un Walsh localizado
-    # anclado en theta_hat con k = max(16, n) candidatos (en vez de k = 8n).
-    # Justificación: las remuestras se extraen de sF_n(theta_hat), que es
-    # simétrica *exactamente* en theta_hat, por lo que el argmin de cada
-    # remuestra está a distancia O(1/sqrt(n)) de theta_hat. Anclar en theta_hat
-    # (en lugar de en la mediana de la remuestra) garantiza que los k Walsh
-    # averages cubren la zona correcta incluso con k pequeño; empíricamente
-    # k = n alcanza una tasa de acierto del mínimo global comparable a k = 8n.
+    # anclado en theta_hat. El número de candidatos es max(64, 4n):
+    # - El soporte bootstrap {X_i, 2θ̂-X_i} es simétrico exactamente en θ̂,
+    #   por lo que el argmin de cada remuestra está cerca de θ̂.
+    # - Sin embargo, el radio O(1/√n) en Walsh averages corresponde a
+    #   ~n^(3/2)/range candidatos; con k=max(64,4n) se cubre ese radio de
+    #   forma confiable para n ∈ {20,40,80,160} y las distribuciones del estudio.
+    # - k=n era insuficiente (1.2% de los Walsh averages para n=160):
+    #   θ̂* no era el mínimo → T_n^* sobreestimado → p-valor ≈ 1 siempre.
     if estimator == "argmin":
         _theta_hat = theta_hat          # captura en el closure
-        _k_inner = max(16, n)           # 8x menos candidatos que k = 8n
+        _k_inner = max(64, 4 * n)       # 2x menos candidatos que k = 8n
         def inner_est_fn(y: np.ndarray) -> float:
             return theta_argmin(y, n_walsh=_k_inner, anchor=_theta_hat)
     else:

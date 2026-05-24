@@ -65,7 +65,7 @@ Como $T_n$ es escalonada con saltos exactamente en $\mathcal{W}_n=\{(X_i+X_j)/2:
 
 \begin{itemize}
   \item \textbf{Muestra original} (\texttt{anchor="median"}, $k=8n$): la mediana muestral es $\sqrt{n}$-consistente para el centro, por lo que el entorno de radio $\mathcal{O}(n^{-1/2})$ alrededor de ella contiene el mínimo global con alta probabilidad. Con $k=8n$ la tasa de acierto es $\approx 98\%$ en muestras $\mathcal{N}(0,1)$ con $n\in\{20,\dots,160\}$.
-  \item \textbf{Remuestras bootstrap} (\texttt{anchor=theta\_hat}, $k=n$): el soporte bootstrap es $\{X_i,2\hat\theta-X_i\}_{i=1}^n$, simétrico \emph{exactamente} en $\hat\theta$, de modo que el argmin de cada remuestra está a distancia $\mathcal{O}(n^{-1/2})$ de $\hat\theta$. Usar $\hat\theta$ como pivote garantiza que los $k=n$ candidatos ya están en la región correcta, reduciendo el costo en un factor~$8$ sin pérdida apreciable de precisión.
+  \item \textbf{Remuestras bootstrap} (\texttt{anchor=theta\_hat}, $k=\max(64,4n)$): el soporte bootstrap es $\{X_i,2\hat\theta-X_i\}_{i=1}^n$, simétrico \emph{exactamente} en $\hat\theta$, de modo que el argmin de cada remuestra está a distancia $\mathcal{O}(n^{-1/2})$ de $\hat\theta$. Usar $\hat\theta$ como pivote garantiza que los candidatos cubren la región correcta, reduciendo el costo en un factor~$2$ respecto a $k=8n$ sin pérdida apreciable de precisión.
 \end{itemize}
 
 \begin{lstlisting}[language=Python]
@@ -88,7 +88,7 @@ def theta_argmin(sample, n_walsh=None, anchor="median"):
     return float(W[np.argmin(Tn_multi(sample, W))])
 \end{lstlisting}
 
-El coste por evaluación es $\mathcal{O}(k\cdot n\log n)$: $\mathcal{O}(n^{5/2}\log n)$ con $k=8n$ (fase exterior) y $\mathcal{O}(n^2\log n)$ con $k=n$ (fase interior). Para garantía estricta del óptimo global existe la variante \texttt{theta\_argmin\_walsh\_full} que enumera $\mathcal{W}_n$ completo.
+El coste por evaluación es $\mathcal{O}(k\cdot n\log n)$: $\mathcal{O}(n^{5/2}\log n)$ con $k=8n$ (fase exterior) y $\mathcal{O}(n^{3/2}\log n)$ con $k=4n$ (fase interior). Para garantía estricta del óptimo global existe la variante \texttt{theta\_argmin\_walsh\_full} que enumera $\mathcal{W}_n$ completo.
 
 \subsubsection{argmin de \texorpdfstring{$S_n$}{Sn}: L-BFGS-B con gradiente analítico}\label{impl:argmin-Sn}
 
@@ -129,7 +129,7 @@ El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero}
 
 Ambos tests comparten el mismo esqueleto bootstrap: (i)~calcular el estadístico observado con el estimador sobre la muestra original, (ii)~construir el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$, (iii)~remuestrear $B$ veces y recalcular estimador y estadístico, y (iv)~obtener el p-valor con la corrección de continuidad estándar: $\hat p=(1+\#\{b:T_n^{*(b)}\ge T_n^{\text{obs}}\})/(B+1)$.
 
-Para el estimador argmin, la fase~2 de la sección anterior se activa automáticamente: el estimador interior usa $\hat\theta_{\min}$ de la muestra original como pivote y $k=n$ Walsh averages.
+Para el estimador argmin, la fase~2 de la sección anterior se activa automáticamente: el estimador interior usa $\hat\theta_{\min}$ de la muestra original como pivote y $k=\max(64,4n)$ Walsh averages.
 
 \begin{lstlisting}[language=Python]
 def bootstrap_test_Tn(sample, estimator='argmin', B=199, rng=None):
@@ -139,10 +139,10 @@ def bootstrap_test_Tn(sample, estimator='argmin', B=199, rng=None):
     T_obs = Tn_statistic(sample, theta_hat)
     support = np.concatenate([sample, 2 * theta_hat - sample])
 
-    # Estimador interior: para argmin usa theta_hat como pivote con k = n
+    # Estimador interior: para argmin usa theta_hat como pivote con k = max(64, 4n)
     # (soporte simetrico exactamente en theta_hat => argmin cerca de theta_hat)
     if estimator == "argmin":
-        k_inner = max(16, sample.size)
+        k_inner = max(64, 4 * sample.size)
         inner = lambda y: theta_argmin(y, n_walsh=k_inner, anchor=theta_hat)
     else:
         inner = est_fn

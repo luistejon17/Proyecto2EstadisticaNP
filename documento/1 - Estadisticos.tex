@@ -39,7 +39,7 @@ $(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y$, de la igualdad $\varphi_Y(t) =
 $(\Leftarrow)$ Si $\varphi_X(t)=e^{it\theta}c_0(t)$ con $c_0$ real, entonces $\varphi_Y(t):=e^{-it\theta}\varphi_X(t)=c_0(t)$ es real, luego $\varphi_Y(t)=\overline{\varphi_Y(t)}=\varphi_Y(-t)$. Por unicidad de la función característica, $Y\overset{d}{=}-Y$, es decir $X-\theta\overset{d}{=}-(X-\theta)$.
 \end{proof}
 
-Dada una muestra $X_1,\dots,X_n$, la función característica empírica~\cite{feuerverger1977empirical} es $c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$ (misma magnitud, parte imaginaria nula), el estadístico de penalización propuesto por Csörgő y Heathcote~\cite{csorgo1987symmetry} es
+Dada una muestra $X_1,\dots,X_n$, la función característica empírica~\cite{feuerverger1977empirical} es $c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$ (misma magnitud, parte imaginaria nula), el estadístico de penalización considerado en este trabajo es
 \begin{equation}\label{eq:Sn}
 S_n \;=\; \int_{-\infty}^{\infty}\bigl|c_n(t)e^{-it\hat\theta}-c_s(t)\bigr|^q\,w(t)\,dt,
 \end{equation}
@@ -130,8 +130,8 @@ La existencia del gradiente \eqref{eq:grad-Sn} habilita métodos iterativos de d
 \[
 \theta^{(k+1)} \;=\; \theta^{(k)} - \eta_k\, S_n'(\theta^{(k)}), \qquad k=0,1,2,\dots
 \]
-con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-BFGS-B}~\cite{byrd1995limited}, un método de quasi-Newton de memoria limitada que aproxima el Hessiano $S_n''$ a partir de los últimos $m$ pares $(\Delta\theta,\Delta S_n')$ y elige $\eta_k$ por búsqueda lineal con condiciones de Wolfe. En dimensión $1$, esto se reduce esencialmente a la regla de la secante
+con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-BFGS-B}, un método de quasi-Newton de memoria limitada que aproxima el Hessiano $S_n''$ a partir de los últimos $m$ pares $(\Delta\theta,\Delta S_n')$ y elige $\eta_k$ por búsqueda lineal con condiciones de Wolfe. En dimensión $1$, esto se reduce esencialmente a la regla de la secante
 \[
 \theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
 \]
-salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto (Nocedal y Wright~\cite{nocedal2006numerical}, Thm.\,3.7), de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.
+salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto, de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.
