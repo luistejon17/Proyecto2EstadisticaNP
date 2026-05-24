@@ -1,0 +1,132 @@
+\subsection{La función característica empírica}
+
+
+
+\begin{theorem}
+Sea $X$ una variable aleatoria con función característica
+\[
+c_X(t)=\mathbb{E}(e^{itX}).
+\]
+Entonces,
+\[
+X \sim \mathrm{sim}(\theta)
+\quad \Longleftrightarrow \quad
+c_X(t)=e^{it\theta}c_0(t),
+\]
+donde $c_0(t)$ es una función real para todo $t$.
+\end{theorem}
+
+\begin{proof}
+
+\[
+(\Rightarrow)
+\]
+
+Suponga que $X$ es simétrica respecto a $\theta$, es decir,
+\[
+X-\theta \overset{d}{=} -(X-\theta).
+\]
+
+Definamos
+\[
+Y=X-\theta.
+\]
+
+Entonces $Y$ es simétrica respecto a $0$, y su función característica es
+\[
+c_Y(t)=\mathbb{E}(e^{itY}).
+\]
+
+Como $Y \overset{d}{=} -Y$, se tiene
+\[
+c_Y(t)
+=
+\mathbb{E}(e^{it(-Y)})
+=
+\mathbb{E}(e^{-itY})
+=
+c_Y(-t).
+\]
+
+Por otra parte, para toda función característica,
+\[
+c_Y(-t)=\overline{c_Y(t)}.
+\]
+
+Luego,
+\[
+c_Y(t)=\overline{c_Y(t)},
+\]
+lo cual implica que $c_Y(t)$ es real para todo $t$.
+
+Ahora, usando que $X=Y+\theta$,
+\[
+c_X(t)
+=
+\mathbb{E}(e^{it(Y+\theta)})
+=
+e^{it\theta}\mathbb{E}(e^{itY})
+=
+e^{it\theta}c_Y(t).
+\]
+
+Tomando
+\[
+c_0(t)=c_Y(t),
+\]
+obtenemos
+\[
+c_X(t)=e^{it\theta}c_0(t),
+\]
+donde $c_0(t)$ es real.
+
+\vspace{0.3cm}
+
+\[
+(\Leftarrow)
+\]
+
+Suponga ahora que
+\[
+c_X(t)=e^{it\theta}c_0(t),
+\]
+donde $c_0(t)$ es real.
+
+Definamos
+\[
+c_Y(t)=e^{-it\theta}c_X(t).
+\]
+
+Entonces
+\[
+c_Y(t)=c_0(t),
+\]
+y por hipótesis $c_Y(t)$ es real.
+
+Observe que
+\[
+c_Y(t)
+=
+\mathbb{E}(e^{it(X-\theta)}),
+\]
+por lo que $c_Y$ es la función característica de
+\[
+Y=X-\theta.
+\]
+
+Como $c_Y(t)$ es real,
+\[
+c_Y(t)=\overline{c_Y(t)}=c_Y(-t),
+\]
+y por unicidad de las funciones características,
+\[
+Y \overset{d}{=} -Y.
+\]
+
+Por tanto,
+\[
+X-\theta \overset{d}{=} -(X-\theta),
+\]
+es decir, $X$ es simétrica respecto a $\theta$.
+
+\end{proof}
