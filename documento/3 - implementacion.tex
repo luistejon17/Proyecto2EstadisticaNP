@@ -1,18 +1,6 @@
 
 La traducción del diseño metodológico a código se hizo en Python, apoyándose en \texttt{NumPy} y \texttt{SciPy} para el cálculo numérico, \texttt{matplotlib} y \texttt{seaborn} para las gráficas, y el módulo \texttt{concurrent.futures} de la librería estándar para la paralelización del estudio Monte Carlo. El código completo y los notebooks de reproducción están disponibles en el repositorio del proyecto: \url{https://github.com/luistejon17/Proyecto2EstadisticaNP}.
 
-Para mantener el código mantenible y testeable, se separó la lógica en módulos según su responsabilidad:
-\begin{itemize}
-  \item \texttt{src/distributions.py}: generadores de muestras para las cinco distribuciones de la Sección~2.2.
-  \item \texttt{src/statistics\_ks.py}: cálculo vectorizado de $T_n(\theta)$ y los tres estimadores del centro.
-  \item \texttt{src/bootstrap\_ks.py}: procedimiento bootstrap completo para $T_n$ (estadístico observado, remuestreo de $sF_n(\hat\theta)$ y p-valor).
-  \item \texttt{src/characteristic\_fn.py}: función característica empírica, estadístico $S_n$ vectorizado, funciones de peso $w(t)$ y estimadores.
-  \item \texttt{src/bootstrap\_sn.py}: procedimiento bootstrap para $S_n$.
-  \item \texttt{src/simulation\{,\_sn\}.py} y \texttt{src/simulation\{,\_sn\}\_parallel.py}: orquestación del estudio Monte Carlo, en versión secuencial y paralela.
-  \item \texttt{src/plotting\{,\_sn\}.py}: rutinas de visualización (heatmaps RdYlGn, bandas $\sigma$ para el Error Tipo I, curvas de potencia).
-  \item \texttt{notebooks/}: cuadernos Jupyter que sirven como punto de entrada para correr las simulaciones y reproducir las figuras.
-\end{itemize}
-
 \subsection{Estadístico \texorpdfstring{$T_n$}{T\_n} (Schuster--Barker)}
 
 La diferencia $F_n(x)-sF_n(x;\theta)$ es una función escalera que solo cambia en los puntos del conjunto $\{X_i\}\cup\{2\theta-X_i\}$, por lo que el supremo se alcanza necesariamente en alguno de esos $2n$ puntos. Usando la identidad
@@ -73,8 +61,8 @@ La mediana y la media afeitada se implementan directamente con \texttt{numpy.med
 
 \subsubsection{argmin de \texorpdfstring{$T_n$}{Tn}: búsqueda local en promedios de Walsh}\label{impl:argmin-Tn}
 
-Como $T_n$ es escalonada con saltos exactamente en $\mathcal{W}_n=\{(X_i+X_j)/2:i\le j\}$ (Proposición~\ref{prop:Tn-steps}), el mínimo global se alcanza en algún $W_{ij}$. Evaluar los $\tfrac{n(n+1)}{2}$ promedios cuesta $\mathcal{O}(n^3\log n)$ y se vuelve prohibitivo dentro del bootstrap. Restringimos la búsqueda a los $k$ promedios más cercanos a la \emph{mediana muestral} (consistente para el centro a tasa $\mathcal{O}(n^{-1/2})$): con $k$ de orden $n^{3/2}$ se cubre con holgura la zona donde puede estar el óptimo, y empíricamente $k=8n$ basta para coincidir con la enumeración exhaustiva en $\approx 98\%$ de las muestras Normal con $n\in\{20,40,80,160\}$ (vs.\ $\approx 63\%$ del antiguo grid uniforme).
-
+Como $T_n$ es escalonada con saltos exactamente en $\mathcal{W}_n=\{(X_i+X_j)/2:i\le j\}$ (Proposición~\ref{prop:Tn-steps}), el mínimo global se alcanza en algún $W_{ij}$. Evaluar los $\tfrac{n(n+1)}{2}$ promedios cuesta $\mathcal{O}(n^3\log n)$ y se vuelve prohibitivo dentro del bootstrap. Restringimos la búsqueda a los $k$ promedios más cercanos a la \emph{mediana muestral} (consistente para el centro a tasa $\mathcal{O}(n^{-1/2})$): con $k$ de orden $n^{3/2}$ se cubre con holgura la zona donde puede estar el óptimo, y empíricamente $k=8n$ basta para coincidir con la enumeración exhaustiva en $\approx 98\%$ de las muestras Normal con $n\in\{20,40,80,160\}$.
+\newpage
 \begin{lstlisting}[language=Python]
 def theta_argmin(sample, n_walsh=None):
     n = sample.size
@@ -128,21 +116,16 @@ def theta_argmin_Sn(sample, w_fn, q=2, t_grid=None):
 
 El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero} sugiere que el verdadero centro es un punto estacionario asintótico, y la mediana es $\sqrt n$-consistente). Para $q=1$ el integrando contiene un $\sqrt{\cdot}$ no diferenciable en sus ceros, por lo que se recurre a la búsqueda grid + Brent (\texttt{theta\_argmin\_Sn\_grid}).
 
-\paragraph{Impacto medido sobre el bootstrap.} Sobre un test bootstrap completo con $B=199$ y muestra normal estándar de tamaño $n=160$, el nuevo esquema para $S_n$ resulta $3.5\times$ más rápido que la versión anterior basada en grid+Brent ($406$ ms vs.\ $1419$ ms). Para $T_n$, la versión Walsh local es $4\times$ más rápida para $n=20$ ($53$ ms vs.\ $215$ ms) pero $\approx 7\times$ más lenta para $n=160$ ($2.2$ s vs.\ $0.3$ s); el costo extra compra un mínimo \emph{global} verificable en lugar de un mínimo local heurístico.
 
 \subsection{Procedimiento bootstrap}
 
-Ambos tests comparten el mismo esqueleto bootstrap: dada una muestra y un estimador del centro, (i)~se calcula el estadístico observado, (ii)~se genera el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$ (que es exactamente el soporte de $sF_n(\hat\theta)$), (iii)~se remuestrea con reemplazo $B$ veces y se recalculan el estimador y el estadístico, y (iv)~se obtiene el p-valor con la corrección de continuidad estándar:
-\[
-\hat p \;=\; \frac{1 + \#\{b:\, T_n^{*(b)} \ge T_n^{\text{obs}}\}}{B + 1}.
-\]
+Ambos tests comparten el mismo esqueleto bootstrap: dada una muestra y un estimador del centro, (i)~se calcula el estadístico observado, (ii)~se genera el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$ , (iii)~se remuestrea con reemplazo $B$ veces y se recalculan el estimador y el estadístico, y (iv)~se obtiene el p-valor con la corrección de continuidad estándar:
+$\hat p \;=\; \frac{1 + \#\{b:\, T_n^{*(b)} \ge T_n^{\text{obs}}\}}{B + 1}.$
 \begin{lstlisting}[language=Python]
 def bootstrap_test_Tn(sample, estimator='argmin', B=500, rng=None):
-    rng = rng or np.random.default_rng()
-    est_fn = ESTIMATORS[estimator]
+    rng, est_fn = rng or np.random.default_rng(), ESTIMATORS[estimator]
     theta_hat = est_fn(sample)
-    T_obs = Tn_statistic(sample, theta_hat)
-    support = np.concatenate([sample, 2*theta_hat - sample])
+    T_obs, support = Tn_statistic(sample, theta_hat), np.concatenate([sample, 2*theta_hat - sample])
 
     T_boot = np.empty(B)
     for b in range(B):
@@ -153,7 +136,7 @@ def bootstrap_test_Tn(sample, estimator='argmin', B=500, rng=None):
     return BootstrapResult(T_obs, p_val, theta_hat, T_boot, estimator, B)
 \end{lstlisting}
 
-La función análoga \texttt{bootstrap\_test\_Sn} sigue exactamente el mismo patrón intercambiando $T_n$ por $S_n$ y pasando $(w,q,t\_grid)$ adicionales.
+La función análoga \texttt{bootstrap\_test\_Sn} sigue exactamente el mismo patrón intercambiando $T_n$ por $S_n$ y pasando los parámetros $(w,q,t\_grid)$ adicionales.
 
 \subsection{Paralelización del estudio Monte Carlo}
 
@@ -171,8 +154,7 @@ def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
             'time_s': time.perf_counter() - t0,
             'under_h0': spec.under_h0}
 \end{lstlisting}
-
-El registro global \texttt{\_SPEC\_REGISTRY} evita serializar las \texttt{DistSpec} (que contienen closures no pickleables) en cada envío de tarea: se inicializa una vez por proceso worker. Con 11 cores activos, el estudio completo de $T_n$ (1\,800 tests bootstrap, $B=500$) corre en $\sim 1.5$ minutos y el de $S_n$ (14\,400 tests, integrales sobre $K=301$) en $\sim 2.5$ horas.
+ Con 11 cores activos, el estudio completo de $T_n$ (1\,800 tests bootstrap, $B=500$) corre en $\sim 1.5$ minutos y el de $S_n$ (14\,400 tests, integrales sobre $K=301$) en $\sim 2.5$ horas.
 
 \subsection{Verificación empírica con pruebas unitarias}
 

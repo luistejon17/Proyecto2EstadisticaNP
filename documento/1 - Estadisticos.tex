@@ -23,7 +23,7 @@ $X\sim\mathrm{sim}(\theta)$ si y solo si $\varphi_X(t)=e^{it\theta}\,c_0(t)$ con
 \end{theorem}
 
 \begin{proof}
-$(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y$ entonces $\varphi_Y(t)=\varphi_Y(-t)=\overline{\varphi_Y(t)}$, así que $\varphi_Y$ es real. De $X=Y+\theta$ se sigue $\varphi_X(t)=e^{it\theta}\varphi_Y(t)$, y basta tomar $c_0:=\varphi_Y$.
+$(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y$, de la igualdad $\varphi_Y(t) = \mathbb{E}[\cos(tY)] + i\mathbb{E}[\sin(tY)]$ es fácil verificar que $\varphi_Y(-t)=\overline{\varphi_Y(t)}$, entonces $\varphi_Y(t)=\varphi_Y(-t)=\overline{\varphi_Y(t)}$, así que $\varphi_Y$ es real. De $X=Y+\theta$ se sigue $\varphi_X(t)=e^{it\theta}\varphi_Y(t)$, y basta tomar $c_0:=\varphi_Y$.
 
 $(\Leftarrow)$ Si $\varphi_X(t)=e^{it\theta}c_0(t)$ con $c_0$ real, entonces $\varphi_Y(t):=e^{-it\theta}\varphi_X(t)=c_0(t)$ es real, luego $\varphi_Y(t)=\overline{\varphi_Y(t)}=\varphi_Y(-t)$. Por unicidad de la función característica, $Y\overset{d}{=}-Y$, es decir $X-\theta\overset{d}{=}-(X-\theta)$.
 \end{proof}
@@ -54,22 +54,20 @@ donde el caso $i=j$ corresponde a la observación $X_i$. Denotamos $\mathcal{W}_
 \end{definicion}
 
 \begin{proposicion}[Saltos de $T_n(\theta)$]\label{prop:Tn-steps}
-La función $\theta\mapsto T_n(\theta)$ es \emph{constante a trozos} (piecewise constant) sobre $\mathbb{R}$, y todas sus discontinuidades están contenidas en $\mathcal{W}_n$. En consecuencia,
-\[
-\arg\min_{\theta\in\mathbb{R}} T_n(\theta) \quad\text{es una unión de intervalos cuyas fronteras son elementos de } \mathcal{W}_n,
-\]
-y existe $W^\star\in\mathcal{W}_n$ tal que $T_n(W^\star)=\min_\theta T_n(\theta)$.
+La función $\theta\mapsto T_n(\theta)$ es constante a trozos con discontinuidades en el conjunto de promedios de Walsh $\mathcal{W}_n$. Así, $\arg\min_\theta T_n(\theta)$ es una unión de intervalos con fronteras en $\mathcal{W}_n$, y el mínimo se alcanza en algún $W^\star\in\mathcal{W}_n$.
 \end{proposicion}
 
 \begin{proof}
-A partir de la identidad
-\[
-F_n(x)-sF_n(x;\theta) \;=\; \tfrac{1}{2}\bigl(F_n(x)-1+F_n((2\theta-x)^-)\bigr),
-\]
-el supremo en $x$ se evalúa en el conjunto de saltos $\{X_1,\dots,X_n\}\cup\{2\theta-X_1,\dots,2\theta-X_n\}$. Variar $\theta$ traslada únicamente los puntos $2\theta-X_j$. La función $F_n((2\theta-x)^-)$, evaluada en cualquier punto del conjunto anterior, solo cambia cuando algún $2\theta-X_j$ cruza por algún $X_i$, es decir, cuando $\theta$ atraviesa la semisuma $W_{ij}=(X_i+X_j)/2$. Entre dos elementos consecutivos de $\mathcal{W}_n$ todas las indicadoras involucradas son constantes y por tanto $T_n(\theta)$ es constante. El argmin, al ser una intersección de cerrados, contiene a su clausura, cuyos extremos son por construcción Walsh promedios.
+A partir de la identidad de Schuster y Barker (1987)[cite: 156, 157]:
+$$F_n(x)-sF_n(x;\theta) = \frac{1}{2}\bigl(F_n(x)-1+F_n((2\theta-x)^-)\bigr).$$
+Dado $\theta$, la diferencia define una función escalonada en $x$ con saltos en $\{X_i\} \cup \{2\theta-X_i\}$. El valor del supremo $T_n(\theta)$ está determinado exclusivamente por el orden relativo de estos $2n$ puntos.
+
+Al variar $\theta$, el orden de los saltos es invariante, manteniendo $T_n(\theta)$ estrictamente constante, excepto cuando un punto reflejado interseca a uno muestral: $2\theta-X_j = X_i$. Esto sucede si y solo si $\theta = (X_i+X_j)/2 \in \mathcal{W}_n$.
+
+En consecuencia, $T_n(\theta)$ es constante en los intervalos entre elementos de $\mathcal{W}_n$. Al depender de funciones càdlàg, el ínfimo se alcanza en la clausura de alguno de estos trozos constantes, asegurando que el mínimo global recaiga sobre un punto en $\mathcal{W}_n$.
 \end{proof}
 
-La Proposición~\ref{prop:Tn-steps} reduce el problema continuo a una búsqueda discreta sobre un conjunto finito de $\tfrac{n(n+1)}{2}$ candidatos. Esto es la base teórica del estimador localizado descrito en la Sección~\ref{impl:argmin-Tn}.
+La Proposición~\ref{prop:Tn-steps} reduce el problema continuo a una búsqueda discreta sobre un conjunto finito de $\tfrac{n(n+1)}{2}$ candidatos. Esto es la base teórica del estimador localizado (evaluar $T_n(\theta)$ en los $K$ promedios de Walsh más cercanos a la mediana) descrito en la Sección~\ref{impl:argmin-Tn}.
 
 \subsubsection{Argmin de $S_n$: diferenciación bajo el signo integral}
 
