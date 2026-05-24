@@ -69,7 +69,7 @@ En perfiles preliminares esta vectorización redujo el tiempo de $\hat\theta_{\m
 
 \subsection{Estimadores del centro de simetría}
 
-La mediana y la media afeitada se implementan directamente con \texttt{numpy.median} y \texttt{scipy.stats.trim\_mean(\,\cdot\,, proportiontocut=0.1)}. El estimador $\hat\theta_{\min}$ requiere optimización numérica y se implementa de forma distinta para cada estadístico, aprovechando su estructura matemática (Sección~\ref{sec:estim-theta}).
+La mediana y la media afeitada se implementan directamente con \texttt{numpy.median} y \texttt{scipy.stats.trim\_mean} (con \texttt{proportiontocut=0.1}). El estimador $\hat\theta_{\min}$ requiere optimización numérica y se implementa de forma distinta para cada estadístico, aprovechando su estructura matemática (Sección~\ref{sec:estim-theta}).
 
 \subsubsection{argmin de \texorpdfstring{$T_n$}{Tn}: búsqueda local en promedios de Walsh}\label{impl:argmin-Tn}
 
