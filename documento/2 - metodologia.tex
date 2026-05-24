@@ -1,0 +1,39 @@
+
+\subsection{Protocolo Monte Carlo}
+
+Para estimar el nivel y la potencia de cada test se repite $R$ veces el siguiente experimento: (i)~generar $X_1,\dots,X_n$ i.i.d.\ de la distribución de interés; (ii)~calcular el p-valor $p_r$ del test mediante $B=500$ remuestras bootstrap de $sF_n(\hat\theta)$; (iii)~registrar $I_r=\mathbf{1}\{p_r\le\alpha\}$. La tasa de rechazo empírica
+\[
+\hat\pi_n \;=\; \frac{1}{R}\sum_{r=1}^{R} I_r
+\]
+estima el error Tipo I bajo $H_0$ o la potencia bajo $H_a$, con error estándar $\sqrt{\hat\pi_n(1-\hat\pi_n)/R}$. Se fijó $\alpha=0.05$, y se usaron $R=300$ réplicas para $T_n$ y $R=200$ para $S_n$.
+
+\subsection{Distribuciones}
+
+Bajo $H_0$ se consideran dos distribuciones simétricas en $\theta=2$:
+\[
+X \sim \mathrm{Unif}(1,3), \qquad X \sim \mathrm{Cauchy}(2,1).
+\]
+Para medir potencia se consideran tres distribuciones asimétricas de cola derecha:
+\[
+X \sim \Gamma(k{=}2,\,s{=}1), \qquad X \sim \mathrm{Weibull}(k{=}1.5,\,s{=}1), \qquad X \sim \mathrm{Pareto}(a{=}3,\,s{=}1).
+\]
+Los tamaños de muestra son $n\in\{20,40,80,160\}$, elegidos para que la potencia muestre una transición clara de baja a alta conforme crece $n$.
+
+\subsection{Estimadores del centro de simetría}
+
+Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker (1987):
+\begin{itemize}
+  \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$) sobre una cuadrícula uniforme en el rango de la muestra.
+  \item $\hat\theta_{\mathrm{med}} = \mathrm{mediana}(X_1,\dots,X_n)$.
+  \item $\hat\theta_\alpha = \bar{X}_{0.1}$: media afeitada con fracción $0.1$ en cada cola.
+\end{itemize}
+
+\subsection{Funciones de peso para $S_n$}
+
+La integral \eqref{eq:Sn} depende de $q$ y de $w$. Se consideran los dos exponentes $q\in\{1,2\}$ y tres densidades simétricas:
+\begin{align*}
+  w_1(t) &= \frac{1}{\sqrt{2\pi}}\,e^{-t^2/2} & &(\mathcal{N}(0,1)),\\
+  w_2(t) &= \frac{1}{0.5\sqrt{2\pi}}\,e^{-t^2/(2\cdot 0.5^2)} & &(\mathcal{N}(0,\,0.5^2)),\\
+  w_3(t) &= \tfrac{1}{2}\,e^{-|t|} & &(\mathrm{Laplace}(0,1)).
+\end{align*}
+$w_1$ y $w_2$ difieren en el ancho de banda: $w_2$ concentra más masa en frecuencias bajas. $w_3$ tiene colas más pesadas que $w_1$ y pondera con mayor intensidad las frecuencias altas. La integral se aproxima por cuadratura trapezoidal en un grid de $K=301$ puntos adaptado al soporte efectivo de cada $w$.
