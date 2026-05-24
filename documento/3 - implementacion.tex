@@ -29,7 +29,7 @@ Esto evita los $\mathcal{O}(K\cdot 4n^2)$ del enfoque ingenuo y reduce el cómpu
 
 \subsection{Estadístico \texorpdfstring{$S_n$}{S\_n} (función característica empírica)}
 
-La integral de penalización \eqref{eq:Sn} se aproxima por cuadratura trapezoidal sobre un grid uniforme $\{t_1,\dots,t_K\}$ con $K=301$. La clave para que el barrido sobre $\theta$ sea barato es la siguiente: dado que $c_n(t)=a_n(t)+i\,b_n(t)$ no depende de $\theta$, se tiene
+La integral de penalización \eqref{eq:Sn} se aproxima sobre un grid uniforme $\{t_1,\dots,t_K\}$ con $K=301$. La clave para que el barrido sobre $\theta$ sea barato es la siguiente: dado que $c_n(t)=a_n(t)+i\,b_n(t)$ no depende de $\theta$, se tiene
 \[
 \bigl|c_n(t)e^{-it\theta}-c_s(t)\bigr|^2 \;=\; 2|c_n(t)|\bigl(|c_n(t)|-A_n(t;\theta)\bigr),\qquad A_n(t;\theta)=a_n(t)\cos(t\theta)+b_n(t)\sin(t\theta).
 \]
