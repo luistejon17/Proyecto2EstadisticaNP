@@ -1,0 +1,495 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Paquetes ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{margin=2.4cm}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\tcbuselibrary{listings, skins, breakable}
+\usepackage{titlesec}
+\usepackage{parskip}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  urlcolor=blue!50!black,
+  citecolor=black,
+  pdftitle={Documentación Test 2 - Proyecto 2 Estadística No Paramétrica},
+  pdfauthor={Equipo Proyecto 2}
+}
+
+% --- Estilos código ---
+\definecolor{codebg}{RGB}{246,248,250}
+\definecolor{codekw}{RGB}{170,13,145}
+\definecolor{codestr}{RGB}{196,26,22}
+\definecolor{codecmt}{RGB}{93,108,121}
+
+\lstdefinestyle{pystyle}{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecmt}\itshape,
+  numberstyle=\tiny\color{codecmt},
+  numbers=left,
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{black!20},
+  framesep=4pt,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1
+           {Ú}{{\'U}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1
+}
+
+\lstdefinestyle{shellstyle}{
+  basicstyle=\ttfamily\footnotesize\color{white},
+  backgroundcolor=\color{black!88},
+  frame=single,
+  rulecolor=\color{black},
+  framesep=4pt,
+  breaklines=true,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1
+           {Ú}{{\'U}}1 {Ñ}{{\~N}}1,
+}
+
+\titleformat{\section}{\Large\bfseries\color{blue!50!black}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{black!75}}{\thesubsection}{0.5em}{}
+
+\newtcolorbox{notebox}[1][]{
+  enhanced, breakable,
+  colback=yellow!8, colframe=orange!70!black,
+  boxrule=0.6pt, sharp corners,
+  fonttitle=\bfseries,
+  #1
+}
+
+\title{\textbf{Documentación del código --- Test 2 ($S_n$, función característica empírica)}\\[0.5em]
+\large Proyecto 2: Estadística No Paramétrica}
+\author{Equipo: Gabriel Sánchez, Juan David Duarte, Luis Tejón, Claudio (IA)}
+\date{Mayo 2026}
+
+\begin{document}
+\maketitle
+
+\hrule
+\vspace{0.5em}
+\begin{quote}\small\itshape
+Este documento describe el código implementado para el \textbf{Test 2}
+del Proyecto 2: el test bootstrap de simetría basado en el estadístico
+de penalización $S_n$ sobre la función característica empírica
+(Csörgő \& Heathcote 1987; Feuerverger \& Mureika 1977). Cubre el
+fundamento matemático, la simplificación numérica usada, la descripción
+módulo a módulo y las instrucciones para reproducir las simulaciones.
+\end{quote}
+\vspace{0.5em}
+\hrule
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Visión general}
+
+El Test 2 evalúa la misma hipótesis nula que el Test 1,
+\[
+H_0 : F \text{ es simétrica respecto a algún } \theta,
+\]
+pero la métrica de discrepancia se construye sobre la función
+característica empírica
+\[
+c_n(t) \;=\; \frac{1}{n}\sum_{j=1}^{n} e^{itX_j}
+\]
+en lugar de sobre la cdf empírica. La motivación es el Teorema:
+$X\sim\mathrm{sim}(\theta)$ si y solo si $\varphi_X(t)=e^{it\theta}c_0(t)$
+con $c_0:\mathbb{R}\to\mathbb{R}$. En consecuencia, bajo $H_0$ la función
+$c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real.
+
+Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$ (misma magnitud, parte
+imaginaria nula), el estadístico de penalización es
+\begin{equation}\label{eq:Sn}
+S_n(\hat\theta) \;=\; \int_{-\infty}^{\infty}
+\bigl|c_n(t)\,e^{-it\hat\theta} - c_s(t)\bigr|^q \, w(t)\,dt,
+\end{equation}
+con $q\in\{1,2\}$ y $w$ una densidad simétrica. Bajo $H_0$ la parte
+imaginaria de $c_n(t)e^{-it\hat\theta}$ se anula y $S_n$ es pequeño;
+bajo asimetría, $S_n$ crece.
+
+\subsection{Estimadores del centro de simetría}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{argmin:} $\hat\theta=\arg\min_\theta S_n(\theta)$ — minimiza la propia penalización.
+    \item \textbf{mediana:} $\hat\theta=\mathrm{median}(X_1,\dots,X_n)$.
+    \item \textbf{media afeitada:} $\hat\theta=\overline X_\alpha$ con $\alpha=0{,}1$.
+\end{itemize}
+
+\subsection{Funciones de peso \texorpdfstring{$w(t)$}{w(t)} implementadas}
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Nombre & Forma & Soporte efectivo \\
+\midrule
+\texttt{gauss\_1.0}   & $w(t)=\phi_1(t)=\frac{1}{\sqrt{2\pi}}e^{-t^2/2}$ & $|t|\le 6$ \\
+\texttt{gauss\_0.5}   & $w(t)=\phi_{1/2}(t)$ (más concentrada) & $|t|\le 3$ \\
+\texttt{laplace\_1.0} & $w(t)=\tfrac{1}{2}e^{-|t|}$ & $|t|\le 10$ \\
+\texttt{cauchy\_1.0}  & $w(t)=\frac{1}{\pi(1+t^2)}$ & $|t|\le 40$ \\
+\texttt{unif(T)}      & $w(t)=\frac{1}{2T}\mathbf{1}_{[-T,T]}(t)$ & $|t|\le T$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================
+\section{Simplificación numérica}
+\label{sec:simpl}
+
+Escribimos $c_n(t)e^{-it\hat\theta}=A_n(t;\hat\theta)+iB_n(t;\hat\theta)$
+con
+\begin{align*}
+A_n(t;\theta) &= \tfrac{1}{n}\sum_j \cos\!\bigl(t(X_j-\theta)\bigr), \\
+B_n(t;\theta) &= \tfrac{1}{n}\sum_j \sin\!\bigl(t(X_j-\theta)\bigr).
+\end{align*}
+Como $c_s(t)=|c_n(t)|=\sqrt{A_n^2+B_n^2}$ es real y positivo,
+\[
+\bigl|c_n(t)e^{-it\hat\theta} - c_s(t)\bigr|^2
+\;=\; \bigl(A_n - \sqrt{A_n^2+B_n^2}\bigr)^2 + B_n^2
+\;=\; 2\,|c_n(t)|\,\bigl(|c_n(t)| - A_n(t;\hat\theta)\bigr).
+\]
+
+Esto evita raíces complejas y separa la dependencia de $\theta$. Una
+segunda simplificación es:
+\[
+A_n(t;\theta) \;=\; a_n(t)\cos(t\theta) + b_n(t)\sin(t\theta),
+\qquad
+a_n(t)=\tfrac{1}{n}\sum_j\cos(tX_j),\ \ b_n(t)=\tfrac{1}{n}\sum_j\sin(tX_j),
+\]
+y $|c_n(t)|^2=a_n^2+b_n^2$ \emph{no depende} de $\theta$. La utilidad
+práctica es enorme: para el estimador \texttt{argmin} se barre $\theta$
+sobre una grilla; precomputando $(a_n, b_n)$ una sola vez, cada
+evaluación de $S_n(\theta)$ cuesta $O(K)$ en lugar de $O(nK)$.
+
+\begin{notebox}[title=Cuadratura]
+La integral se aproxima con regla trapezoidal sobre un grid uniforme
+$\{t_k\}\subset[-t_{\max},t_{\max}]$. La cota $t_{\max}$ se fija
+automáticamente por cada $w$ (Gaussiana: $6\sigma$; Laplace: $10/a$,
+etc.). Por defecto $K=301$ puntos; en \texttt{--quick}, $K=201$.
+Verificamos en tests que las densidades integran $\approx 1$.
+\end{notebox}
+
+% =====================================================================
+\section{Estructura del repositorio (parte $S_n$)}
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single, backgroundcolor=\color{codebg}]
+src/
+|-- characteristic_fn.py         # S_n, pesos w(t), argmin_Sn
+|-- bootstrap_sn.py              # Procedimiento bootstrap para S_n
+|-- simulation_sn.py             # Estudio MC secuencial
+|-- simulation_sn_parallel.py    # Estudio MC paralelo
+|-- plotting_sn.py               # Graficas S_n y comparativas T_n vs S_n
+
+scripts/
+|-- run_test2_simulation_parallel.py    # Script CLI principal
+
+tests/
+|-- test_characteristic_fn.py    # Tests unitarios
+\end{lstlisting}
+
+% =====================================================================
+\section{Módulos del paquete}
+
+\subsection{\texttt{characteristic\_fn.py}}
+
+Define los objetos centrales: la dataclass \texttt{WeightFn}, los
+factorías de pesos, el grid de integración, las dos versiones del
+estadístico ($S_n$ y $S_n$ multi-$\theta$) y los estimadores del
+centro.
+
+\paragraph{Núcleo:} \texttt{Sn\_multi\_theta(sample, thetas, w\_fn, q, t\_grid)}.
+Implementa la simplificación descrita en \S\ref{sec:simpl}: precomputa
+$(a_n, b_n, |c_n|)$ una sola vez y barre los $M$ valores de $\theta$ en
+una sola operación vectorizada.
+
+\begin{lstlisting}[style=pystyle, caption={Vectorización de $S_n(\theta)$}]
+def Sn_multi_theta(sample, thetas, w_fn, q=2, t_grid=None):
+    if t_grid is None:
+        t_grid = make_t_grid(w_fn)
+    x  = np.asarray(sample, dtype=float)
+    th = np.atleast_1d(np.asarray(thetas, dtype=float))
+
+    # c_n(t) raw
+    arg_raw = t_grid[:, None] * x[None, :]
+    a_n = np.mean(np.cos(arg_raw), axis=1)
+    b_n = np.mean(np.sin(arg_raw), axis=1)
+    abs_cn = np.sqrt(a_n**2 + b_n**2)
+
+    # A_n(t; theta) para todos los theta de una vez
+    tth = t_grid[:, None] * th[None, :]
+    A   = a_n[:, None] * np.cos(tth) + b_n[:, None] * np.sin(tth)
+
+    # |c_n e^{-it.theta} - c_s|^2 = 2|c_n|(|c_n| - A)
+    abs_cn_col = abs_cn[:, None]
+    diff_sq = 2.0 * abs_cn_col * (abs_cn_col - A)
+    np.maximum(diff_sq, 0.0, out=diff_sq)
+
+    integrand = diff_sq if q == 2 else (
+        np.sqrt(diff_sq) if q == 1 else diff_sq**(q/2.0))
+
+    weights = w_fn.fn(t_grid)[:, None]
+    return np.trapezoid(integrand * weights, t_grid, axis=0)
+\end{lstlisting}
+
+\paragraph{Estimadores.} Los tres se mantienen consistentes con el Test 1:
+\begin{itemize}[leftmargin=*]
+    \item \texttt{theta\_median}: \texttt{np.median}.
+    \item \texttt{theta\_trimmed}: \texttt{scipy.stats.trim\_mean}.
+    \item \texttt{theta\_argmin\_Sn(sample, w\_fn, q)}: búsqueda en 2 etapas
+    (grid uniforme de 40 puntos + refinamiento Brent), aprovechando
+    \texttt{Sn\_multi\_theta} para el barrido del grid.
+\end{itemize}
+
+% ------------------------------------
+\subsection{\texttt{bootstrap\_sn.py}}
+
+Implementa \texttt{bootstrap\_test\_Sn(sample, w\_fn, q, estimator, B, t\_grid, rng)}
+con el mismo flujo del Test 1, adaptado a $S_n$:
+\begin{enumerate}[leftmargin=*]
+    \item Estima $\hat\theta$ y calcula $S_{\text{obs}}=S_n(X;\hat\theta,q,w)$.
+    \item Construye el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}$.
+    \item Para $b=1,\dots,B$: remuestrea, recalcula $\hat\theta^*$ y obtiene $S_n^*(b)$.
+    \item $p = \frac{1+\#\{S_n^*(b)\ge S_{\text{obs}}\}}{B+1}$.
+\end{enumerate}
+El resultado es un \texttt{BootstrapResultSn} con: \texttt{statistic},
+\texttt{p\_value}, \texttt{theta\_hat}, \texttt{boot\_statistics},
+\texttt{estimator\_name}, \texttt{weight\_name}, \texttt{q}, \texttt{B}.
+
+% ------------------------------------
+\subsection{\texttt{simulation\_sn.py} y \texttt{simulation\_sn\_parallel.py}}
+
+\texttt{SimConfigSn} extiende la configuración con las dimensiones
+adicionales: \texttt{qs}, \texttt{weight\_names}, \texttt{n\_t\_grid}.
+
+\begin{lstlisting}[style=pystyle]
+@dataclass
+class SimConfigSn:
+    sample_sizes : tuple = (20, 40, 80, 160)
+    estimators   : tuple = ("argmin", "median", "trimmed")
+    qs           : tuple = (1, 2)
+    weight_names : tuple = ("gauss_1.0", "gauss_0.5", "laplace_1.0")
+    B            : int = 500
+    R            : int = 200
+    alpha        : float = 0.05
+    seed         : int = 2026
+    n_t_grid     : int = 301
+\end{lstlisting}
+
+\texttt{run\_simulation\_sn\_parallel} reutiliza el registro
+\texttt{\_SPEC\_REGISTRY} del Test 1 (`simulation\_parallel.py`) para
+serializar las \texttt{DistSpec} entre procesos. Cada tarea es una
+réplica completa con seed único $=\texttt{seed}+\texttt{task\_idx}$.
+
+% ------------------------------------
+\subsection{\texttt{plotting\_sn.py}}
+
+Genera 8 tipos de figuras en \texttt{results/figures/}:
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Función & Salida \\
+\midrule
+\texttt{plot\_type\_i\_error\_sn}        & \texttt{sn\_type\_i\_error\_q\{q\}\_\{w\}.png} (una por $(q,w)$) \\
+\texttt{plot\_power\_curves\_sn}         & \texttt{sn\_power\_curves\_q\{q\}\_\{w\}.png} (una por $(q,w)$) \\
+\texttt{plot\_q1\_vs\_q2}                & \texttt{sn\_compare\_q.png} \\
+\texttt{plot\_weights\_compare}          & \texttt{sn\_compare\_weights.png} \\
+\texttt{plot\_power\_heatmap}            & \texttt{sn\_power\_heatmap.png} \\
+\texttt{plot\_runtime\_sn}               & \texttt{sn\_runtime.png} \\
+\texttt{plot\_pvalue\_distribution\_h0\_sn} & \texttt{sn\_pvalue\_h0.png} \\
+\texttt{plot\_tn\_vs\_sn\_power}         & \texttt{compare\_tn\_vs\_sn\_power.png} \\
+\texttt{plot\_tn\_vs\_sn\_runtime}       & \texttt{compare\_tn\_vs\_sn\_runtime.png} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Las comparativas \texttt{compare\_tn\_vs\_sn\_*.png} solo se generan si
+existe \texttt{tn\_simulation\_summary.csv} en disco (i.e., el Test 1
+ya fue corrido).
+
+% =====================================================================
+\section{Scripts ejecutables}
+
+\subsection{Versión paralelizada (recomendada)}
+\begin{lstlisting}[style=shellstyle]
+python scripts/run_test2_simulation_parallel.py            # full
+python scripts/run_test2_simulation_parallel.py --quick    # rápido (~7-10 min)
+\end{lstlisting}
+
+\paragraph{Comparación \texttt{full} vs \texttt{--quick}.}
+\begin{center}\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Parámetro & \texttt{full} & \texttt{--quick} \\
+\midrule
+$B$ (remuestras) & 500 & 199 \\
+$R$ (réplicas MC) & 200 & 60 \\
+Tamaños $n$ & $\{20,40,80,160\}$ & $\{20,40,80\}$ \\
+$q$ & $\{1,2\}$ & $\{1,2\}$ \\
+Pesos $w$ & gauss\_1.0, gauss\_0.5, laplace\_1.0 & gauss\_1.0, laplace\_1.0 \\
+$K$ (grid integración) & 301 & 201 \\
+Tareas totales & 72\,000 & 10\,800 \\
+Tiempo aprox.\ (12 cores) & $\sim$60--90 min & $\sim$7--10 min \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================
+\section{Salidas generadas}
+
+\subsection{Datos}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{results/data/sn\_simulation\_raw.csv}: una fila por réplica MC.
+    \item \texttt{results/data/sn\_simulation\_summary.csv}: una fila por celda
+        (\texttt{dist}, $n$, \texttt{estimator}, $q$, \texttt{weight}).
+\end{itemize}
+
+\paragraph{Columnas del CSV \texttt{raw}.}
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Columna & Descripción \\
+\midrule
+\texttt{dist}, \texttt{under\_h0} & Distribución y bandera $H_0$ \\
+\texttt{n} & Tamaño muestral \\
+\texttt{estimator} & \texttt{argmin}, \texttt{median} o \texttt{trimmed} \\
+\texttt{q} & 1 o 2 \\
+\texttt{weight} & Nombre del peso $w(t)$ \\
+\texttt{rep} & Índice de la réplica MC \\
+\texttt{statistic} & $S_n$ observado \\
+\texttt{p\_value} & p-valor bootstrap \\
+\texttt{reject} & \texttt{p\_value < alpha} \\
+\texttt{theta\_hat} & Centro estimado \\
+\texttt{time\_s} & Tiempo del test (B remuestras incluidas) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+El CSV \texttt{summary} añade: \texttt{reject\_rate}, \texttt{mean\_pvalue},
+\texttt{mean\_stat}, \texttt{mean\_time\_s}, \texttt{sd\_time\_s},
+\texttt{n\_rep}, \texttt{se\_rate}.
+
+\subsection{Figuras}
+
+Para cada $(q, w)$ se generan 2 figuras (Error Tipo I y curvas de
+potencia, $|q|\times|w|=6$ figuras de cada tipo), más 7 figuras
+agregadas (comparativas, heatmap, runtime, p-valor bajo $H_0$, y dos
+comparativas con $T_n$).
+
+% =====================================================================
+\section{Tests unitarios}
+
+Ubicación: \texttt{tests/test\_characteristic\_fn.py}. Verifica:
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{Sn vs reference}: la versión vectorizada coincide con
+    la implementación ingenua (suma sobre $j$ explícita) para varios $q$ y $\theta$.
+    \item \texttt{Sn translation invariance}: $S_n(X+c;\theta+c)=S_n(X;\theta)$.
+    \item \texttt{Sn\_multi vs loop}: \texttt{Sn\_multi\_theta} coincide con
+    iterar \texttt{Sn\_statistic}.
+    \item \texttt{argmin recovers center}: con $n=400$ normales,
+    \texttt{theta\_argmin\_Sn} recupera el centro a $\pm 0{,}3$.
+    \item \texttt{median/trimmed}: estimadores convergen al centro real.
+    \item \texttt{weights integrate to 1}: las densidades $w(t)$ integran $\approx 1$
+    sobre el soporte usado.
+    \item \texttt{bootstrap H0 level}: bajo $H_0$ la tasa de rechazo es razonable.
+    \item \texttt{bootstrap power gamma}: bajo $H_a$ (Gamma) hay potencia $>0{,}25$.
+\end{itemize}
+
+\textbf{Ejecutar:}
+\begin{lstlisting}[style=shellstyle]
+python tests/test_characteristic_fn.py
+\end{lstlisting}
+
+% =====================================================================
+\section{Dependencias}
+
+Las mismas que el Test 1 (\texttt{numpy}, \texttt{scipy}, \texttt{pandas},
+\texttt{matplotlib}). Probado con Python 3.11.
+
+% =====================================================================
+\section{Reproducir la simulación}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Tests unitarios:}
+    \begin{lstlisting}[style=shellstyle]
+python tests/test_characteristic_fn.py
+    \end{lstlisting}
+    \item \textbf{Sanity check rápido} (~7--10 min):
+    \begin{lstlisting}[style=shellstyle]
+python scripts/run_test2_simulation_parallel.py --quick
+    \end{lstlisting}
+    \item \textbf{Ejecución completa} (~60--90 min con 12 cores):
+    \begin{lstlisting}[style=shellstyle]
+python scripts/run_test2_simulation_parallel.py
+    \end{lstlisting}
+    \item \textbf{Resultados:} datos en \texttt{results/data/}, figuras
+    en \texttt{results/figures/}. Si \texttt{tn\_simulation\_summary.csv}
+    existe, el script también produce \texttt{compare\_tn\_vs\_sn\_*.png}.
+\end{enumerate}
+
+\begin{notebox}[title=Reproducibilidad]
+Semilla por defecto: \texttt{seed=2026}. Cada réplica recibe un seed
+único derivado (\texttt{seed + task\_idx}). Los resultados son
+\emph{exactos} entre corridas con la misma configuración.
+\end{notebox}
+
+% =====================================================================
+\section{Notas de diseño y comparación con \texorpdfstring{$T_n$}{Tn}}
+
+\paragraph{Costo computacional.} $T_n$ es $O(n)$ por evaluación (búsqueda
+sobre el grid de $2n$ puntos vía \texttt{searchsorted}); $S_n$ es
+$O(nK)$ con $K\approx 300$ por evaluación. Empíricamente: $S_n$ con
+estimador \texttt{median} es $\sim$5--10$\times$ más lento que $T_n$
+con \texttt{median}, y con \texttt{argmin} la relación cae a
+$\sim$2--3$\times$ porque el barrido vectorizado de $\theta$ amortiza
+muy bien el costo.
+
+\paragraph{Sensibilidad a $w$ y $q$.} El Test 2 introduce dos hiper-parámetros
+($w$, $q$) que no existen en $T_n$. Esto le da flexibilidad para
+adaptarse a tipos específicos de alternativa, pero requiere
+exploración. En la práctica:
+\begin{itemize}[leftmargin=*]
+    \item $q=2$ amplifica desviaciones grandes; $q=1$ es más robusto
+    (en presencia de outliers o colas pesadas como Cauchy).
+    \item Pesos $w$ concentrados cerca de 0 (\texttt{gauss\_0.5}) favorecen
+    alternativas con asimetría visible en las frecuencias bajas
+    (translaciones de masa, asimetría suave).
+    \item Pesos más anchos (\texttt{laplace\_1.0}) capturan asimetrías de
+    cola (Pareto, Weibull con $k$ pequeño).
+\end{itemize}
+
+\paragraph{Naturaleza del estadístico.} A diferencia de $T_n$, $S_n$ no
+es exactamente cero en muestras simétricas perfectas (porque
+$c_n(t)$ puede ser negativo en algunos $t$, y $c_s(t)=|c_n(t)|$
+captura ese signo). Esto es comportamiento esperado: el bootstrap
+absorbe esta dispersión bajo $H_0$ y el test sigue siendo válido.
+
+\vspace{1em}
+\hrule
+\vspace{0.5em}
+\begin{center}\small\itshape
+Documento generado a partir del código presente en el repositorio del proyecto.\\
+Ver también \texttt{documentacion\_test1.pdf} para la documentación del Test 1.
+\end{center}
+
+\end{document}
