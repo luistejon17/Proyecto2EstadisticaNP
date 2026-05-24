@@ -30,7 +30,7 @@ Los tamaños de muestra son $n\in\{20,40,80,160\}$, elegidos para que la potenci
 
 Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker (1987):
 \begin{itemize}
-  \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$) sobre una cuadrícula uniforme en el rango de la muestra.
+  \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$). En la Sección~\ref{sec:estim-theta} se detalla el esquema numérico: búsqueda local entre los promedios de Walsh de la muestra para $T_n$, y \texttt{L-BFGS-B} con gradiente analítico para $S_n$ (caso $q=2$).
   \item $\hat\theta_{\mathrm{med}} = \mathrm{mediana}(X_1,\dots,X_n)$.
   \item $\hat\theta_\alpha = \bar{X}_{0.1}$: media afeitada con fracción $0.1$ en cada cola.
 \end{itemize}

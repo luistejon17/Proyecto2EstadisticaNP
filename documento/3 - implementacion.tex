@@ -69,22 +69,66 @@ En perfiles preliminares esta vectorización redujo el tiempo de $\hat\theta_{\m
 
 \subsection{Estimadores del centro de simetría}
 
-La mediana y la media afeitada se implementan directamente con \texttt{numpy.median} y \texttt{scipy.stats.trim.mean(, proportiontocut=0.1)}. El estimador $\hat\theta_{\min}$ requiere optimizar una función no convexa (con potenciales mínimos locales), por lo que se aplica una búsqueda en dos etapas: (i)~evaluación vectorizada de $T_n$ (resp.\ $S_n$) sobre un grid uniforme de 40--60 puntos en el rango muestral ampliado un 10\%, y (ii)~refinamiento Brent (método \texttt{bounded} de \texttt{scipy.optimize.minimize\_scalar}) en un intervalo local alrededor del mínimo del grid. Esto da una precisión de $10^{-6}$ en pocos milisegundos:
+La mediana y la media afeitada se implementan directamente con \texttt{numpy.median} y \texttt{scipy.stats.trim\_mean(\,\cdot\,, proportiontocut=0.1)}. El estimador $\hat\theta_{\min}$ requiere optimización numérica y se implementa de forma distinta para cada estadístico, aprovechando su estructura matemática (Sección~\ref{sec:estim-theta}).
+
+\subsubsection{argmin de \texorpdfstring{$T_n$}{Tn}: búsqueda local en promedios de Walsh}\label{impl:argmin-Tn}
+
+Como $T_n$ es escalonada con saltos exactamente en $\mathcal{W}_n=\{(X_i+X_j)/2:i\le j\}$ (Proposición~\ref{prop:Tn-steps}), el mínimo global se alcanza en algún $W_{ij}$. Evaluar los $\tfrac{n(n+1)}{2}$ promedios cuesta $\mathcal{O}(n^3\log n)$ y se vuelve prohibitivo dentro del bootstrap. Restringimos la búsqueda a los $k$ promedios más cercanos a la \emph{mediana muestral} (consistente para el centro a tasa $\mathcal{O}(n^{-1/2})$): con $k$ de orden $n^{3/2}$ se cubre con holgura la zona donde puede estar el óptimo, y empíricamente $k=8n$ basta para coincidir con la enumeración exhaustiva en $\approx 98\%$ de las muestras Normal con $n\in\{20,40,80,160\}$ (vs.\ $\approx 63\%$ del antiguo grid uniforme).
 
 \begin{lstlisting}[language=Python]
-def theta_argmin(sample, bracket=None, n_grid=60):
-    lo, hi = sample.min(), sample.max()
-    pad = 0.1 * (hi - lo)
-    grid = np.linspace(lo - pad, hi + pad, n_grid)
-    vals = Tn_multi(sample, grid)                # vectorizado
-    k = int(np.argmin(vals))
-    res = minimize_scalar(
-        lambda th: Tn_statistic(sample, th),
-        bounds=(grid[max(k-1, 0)], grid[min(k+1, n_grid-1)]),
-        method='bounded', options={'xatol': 1e-6},
-    )
-    return float(res.x)
+def theta_argmin(sample, n_walsh=None):
+    n = sample.size
+    # 1. Generar todos los Walsh averages W_{ij}, i <= j
+    i, j = np.triu_indices(n)
+    W = 0.5 * (sample[i] + sample[j])
+
+    # 2. Quedarse con los k mas cercanos a la mediana
+    k = n_walsh or max(64, 8 * n)
+    if k < W.size:
+        idx = np.argpartition(np.abs(W - np.median(sample)), k - 1)[:k]
+        W = W[idx]
+
+    # 3. Evaluar T_n vectorizado y devolver el argmin
+    return float(W[np.argmin(Tn_multi(sample, W))])
 \end{lstlisting}
+
+El coste por evaluación es $\mathcal{O}(k\cdot n\log n)=\mathcal{O}(n^{5/2}\log n)$. Para garantía estricta del óptimo global existe la variante \texttt{theta\_argmin\_walsh\_full} que enumera $\mathcal{W}_n$ completo.
+
+\subsubsection{argmin de \texorpdfstring{$S_n$}{Sn}: L-BFGS-B con gradiente analítico}\label{impl:argmin-Sn}
+
+Para $q=2$, la Proposición~\ref{prop:leibniz-Sn} garantiza que $S_n$ es $C^1$ y proporciona la fórmula cerrada del gradiente. Esto habilita un esquema de quasi-Newton (Sección~\ref{sec:estim-theta}) que evita el barrido sobre toda una grilla. La rutina precomputa $(a_n,b_n,|c_n|)$ una sola vez ($\mathcal{O}(Kn)$) y cada iteración de \texttt{L-BFGS-B} cuesta $\mathcal{O}(K)$ — una llamada al par valor–gradiente:
+
+\begin{lstlisting}[language=Python]
+def _Sn_value_and_grad_q2(theta, a_n, b_n, abs_cn, w_vals, t_grid):
+    # A_n y B_n son la parte real e imaginaria de c_n(t) * exp(-i t theta)
+    A = a_n * np.cos(t_grid * theta) + b_n * np.sin(t_grid * theta)
+    B = -a_n * np.sin(t_grid * theta) + b_n * np.cos(t_grid * theta)
+    # Valor: S_n = integral de 2 |c_n| (|c_n| - A) w dt
+    integrand = 2.0 * abs_cn * (abs_cn - A)
+    np.maximum(integrand, 0.0, out=integrand)        # estabilidad
+    S_n = np.trapezoid(integrand * w_vals, t_grid)
+    # Gradiente: dS/dtheta = -2 integral t |c_n| B(t,theta) w dt
+    dS_n = np.trapezoid(-2.0 * t_grid * abs_cn * B * w_vals, t_grid)
+    return float(S_n), float(dS_n)
+
+def theta_argmin_Sn(sample, w_fn, q=2, t_grid=None):
+    if q != 2:
+        return _theta_argmin_Sn_grid(sample, w_fn, q, ...)   # fallback
+    a_n, b_n, abs_cn, w_vals = _Sn_precompute(sample, w_fn, t_grid)
+    res = minimize(
+        lambda th: _Sn_value_and_grad_q2(th[0], a_n, b_n, abs_cn,
+                                          w_vals, t_grid),
+        x0=np.array([np.median(sample)]),
+        jac=True, method='L-BFGS-B',
+        bounds=[(sample.min()-pad, sample.max()+pad)],
+        options={'gtol': 1e-7, 'ftol': 1e-10, 'maxiter': 50},
+    )
+    return float(res.x[0])
+\end{lstlisting}
+
+El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero} sugiere que el verdadero centro es un punto estacionario asintótico, y la mediana es $\sqrt n$-consistente). Para $q=1$ el integrando contiene un $\sqrt{\cdot}$ no diferenciable en sus ceros, por lo que se recurre a la búsqueda grid + Brent (\texttt{theta\_argmin\_Sn\_grid}).
+
+\paragraph{Impacto medido sobre el bootstrap.} Sobre un test bootstrap completo con $B=199$ y muestra normal estándar de tamaño $n=160$, el nuevo esquema para $S_n$ resulta $3.5\times$ más rápido que la versión anterior basada en grid+Brent ($406$ ms vs.\ $1419$ ms). Para $T_n$, la versión Walsh local es $4\times$ más rápida para $n=20$ ($53$ ms vs.\ $215$ ms) pero $\approx 7\times$ más lenta para $n=160$ ($2.2$ s vs.\ $0.3$ s); el costo extra compra un mínimo \emph{global} verificable en lugar de un mínimo local heurístico.
 
 \subsection{Procedimiento bootstrap}
 

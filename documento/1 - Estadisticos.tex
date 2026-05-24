@@ -33,3 +33,96 @@ Dada una muestra $X_1,\dots,X_n$, la función característica empírica es $c_n(
 S_n \;=\; \int_{-\infty}^{\infty}\bigl|c_n(t)e^{-it\hat\theta}-c_s(t)\bigr|^q\,w(t)\,dt,
 \end{equation}
 con $q\in\{1,2\}$ y $w$ una densidad simétrica. Bajo $H_0$ la parte imaginaria de $c_n(t)e^{-it\hat\theta}$ se anula y $S_n$ es pequeño; bajo asimetría no se anula y $S_n$ crece. El exponente $q$ controla la penalización ($q{=}2$ amplifica desviaciones grandes, $q{=}1$ es más robusto), y la densidad $w$ pondera las frecuencias: como $c_n(t)$ se vuelve ruidoso para $|t|$ grande, conviene concentrar la masa de $w$ cerca del origen. El p-valor se obtiene por un bootstrap análogo al de $T_n$, remuestreando de $sF_n(\hat\theta)$.
+
+\subsection{Estimación del centro de simetría}\label{sec:estim-theta}
+
+Ambos estadísticos requieren un estimador $\hat\theta$ del centro. Consideramos tres candidatos clásicos (Schuster y Barker, 1987): la mediana muestral $\hat\theta_{\mathrm{med}}=\mathrm{med}(X_1,\dots,X_n)$, la media afeitada $\hat\theta_\alpha=\bar X_{0.1}$, y el \emph{minimizador} del estadístico,
+\[
+\hat\theta_{\min} \;=\; \arg\min_{\theta\in\mathbb{R}} M_n(\theta),
+\qquad M_n\in\{T_n,\,S_n\}.
+\]
+Los dos primeros son explícitos y baratos; el tercero exige una optimización numérica cuyo costo es crítico, pues el procedimiento bootstrap repite $B{+}1$ veces el cálculo de $\hat\theta_{\min}$ por test. La estructura matemática de cada estadístico permite diseñar un optimizador adaptado: $T_n$ es escalonada y se resuelve por enumeración de candidatos discretos (\textbf{promedios de Walsh}); $S_n$ es suave y admite un esquema de \emph{quasi-Newton} basado en su gradiente analítico.
+
+\subsubsection{Argmin de $T_n$: promedios de Walsh}
+
+\begin{definicion}[Promedio de Walsh]\label{def:walsh}
+Sea $X_1,\dots,X_n$ una muestra. Los \emph{promedios de Walsh} son las $\binom{n}{2}+n=\tfrac{n(n+1)}{2}$ semisumas
+\[
+W_{ij} \;=\; \frac{X_i + X_j}{2}, \qquad 1\le i\le j\le n,
+\]
+donde el caso $i=j$ corresponde a la observación $X_i$. Denotamos $\mathcal{W}_n=\{W_{ij}:i\le j\}$.
+\end{definicion}
+
+\begin{proposicion}[Saltos de $T_n(\theta)$]\label{prop:Tn-steps}
+La función $\theta\mapsto T_n(\theta)$ es \emph{constante a trozos} (piecewise constant) sobre $\mathbb{R}$, y todas sus discontinuidades están contenidas en $\mathcal{W}_n$. En consecuencia,
+\[
+\arg\min_{\theta\in\mathbb{R}} T_n(\theta) \quad\text{es una unión de intervalos cuyas fronteras son elementos de } \mathcal{W}_n,
+\]
+y existe $W^\star\in\mathcal{W}_n$ tal que $T_n(W^\star)=\min_\theta T_n(\theta)$.
+\end{proposicion}
+
+\begin{proof}
+A partir de la identidad
+\[
+F_n(x)-sF_n(x;\theta) \;=\; \tfrac{1}{2}\bigl(F_n(x)-1+F_n((2\theta-x)^-)\bigr),
+\]
+el supremo en $x$ se evalúa en el conjunto de saltos $\{X_1,\dots,X_n\}\cup\{2\theta-X_1,\dots,2\theta-X_n\}$. Variar $\theta$ traslada únicamente los puntos $2\theta-X_j$. La función $F_n((2\theta-x)^-)$, evaluada en cualquier punto del conjunto anterior, solo cambia cuando algún $2\theta-X_j$ cruza por algún $X_i$, es decir, cuando $\theta$ atraviesa la semisuma $W_{ij}=(X_i+X_j)/2$. Entre dos elementos consecutivos de $\mathcal{W}_n$ todas las indicadoras involucradas son constantes y por tanto $T_n(\theta)$ es constante. El argmin, al ser una intersección de cerrados, contiene a su clausura, cuyos extremos son por construcción Walsh promedios.
+\end{proof}
+
+La Proposición~\ref{prop:Tn-steps} reduce el problema continuo a una búsqueda discreta sobre un conjunto finito de $\tfrac{n(n+1)}{2}$ candidatos. Esto es la base teórica del estimador localizado descrito en la Sección~\ref{impl:argmin-Tn}.
+
+\subsubsection{Argmin de $S_n$: diferenciación bajo el signo integral}
+
+Para $S_n$ con $q=2$, el integrando es una función suave de $\theta$ y de $t$, lo que permite usar métodos basados en el gradiente. Se requiere justificar el intercambio $\partial_\theta\!\int = \int\!\partial_\theta$.
+
+\begin{proposicion}[Leibniz para $S_n$, $q=2$]\label{prop:leibniz-Sn}
+Sea $w:\mathbb{R}\to\mathbb{R}_{\ge 0}$ una densidad simétrica con primer momento absoluto finito, $\int|t|w(t)\,dt<\infty$ (caso Normal y Laplace). Defínase
+\[
+S_n(\theta) \;=\; \int_{-\infty}^{\infty} \bigl|c_n(t)e^{-it\theta}-|c_n(t)|\bigr|^2 w(t)\,dt.
+\]
+Entonces $S_n$ es de clase $C^1$ en $\theta$ y
+\begin{equation}\label{eq:grad-Sn}
+\frac{\partial S_n}{\partial \theta}(\theta) \;=\; -2\int_{-\infty}^{\infty} t\,|c_n(t)|^2\,\sin\!\bigl(\Phi_n(t)-t\theta\bigr)\,w(t)\,dt,
+\end{equation}
+donde $\Phi_n(t)=\arg c_n(t)$ es la fase de la función característica empírica.
+\end{proposicion}
+
+\begin{proof}
+Escribiendo $A_n(t;\theta)=a_n(t)\cos(t\theta)+b_n(t)\sin(t\theta)$ con $a_n=\Re c_n$ y $b_n=\Im c_n$, se tiene
+\[
+\bigl|c_n e^{-it\theta}-|c_n|\bigr|^2 \;=\; 2|c_n|\bigl(|c_n|-A_n(t;\theta)\bigr).
+\]
+Sea $g(t,\theta)$ ese integrando. La derivada parcial es
+\[
+\frac{\partial g}{\partial \theta}(t,\theta) \;=\; -2|c_n(t)|\bigl(-a_n(t)\,t\sin(t\theta)+b_n(t)\,t\cos(t\theta)\bigr)
+\;=\; -2t\,|c_n(t)|\,B_n(t;\theta),
+\]
+con $B_n(t;\theta)=-a_n(t)\sin(t\theta)+b_n(t)\cos(t\theta)$. Como $|a_n|,|b_n|\le 1$, se tiene la cota uniforme en $\theta$,
+\[
+\bigl|\partial_\theta g(t,\theta)\bigr|\,w(t) \;\le\; 4|t|\,w(t),
+\]
+y $\int 4|t|w(t)\,dt<\infty$ por hipótesis. El Teorema de convergencia dominada (regla de Leibniz, ver p.\,ej. Folland \emph{Real Analysis}, Thm.\,2.27) permite intercambiar derivada e integral, obteniendo
+\[
+\frac{\partial S_n}{\partial \theta} \;=\; \int \partial_\theta g(t,\theta)\,w(t)\,dt \;=\; -2\int t\,|c_n(t)|\,B_n(t;\theta)\,w(t)\,dt.
+\]
+Usando $|c_n|\,B_n = |c_n|^2 \sin(\Phi_n-t\theta)$ (un cálculo trigonométrico) se obtiene la forma~\eqref{eq:grad-Sn}.
+\end{proof}
+
+\begin{corolario}\label{cor:H0-gradient-zero}
+Si $X_1,\dots,X_n$ es i.i.d.\ con distribución simétrica respecto a $\theta_0$, entonces $\mathbb{E}\bigl[\partial_\theta S_n(\theta_0)\bigr]=0$. En particular, el verdadero centro $\theta_0$ es un punto estacionario asintótico de $S_n$.
+\end{corolario}
+\begin{proof}
+Bajo simetría en $\theta_0$, la distribución de $c_n(t)e^{-it\theta_0}$ es real (Teorema~\ref{thm:fc}), luego $\mathbb{E}[B_n(t;\theta_0)]=0$ para todo $t$. Aplicando esperanza a~\eqref{eq:grad-Sn} y usando Fubini (justificado por las mismas cotas que arriba) se concluye.
+\end{proof}
+
+\subsubsection{Iteración de quasi-Newton}
+
+La existencia del gradiente \eqref{eq:grad-Sn} habilita métodos iterativos de descenso. El más simple es el \emph{descenso por gradiente}: dado $\theta^{(0)}$, iterar
+\[
+\theta^{(k+1)} \;=\; \theta^{(k)} - \eta_k\, S_n'(\theta^{(k)}), \qquad k=0,1,2,\dots
+\]
+con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-BFGS-B} (Byrd et al., 1995), un método de quasi-Newton de memoria limitada que aproxima el Hessiano $S_n''$ a partir de los últimos $m$ pares $(\Delta\theta,\Delta S_n')$ y elige $\eta_k$ por búsqueda lineal con condiciones de Wolfe. En dimensión $1$, esto se reduce esencialmente a la regla de la secante
+\[
+\theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
+\]
+salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto (Nocedal y Wright, \emph{Numerical Optimization}, Thm.\,3.7), de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.
