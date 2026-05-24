@@ -69,7 +69,7 @@ En perfiles preliminares esta vectorización redujo el tiempo de $\hat\theta_{\m
 
 \subsection{Estimadores del centro de simetría}
 
-La mediana y la media afeitada se implementan directamente con \texttt{numpy.median} y \texttt{scipy.stats.trim\_mean(\,\cdot\,, proportiontocut=0.1)}. El estimador $\hat\theta_{\min}$ requiere optimizar una función no convexa (con potenciales mínimos locales), por lo que se aplica una búsqueda en dos etapas: (i)~evaluación vectorizada de $T_n$ (resp.\ $S_n$) sobre un grid uniforme de 40--60 puntos en el rango muestral ampliado un 10\%, y (ii)~refinamiento Brent (método \texttt{bounded} de \texttt{scipy.optimize.minimize\_scalar}) en un intervalo local alrededor del mínimo del grid. Esto da una precisión de $10^{-6}$ en pocos milisegundos:
+La mediana y la media afeitada se implementan directamente con \texttt{numpy.median} y \texttt{scipy.stats.trim.mean(, proportiontocut=0.1)}. El estimador $\hat\theta_{\min}$ requiere optimizar una función no convexa (con potenciales mínimos locales), por lo que se aplica una búsqueda en dos etapas: (i)~evaluación vectorizada de $T_n$ (resp.\ $S_n$) sobre un grid uniforme de 40--60 puntos en el rango muestral ampliado un 10\%, y (ii)~refinamiento Brent (método \texttt{bounded} de \texttt{scipy.optimize.minimize\_scalar}) en un intervalo local alrededor del mínimo del grid. Esto da una precisión de $10^{-6}$ en pocos milisegundos:
 
 \begin{lstlisting}[language=Python]
 def theta_argmin(sample, bracket=None, n_grid=60):
