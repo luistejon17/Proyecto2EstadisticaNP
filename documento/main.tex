@@ -90,57 +90,49 @@
 \newpage
 \section*{Checklist del Proyecto 2: Estadística No Paramétrica}
 
-\noindent\textcolor{green}{$\blacksquare$} Gabriel \quad
-\textcolor{red}{$\blacksquare$} Ing.\ Juan David \quad
-\textcolor{blue}{$\blacksquare$} Luis Tejón \quad
-\textcolor{orange}{$\blacksquare$} Claudio (IA) \quad
-\textcolor{purple}{$\blacksquare$} Todos
-
 \subsection*{Fase 1: Estructura y Configuración del Repositorio}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Separar la lógica de ejecución en Jupyter Notebooks (\texttt{0\_generar\_muestras}, \texttt{1\_procesar\_estadisticos}, \texttt{2\_graficos}).
-    \item[\textbf{[ ]}] \textcolor{purple}{(Todos)} Revisar que la estructura modular del código de Claudio sea clara y navegable.
+    \item[\textbf{[$\checkmark$]}] Separar la lógica de ejecución en Jupyter Notebooks.
+    \item[\textbf{[$\checkmark$]}] Revisar que la estructura modular del código sea clara y navegable.
 \end{itemize}
 
 \subsection*{Fase 2: Implementación Matemática}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{orange}{(Claudio)} \textbf{Hacer TODO el código.}
-    \item[\textbf{[ ]}] \textcolor{orange}{(Claudio)} Documentar cada función con descripción, parámetros, retorno y ejemplo de uso.
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Revisar que la simetrización $sF_n(\theta)$ y el estadístico $T_n$ estén correctamente implementados; contrastar con cálculo manual en muestra pequeña simétrica.
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Revisar que $c_n(t)$ y el estadístico $S_n$ estén correctos para $q=1$ y $q=2$; verificar que $c_s(t)=\|c_n(t)\|$.
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Revisar los tres estimadores del centro de simetría (argmin, mediana, media afeitada) para ambos tests.
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Revisar el procedimiento bootstrap de $T_n$: verificar que las remuestras se generan de $sF_n(\tilde\theta)$ y que el p-valor se calcula correctamente.
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Revisar el procedimiento bootstrap de $S_n$ y las funciones de peso $w(t)$ candidatas.
+    \item[\textbf{[$\checkmark$]}] Revisar que la simetrización $sF_n(\theta)$ y el estadístico $T_n$ estén correctamente implementados; contrastar con cálculo manual en muestra pequeña simétrica.
+    \item[\textbf{[$\checkmark$]}] Revisar que $c_n(t)$ y el estadístico $S_n$ estén correctos para $q=1$ y $q=2$; verificar que $c_s(t)=\|c_n(t)\|$.
+    \item[\textbf{[$\checkmark$]}] Revisar los tres estimadores del centro de simetría (argmin, mediana, media afeitada) para ambos tests.
+    \item[\textbf{[$\checkmark$]}] Revisar el procedimiento bootstrap de $T_n$: verificar que las remuestras se generan de $sF_n(\tilde\theta)$ y que el p-valor se calcula correctamente.
+    \item[\textbf{[$\checkmark$]}] Revisar el procedimiento bootstrap de $S_n$ y las funciones de peso $w(t)$ candidatas.
 \end{itemize}
 
 \subsection*{Fase 3: Diseño y Ejecución de Simulaciones}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Realizar estudio piloto para fijar los tamaños muestrales $n$ adecuados.
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Diseñar la matriz experimental completa: 2 tests $\times$ 3 estimadores $\times$ $w(t)$ candidatas $\times$ $q\in\{1,2\}$ $\times$ distribuciones $\times$ tamaños $n$.
-    \item[\textbf{[ ]}] (Cualquiera) Ejecutar simulaciones definitivas con $B=500$ y $R$ réplicas Monte Carlo acordadas.
+    \item[\textbf{[$\checkmark$]}] Realizar estudio piloto para fijar los tamaños muestrales $n$ adecuados.
+    \item[\textbf{[$\checkmark$]}] Diseñar la matriz experimental completa: 2 tests $\times$ 3 estimadores $\times$ $w(t)$ candidatas $\times$ $q\in\{1,2\}$ $\times$ distribuciones $\times$ tamaños $n$.
+    \item[\textbf{[$\checkmark$]}] Ejecutar simulaciones definitivas con $B=500$ y $R$ réplicas Monte Carlo acordadas.
 \end{itemize}
 
 \subsection*{Fase 4: Visualización y Gráficos}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Heatmap de potencia empírica por test, estimador de $\theta$ y distribución alternativa.
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Comparativa de potencia para distintas $w(t)$ y para $q=1$ vs.\ $q=2$ en $S_n$.
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Densidades teóricas de las distribuciones empleadas (ilustrativo).
+    \item[\textbf{[$\checkmark$]}] Heatmap de potencia empírica por test, estimador de $\theta$ y distribución alternativa.
+    \item[\textbf{[$\checkmark$]}] Comparativa de potencia para distintas $w(t)$ y para $q=1$ vs.\ $q=2$ en $S_n$.
+    \item[\textbf{[$\checkmark$]}] Densidades teóricas de las distribuciones empleadas (ilustrativo).
 \end{itemize}
 
 \subsection*{Fase 5: Redacción del Informe}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Enunciar el resultado teórico de Arcones \& Giné que justifica la validez del bootstrap (sin demostración).
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Metodología (sección 2): protocolo Monte Carlo, diseño experimental y estimadores del centro de simetría.
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementación (sección 3): descripción del código con fragmentos clave, apoyándose en la documentación de Claudio.
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Resultados: control del Error Tipo I y cumplimiento del nivel bajo $H_0$.
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Resultados: potencia empírica bajo $H_a$ y comparativa $T_n$ vs.\ $S_n$.
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Resultados: tiempos de ejecución y análisis de complejidad computacional.
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Discusión: ¿qué estimador del centro funciona mejor? ¿qué test es preferible y en qué escenarios?
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Discusión: ¿cómo afectan las distintas $w(t)$ y la elección de $q$ al desempeño de $S_n$?
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Discusión: tradeoff entre costo computacional y potencia.
-    \item[\textbf{[ ]}] \textcolor{purple}{(Todos)} Conclusiones (sección 6): ¿cuál de los dos tests es preferible considerando potencia, nivel y costo?
-    \item[\textbf{[ ]}] \textcolor{purple}{(Todos)} Revisión final del documento (ortografía, coherencia notacional, citas).
-    \item[\textbf{[ ]}] (Cualquiera) Subir el informe y código a Bloque Neón antes del \textbf{miércoles 27 de mayo de 2026 a las 11:00 pm}.
+    \item[\textbf{[$\checkmark$]}] Enunciar el resultado teórico de Arcones \& Giné que justifica la validez del bootstrap (sin demostración).
+    \item[\textbf{[$\checkmark$]}] Metodología (sección 2): protocolo Monte Carlo, diseño experimental y estimadores del centro de simetría.
+    \item[\textbf{[$\checkmark$]}] Implementación (sección 3): descripción del código con fragmentos clave.
+    \item[\textbf{[ ]}] Resultados: control del Error Tipo I y cumplimiento del nivel bajo $H_0$.
+    \item[\textbf{[ ]}] Resultados: potencia empírica bajo $H_a$ y comparativa $T_n$ vs.\ $S_n$.
+    \item[\textbf{[ ]}] Resultados: tiempos de ejecución y análisis de complejidad computacional.
+    \item[\textbf{[ ]}] Discusión: ¿qué estimador del centro funciona mejor? ¿qué test es preferible y en qué escenarios?
+    \item[\textbf{[ ]}] Discusión: ¿cómo afectan las distintas $w(t)$ y la elección de $q$ al desempeño de $S_n$?
+    \item[\textbf{[ ]}] Discusión: tradeoff entre costo computacional y potencia.
+    \item[\textbf{[ ]}] Conclusiones (sección 6): ¿cuál de los dos tests es preferible considerando potencia, nivel y costo?
+    \item[\textbf{[ ]}] Revisión final del documento (ortografía, coherencia notacional, citas).
+    \item[\textbf{[ ]}] Subir el informe y código a Bloque Neón antes del \textbf{miércoles 27 de mayo de 2026 a las 11:00 pm}.
 \end{itemize}
 
 \end{document}
