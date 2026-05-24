@@ -1,14 +1,14 @@
 \subsection{Un estadístico de remuestreo tipo Kolmogorov-Smirnov}
-Una variable aleato
+Una variable aleatoria es simétrica si y solo si
 
 \[
 P(A)=P(2\theta-A),
 \qquad \forall A \text{ medible}.
 \]
 
-Esta definición expresa que la probabilidad asignada a una región situada a la derecha de \(\theta\) coincide con la probabilidad de su reflejo respecto al mismo punto. En consecuencia, si una distribución posee simetría alrededor de \(\theta\), entonces la transformación \(X\mapsto 2\theta-X\) deja invariante la ley de la variable aleatoria.
+Esto quiere decir que la probabilidad asignada a una región situada a la derecha de \(\theta\) es igual a la probabilidad de su reflejo respecto al mismo punto. En consecuencia, si una distribución posee simetría alrededor de \(\theta\), entonces la transformación \(X\mapsto 2\theta-X\) deja invariante la distribucion de la variable aleatoria.
 
-Dada una muestra \(X_1,\dots,X_n\), la distribución empírica se define como
+Apartir de una muestra \(X_1,\dots,X_n\), la distribución empírica se define como
 
 \[
 F_n(x)=\frac{1}{n}\sum_{i=1}^{n}\mathbf{1}_{\{X_i\leq x\}},
@@ -48,20 +48,7 @@ donde
 \sup_{x\in\mathbb{R}}|G(x)|
 \]
 
-denota la norma supremo y \(\hat{\theta}\) corresponde a un estimador del centro de simetría. En este proyecto se consideran tres alternativas para estimar dicho centro:
-
-\begin{itemize}
-    \item El minimizador de \(T_n\), es decir,
-    \[
-    \hat{\theta}
-    =
-    \arg\min_{\theta} T_n;
-    \]
-
-    \item La mediana muestral;
-
-    \item Una media recortada (trimmed mean).
-\end{itemize}
+denota la norma supremo y \(\hat{\theta}\) corresponde a un estimador del centro de simetría. 
 
 La interpretación del estadístico \(T_n\) es análoga a la del test clásico de Kolmogorov--Smirnov: mide la discrepancia máxima entre dos distribuciones acumuladas. En este caso, la comparación se realiza entre la distribución empírica original y su versión simétrica estimada. Valores pequeños de \(T_n\) sugieren compatibilidad con la hipótesis de simetría, mientras que valores grandes indican evidencia contra dicha hipótesis.
 
@@ -90,9 +77,7 @@ donde \(F_n^{*(b)}\) es la distribución empírica bootstrap y \(\hat{\theta}^{*
 T_n^{*(1)},\dots,T_n^{*(B)}
 \]
 
-permite aproximar la distribución nula del estadístico y calcular p-valores de manera no paramétrica.
-
-Este enfoque resulta especialmente atractivo porque evita depender de aproximaciones asintóticas difíciles de derivar y permite adaptar automáticamente la inferencia a la forma de la distribución subyacente. Además, el procedimiento facilita comparar el efecto de distintas elecciones para el estimador del centro de simetría y analizar el desempeño del test en términos de nivel, potencia y complejidad computacional frente a distribuciones simétricas y asimétricas.
+permite aproximar la distribución nula del estadístico y calcular p-valores de manera no paramétrica. Esto resulta llamativo porque evita depender de aproximaciones asintóticas.
 
 
 \subsection{La función característica empírica}
