@@ -1,0 +1,554 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- Paquetes ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\geometry{margin=2.4cm}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\tcbuselibrary{listings, skins, breakable}
+\usepackage{titlesec}
+\usepackage{parskip}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  urlcolor=blue!50!black,
+  citecolor=black,
+  pdftitle={Documentación Test 1 - Proyecto 2 Estadística No Paramétrica},
+  pdfauthor={Equipo Proyecto 2}
+}
+
+% --- Estilos código ---
+\definecolor{codebg}{RGB}{246,248,250}
+\definecolor{codekw}{RGB}{170,13,145}
+\definecolor{codestr}{RGB}{196,26,22}
+\definecolor{codecmt}{RGB}{93,108,121}
+\definecolor{codenum}{RGB}{28,0,207}
+
+\lstdefinestyle{pystyle}{
+  language=Python,
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecmt}\itshape,
+  numberstyle=\tiny\color{codecmt},
+  numbers=left,
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{black!20},
+  framesep=4pt,
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {ñ}{{\~n}}1 {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1
+           {Ú}{{\'U}}1 {Ñ}{{\~N}}1 {¿}{{?`}}1 {¡}{{!`}}1
+}
+
+\lstdefinestyle{shellstyle}{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{black!88},
+  basicstyle=\ttfamily\footnotesize\color{white},
+  frame=single,
+  rulecolor=\color{black},
+  framesep=4pt,
+  breaklines=true,
+}
+
+\titleformat{\section}{\Large\bfseries\color{blue!50!black}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{black!75}}{\thesubsection}{0.5em}{}
+
+\newtcolorbox{notebox}[1][]{
+  enhanced, breakable,
+  colback=yellow!8, colframe=orange!70!black,
+  boxrule=0.6pt, sharp corners,
+  fonttitle=\bfseries,
+  #1
+}
+
+\title{\textbf{Documentación del código --- Test 1 (T\textsubscript{n}, Schuster--Barker)}\\[0.5em]
+\large Proyecto 2: Estadística No Paramétrica}
+\author{Equipo: Gabriel Sánchez, Juan David Duarte, Luis Tejón, Claudio (IA)}
+\date{Mayo 2026}
+
+\begin{document}
+\maketitle
+
+\hrule
+\vspace{0.5em}
+\begin{quote}\small\itshape
+Este documento explica el código implementado para el \textbf{Test 1} del Proyecto 2:
+el test bootstrap de simetría univariada basado en el estadístico tipo Kolmogorov--Smirnov
+de Schuster \& Barker (1987). Cubre la motivación matemática, la estructura del repositorio,
+la descripción de cada módulo y las instrucciones para reproducir las simulaciones.
+\end{quote}
+\vspace{0.5em}
+\hrule
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{Visión general}
+
+El Test 1 evalúa la hipótesis nula
+\[
+  H_0 : F \text{ es simétrica respecto a algún } \theta,
+\]
+frente a la alternativa $H_a: F$ no simétrica, usando el estadístico
+\[
+  T_n(\tilde\theta) \;=\; \sqrt{n}\,\bigl\| F_n - sF_n(\,\cdot\,;\tilde\theta) \bigr\|_\infty,
+\]
+donde $F_n$ es la cdf empírica de la muestra y $sF_n(\,\cdot\,;\theta)$ es su \emph{simetrización} respecto a $\theta$, es decir, la cdf empírica de los $2n$ puntos $\{X_1,\dots,X_n, 2\theta-X_1,\dots,2\theta-X_n\}$.
+
+Dado que la distribución de $T_n$ bajo $H_0$ depende de la $F$ desconocida, se usa el procedimiento bootstrap de Schuster--Barker: se generan $B$ remuestras de $sF_n(\,\cdot\,;\tilde\theta)$ y se aproxima el p-valor con la proporción de réplicas que superan el estadístico observado.
+
+\subsection{Tres estimadores del centro de simetría}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{argmin:} $\tilde\theta = \arg\min_\theta T_n(\theta)$ (minimiza la propia norma KS).
+    \item \textbf{mediana:} $\tilde\theta = \mathrm{median}(X_1,\dots,X_n)$.
+    \item \textbf{media afeitada:} $\tilde\theta = \overline X_\alpha$ con $\alpha = 0.1$ por defecto.
+\end{itemize}
+
+\subsection{Diseño experimental}
+\begin{itemize}[leftmargin=*]
+    \item Distribuciones bajo $H_0$: Uniforme(1,3), Cauchy(loc=2, scale=1) y opcionalmente Normal.
+    \item Distribuciones bajo $H_a$: Gamma(2,1), Weibull(1.5,1), Pareto(3,1).
+    \item Tamaños muestrales: $n \in \{20, 40, 80, 160\}$.
+    \item Réplicas bootstrap: $B = 500$.
+    \item Réplicas Monte Carlo: $R = 300$ por celda.
+    \item Nivel: $\alpha = 0.05$.
+\end{itemize}
+
+% =====================================================================
+\section{Estructura del repositorio}
+
+\begin{lstlisting}[basicstyle=\ttfamily\small, frame=single, backgroundcolor=\color{codebg}]
+Proyecto2EstadisticaNP/
+|-- src/
+|   |-- __init__.py
+|   |-- statistics_ks.py          # T_n y estimadores del centro
+|   |-- bootstrap_ks.py           # Procedimiento bootstrap
+|   |-- distributions.py          # Generadores de muestras (H_0 y H_a)
+|   |-- simulation.py             # Estudio MC secuencial
+|   |-- simulation_parallel.py    # Estudio MC paralelizado
+|   |-- plotting.py               # Graficas de los resultados
+|
+|-- scripts/
+|   |-- run_test1_simulation.py            # Script CLI secuencial
+|   |-- run_test1_simulation_parallel.py   # Script CLI paralelizado (recomendado)
+|
+|-- tests/
+|   |-- test_statistics_ks.py     # Tests unitarios
+|
+|-- results/
+|   |-- data/                     # CSVs generados
+|   |-- figures/                  # PNG generados
+|
+|-- documento/                    # Informe LaTeX del proyecto
+|-- documentacion/                # (este documento)
+\end{lstlisting}
+
+% =====================================================================
+\section{Módulos del paquete \texttt{src/}}
+
+\subsection{\texttt{statistics\_ks.py} --- estadístico \texorpdfstring{$T_n$}{Tn} y estimadores}
+
+Implementa la simetrización empírica y el estadístico $T_n$ de forma vectorizada para evaluar muchos $\theta$ simultáneamente.
+
+\paragraph{Función núcleo:} \texttt{Tn\_multi(sample, thetas)}.
+Para cada $\theta$ en \texttt{thetas} construye el grid $\{X_i\}\cup\{2\theta - X_j\}$ y evalúa
+\[
+  \mathrm{diff}(x) = \tfrac{1}{2}\bigl(F_n(x) - 1 + F_n((2\theta - x)^-)\bigr),
+\]
+usando \texttt{np.searchsorted}. El estadístico es $\sqrt n\cdot\sup_x|\mathrm{diff}(x)|$.
+
+\begin{lstlisting}[style=pystyle, caption={Vectorización de $T_n$ sobre múltiples $\theta$}]
+def Tn_multi(sample, thetas):
+    x = np.asarray(sample, dtype=float)
+    n = x.size
+    x_sorted = np.sort(x)
+    th = np.asarray(thetas, dtype=float)
+
+    refl = 2.0 * th[:, None] - x_sorted[None, :]
+    grid = np.concatenate(
+        [np.broadcast_to(x_sorted, refl.shape), refl], axis=1
+    )
+
+    Fn = np.searchsorted(x_sorted, grid, side="right") / n
+    arg = 2.0 * th[:, None] - grid
+    Fn_minus = np.searchsorted(x_sorted, arg, side="left") / n
+
+    diff = 0.5 * (Fn - 1.0 + Fn_minus)
+    sup = np.max(np.abs(diff), axis=1)
+    return np.sqrt(n) * sup
+\end{lstlisting}
+
+\paragraph{Estimadores del centro.}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{theta\_median(sample)}: \texttt{np.median(sample)}.
+    \item \texttt{theta\_trimmed(sample, trim=0.1)}: \texttt{scipy.stats.trim\_mean}.
+    \item \texttt{theta\_argmin(sample, n\_grid=60)}: búsqueda en dos etapas
+    \begin{enumerate}
+        \item Grid uniforme de 60 puntos en el rango muestral ampliado un 10\,\%.
+        \item Refinamiento local con \texttt{scipy.optimize.minimize\_scalar} (método de Brent) en el sub-intervalo del mejor punto del grid.
+    \end{enumerate}
+\end{itemize}
+
+El diccionario \texttt{ESTIMATORS} mapea los nombres \texttt{"argmin"}, \texttt{"median"}, \texttt{"trimmed"} a las funciones, permitiendo selección por cadena en el resto del paquete.
+
+% ------------------------------------
+\subsection{\texttt{bootstrap\_ks.py} --- procedimiento bootstrap}
+
+Implementa el algoritmo de Schuster--Barker:
+\begin{enumerate}[leftmargin=*]
+    \item Estima $\tilde\theta$ con el estimador elegido sobre la muestra original.
+    \item Calcula $T_{\text{obs}} = T_n(X; \tilde\theta)$.
+    \item Construye el \emph{soporte simetrizado} $\{X_i, 2\tilde\theta - X_i\}$ ($2n$ puntos con masa uniforme): esto es equivalente a muestrear de $sF_n(\,\cdot\,;\tilde\theta)$.
+    \item Para $b = 1,\dots,B$:
+    \begin{itemize}
+        \item Remuestra $Y_1,\dots,Y_n$ con reemplazo del soporte simetrizado.
+        \item Recalcula $\tilde\theta^*$ sobre la remuestra (mismo estimador).
+        \item Calcula $T_n^*(b) = T_n(Y; \tilde\theta^*)$.
+    \end{itemize}
+    \item p-valor bootstrap (con corrección de continuidad):
+    \[
+      p = \frac{1 + \#\{T_n^*(b) \geq T_{\text{obs}}\}}{B+1}.
+    \]
+\end{enumerate}
+
+\begin{lstlisting}[style=pystyle, caption={Núcleo del bootstrap simétrico}]
+def bootstrap_test_Tn(sample, estimator="argmin", B=500, rng=None):
+    if rng is None:
+        rng = np.random.default_rng()
+    est_fn = ESTIMATORS[estimator] if isinstance(estimator, str) else estimator
+
+    x = np.asarray(sample, dtype=float)
+    n = x.size
+    theta_hat = est_fn(x)
+    T_obs = Tn_statistic(x, theta_hat)
+    support = symmetrized_sample(x, theta_hat)
+
+    T_boot = np.empty(B, dtype=float)
+    for b in range(B):
+        y = rng.choice(support, size=n, replace=True)
+        theta_b = est_fn(y)
+        T_boot[b] = Tn_statistic(y, theta_b)
+
+    p_val = (1.0 + np.sum(T_boot >= T_obs)) / (B + 1.0)
+    return BootstrapResult(...)
+\end{lstlisting}
+
+El resultado es un \texttt{BootstrapResult} (dataclass) con: \texttt{statistic}, \texttt{p\_value}, \texttt{theta\_hat}, \texttt{boot\_statistics}, \texttt{estimator\_name}, \texttt{B} y la propiedad \texttt{reject} (\texttt{p\_value < 0.05}).
+
+% ------------------------------------
+\subsection{\texttt{distributions.py} --- generadores de muestras}
+
+Define el dataclass \texttt{DistSpec(name, sampler, theta\_true, under\_h0)} y factorías para cada distribución.
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Factoría & Distribución & Centro $\theta$ \\
+\midrule
+\texttt{uniform\_h0(1.0, 3.0)} & Uniforme$(1,3)$ & $2.0$ \\
+\texttt{cauchy\_h0(2.0, 1.0)} & Cauchy(loc=2, scale=1) & $2.0$ \\
+\texttt{normal\_h0(0.0, 1.0)} & Normal estándar (opcional) & $0.0$ \\
+\texttt{gamma\_ha(2.0, 1.0)} & Gamma$(k{=}2, \theta{=}1)$ & --- \\
+\texttt{weibull\_ha(1.5, 1.0)} & Weibull$(k{=}1.5)$ & --- \\
+\texttt{pareto\_ha(3.0, 1.0)} & Pareto/Lomax$(a{=}3)$ & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Los catálogos por defecto se obtienen con \texttt{default\_h0\_specs()} y \texttt{default\_ha\_specs()}.
+
+% ------------------------------------
+\subsection{\texttt{simulation.py} --- estudio Monte Carlo secuencial}
+
+Configurable vía la dataclass \texttt{SimConfig}:
+\begin{lstlisting}[style=pystyle]
+@dataclass
+class SimConfig:
+    sample_sizes: tuple[int, ...] = (20, 40, 80, 160)
+    estimators: tuple[str, ...] = ("argmin", "median", "trimmed")
+    B: int = 500
+    R: int = 300
+    alpha: float = 0.05
+    seed: int = 2026
+    progress: bool = True
+\end{lstlisting}
+
+\texttt{run\_simulation(specs, config)} itera sobre (distribución $\times$ $n$ $\times$ estimador $\times$ réplica) y devuelve un DataFrame con una fila por réplica (columnas: \texttt{dist}, \texttt{under\_h0}, \texttt{n}, \texttt{estimator}, \texttt{rep}, \texttt{statistic}, \texttt{p\_value}, \texttt{reject}, \texttt{theta\_hat}, \texttt{time\_s}).
+
+\texttt{summarize(df, alpha)} agrega por celda y calcula:
+\[
+  \widehat{\mathrm{tasa\_rechazo}}, \quad
+  \overline{p}, \quad
+  \overline{T_n}, \quad
+  \overline{t}_{\text{s}}, \quad
+  \mathrm{SE} = \sqrt{\hat p (1-\hat p)/R}.
+\]
+
+% ------------------------------------
+\subsection{\texttt{simulation\_parallel.py} --- versión paralelizada}
+
+Usa \texttt{concurrent.futures.ProcessPoolExecutor} para distribuir las réplicas entre los núcleos disponibles. Cada tarea es independiente, con seed único = \texttt{config.seed + task\_idx}, garantizando reproducibilidad.
+
+\begin{notebox}[title=Importante (Windows)]
+El script llamador \textbf{debe} usar \texttt{if \_\_name\_\_ == "\_\_main\_\_":} para que el \emph{spawn} de procesos funcione correctamente.
+\end{notebox}
+
+Como las funciones \texttt{sampler} no son \emph{picklables} si se construyen con \emph{closures}, se mantiene un \texttt{\_SPEC\_REGISTRY} que mapea el nombre de cada distribución a la factoría que la genera. Cada worker reconstruye la \texttt{DistSpec} a partir de (módulo, factoría, kwargs).
+
+Por defecto usa \texttt{os.cpu\_count() - 1} workers. Devuelve el mismo DataFrame que la versión secuencial.
+
+% ------------------------------------
+\subsection{\texttt{plotting.py} --- visualizaciones}
+
+Cinco funciones que reciben el DataFrame agregado y escriben PNG (300 dpi) en \texttt{results/figures/}:
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Función & Salida \\
+\midrule
+\texttt{plot\_type\_i\_error}     & \texttt{tn\_type\_i\_error.png} \\
+\texttt{plot\_power\_curves}      & \texttt{tn\_power\_curves.png} \\
+\texttt{plot\_runtime}            & \texttt{tn\_runtime.png} \\
+\texttt{plot\_power\_vs\_cost}    & \texttt{tn\_power\_vs\_cost.png} \\
+\texttt{plot\_pvalue\_distribution\_h0} & \texttt{tn\_pvalue\_h0.png} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================
+\section{Scripts ejecutables}
+
+\subsection{Versión secuencial}
+\begin{lstlisting}[style=shellstyle]
+python scripts/run_test1_simulation.py            # full
+python scripts/run_test1_simulation.py --quick    # B=199, R=80
+\end{lstlisting}
+
+\subsection{Versión paralelizada (recomendada)}
+\begin{lstlisting}[style=shellstyle]
+python scripts/run_test1_simulation_parallel.py            # full
+python scripts/run_test1_simulation_parallel.py --quick    # rapido
+\end{lstlisting}
+
+\paragraph{Diferencias \texttt{full} vs \texttt{--quick}.}
+\begin{center}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Parámetro & \texttt{full} & \texttt{--quick} \\
+\midrule
+$B$ (remuestras bootstrap) & 500 & 199 \\
+$R$ (réplicas MC) & 300 & 80 \\
+Tamaños $n$ & $\{20,40,80,160\}$ & $\{20,40,80\}$ \\
+Tareas totales & 18\,000 & 2\,880 \\
+Tiempo aprox.\ (12 cores) & $\sim$15--20 min & $<1$ min \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================
+\section{Salidas generadas}
+
+\subsection{Archivos de datos}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{results/data/tn\_simulation\_raw.csv}: una fila por réplica MC.
+    \item \texttt{results/data/tn\_simulation\_summary.csv}: una fila por celda (distribución, $n$, estimador).
+\end{itemize}
+
+\paragraph{Columnas del CSV \texttt{raw}.}
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Columna & Descripción \\
+\midrule
+\texttt{dist} & Nombre corto de la distribución \\
+\texttt{under\_h0} & \texttt{True} si la distribución es simétrica \\
+\texttt{n} & Tamaño de la muestra \\
+\texttt{estimator} & \texttt{argmin}, \texttt{median} o \texttt{trimmed} \\
+\texttt{rep} & Índice de la réplica MC ($0,\dots,R-1$) \\
+\texttt{statistic} & $T_n$ observado en esa réplica \\
+\texttt{p\_value} & p-valor bootstrap \\
+\texttt{reject} & \texttt{p\_value < alpha} \\
+\texttt{theta\_hat} & Centro estimado \\
+\texttt{time\_s} & Tiempo del test (B remuestras incluidas) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Columnas adicionales del CSV \texttt{summary}.}
+\texttt{reject\_rate}, \texttt{mean\_pvalue}, \texttt{mean\_stat}, \texttt{mean\_time\_s}, \texttt{sd\_time\_s}, \texttt{n\_rep} y \texttt{se\_rate} (error estándar binomial $\sqrt{\hat p(1-\hat p)/R}$).
+
+\subsection{Figuras generadas}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{tn\_type\_i\_error.png}: tasa de rechazo bajo $H_0$ vs $n$, una sub-gráfica por distribución $H_0$.
+    \item \texttt{tn\_power\_curves.png}: potencia empírica vs $n$, una sub-gráfica por distribución $H_a$.
+    \item \texttt{tn\_runtime.png}: tiempo medio por test vs $n$, log-log, por estimador.
+    \item \texttt{tn\_power\_vs\_cost.png}: scatter potencia vs costo computacional.
+    \item \texttt{tn\_pvalue\_h0.png}: histograma del p-valor bajo $H_0$ (debería ser ${\sim}U(0,1)$).
+\end{itemize}
+
+% =====================================================================
+\section{Tests unitarios}
+
+Ubicación: \texttt{tests/test\_statistics\_ks.py}. Cubre:
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{test\_Tn\_matches\_reference}: la versión vectorizada coincide con la implementación naive $O(n^2)$.
+    \item \texttt{test\_Tn\_vanishes\_for\_perfectly\_symmetric\_sample}: $T_n(\theta) = 0$ en una muestra simétrica exacta.
+    \item \texttt{test\_Tn\_invariant\_under\_translation}: $T_n(X+c; \theta+c) = T_n(X; \theta)$.
+    \item \texttt{test\_theta\_argmin\_recovers\_symmetry\_center}: con $n=400$ normales, el argmin recupera el centro a $\pm 0.25$.
+    \item \texttt{test\_theta\_median\_and\_trimmed}: convergencia de mediana y media afeitada al centro real.
+    \item \texttt{test\_symmetrized\_sample\_is\_symmetric\_around\_theta}: el soporte simetrizado es simétrico.
+    \item \texttt{test\_bootstrap\_under\_h0\_p\_value\_uniform}: bajo $H_0$ la tasa de rechazo $\approx \alpha$.
+    \item \texttt{test\_bootstrap\_has\_power\_against\_gamma}: bajo $H_a$ la potencia $> 0.4$ con $n=80$.
+\end{itemize}
+
+\textbf{Ejecutar todos los tests:}
+\begin{lstlisting}[style=shellstyle]
+python tests/test_statistics_ks.py
+\end{lstlisting}
+
+% =====================================================================
+\section{Dependencias e instalación}
+
+\subsection{Python}
+Probado con \textbf{Python 3.11.9}. Cualquier versión 3.10+ debería funcionar.
+
+\subsection{Paquetes}
+\begin{lstlisting}[style=shellstyle]
+pip install numpy scipy pandas matplotlib
+\end{lstlisting}
+
+Versiones mínimas recomendadas: \texttt{numpy>=1.24}, \texttt{scipy>=1.10}, \texttt{pandas>=2.0}, \texttt{matplotlib>=3.7}. No se requieren paquetes externos adicionales.
+
+% =====================================================================
+\section{Reproducir la simulación completa --- guía paso a paso}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Clonar el repositorio} y posicionarse en la raíz:
+    \begin{lstlisting}[style=shellstyle]
+git clone https://github.com/luistejon17/Proyecto2EstadisticaNP.git
+cd Proyecto2EstadisticaNP
+    \end{lstlisting}
+
+    \item \textbf{Instalar dependencias} (opcionalmente en un entorno virtual):
+    \begin{lstlisting}[style=shellstyle]
+python -m venv .venv
+.venv\Scripts\activate    # Windows PowerShell
+pip install numpy scipy pandas matplotlib
+    \end{lstlisting}
+
+    \item \textbf{Verificación rápida con tests unitarios:}
+    \begin{lstlisting}[style=shellstyle]
+python tests/test_statistics_ks.py
+    \end{lstlisting}
+
+    \item \textbf{Sanity-check con la versión \texttt{--quick}} (menos de 1 min):
+    \begin{lstlisting}[style=shellstyle]
+python scripts/run_test1_simulation_parallel.py --quick
+    \end{lstlisting}
+    Se generan los CSVs con sufijo \texttt{\_quick} y todas las figuras.
+
+    \item \textbf{Ejecución completa} (B=500, R=300, $\sim$15--20 min con 12 cores):
+    \begin{lstlisting}[style=shellstyle]
+python scripts/run_test1_simulation_parallel.py
+    \end{lstlisting}
+
+    \item \textbf{Resultados:}
+    \begin{itemize}
+        \item Datos en \texttt{results/data/}
+        \item Figuras en \texttt{results/figures/}
+        \item Resumen impreso en consola (pivot table de tasas de rechazo).
+    \end{itemize}
+\end{enumerate}
+
+\begin{notebox}[title=Reproducibilidad]
+La semilla por defecto es \texttt{seed=2026}. En la versión paralelizada, cada réplica recibe un seed único derivado (\texttt{seed + task\_idx}), por lo que los resultados son \emph{exactos} entre corridas con la misma configuración, independientemente del orden de finalización de los workers.
+\end{notebox}
+
+% =====================================================================
+\section{Resumen de resultados obtenidos}
+
+Para referencia, la corrida completa (B=500, R=300) produce los siguientes valores (extracto):
+
+\paragraph{Tasa de Error Tipo I bajo $H_0$ ($\alpha = 0.05$).}
+\begin{center}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Distribución & Estimador & $n=20$ & $n=40$ & $n=80$ & $n=160$ \\
+\midrule
+Cauchy(2,1)  & argmin  & 0.030 & 0.023 & 0.053 & 0.050 \\
+Cauchy(2,1)  & median  & 0.027 & 0.017 & 0.020 & 0.030 \\
+Cauchy(2,1)  & trimmed & 0.037 & 0.027 & 0.043 & 0.077 \\
+Uniforme(1,3) & argmin  & 0.017 & 0.033 & 0.017 & 0.033 \\
+Uniforme(1,3) & median  & 0.087 & 0.070 & 0.083 & 0.073 \\
+Uniforme(1,3) & trimmed & 0.003 & 0.017 & 0.043 & 0.023 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Potencia bajo $H_a$.}
+\begin{center}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Distribución & Estimador & $n=20$ & $n=40$ & $n=80$ & $n=160$ \\
+\midrule
+Gamma(2,1)     & argmin  & 0.090 & 0.253 & 0.590 & 0.983 \\
+Gamma(2,1)     & median  & 0.130 & 0.167 & 0.467 & 0.860 \\
+Gamma(2,1)     & trimmed & 0.027 & 0.140 & 0.543 & 0.963 \\
+Pareto(3,1)    & argmin  & 0.290 & 0.683 & 0.980 & 1.000 \\
+Weibull(1.5,1) & argmin  & 0.043 & 0.183 & 0.407 & 0.910 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Costo medio por test (s).}
+\begin{center}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Estimador & $n=20$ & $n=160$ \\
+\midrule
+median  & $\approx 0.06$ & $\approx 0.07$--$0.20$ \\
+trimmed & $\approx 0.20$ & $\approx 0.20$--$0.50$ \\
+argmin  & $\approx 1.0$  & $\approx 1.4$--$3.1$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Lectura:} \texttt{argmin} domina en potencia pero es 15--50$\times$ más lento que \texttt{median}; \texttt{median} es el más rápido y mantiene razonablemente el nivel; \texttt{trimmed} cae en una zona intermedia.
+
+\vspace{1em}
+\hrule
+\vspace{0.5em}
+\begin{center}\small\itshape
+Documento generado a partir del código presente en el repositorio del proyecto.\\
+Para preguntas o errores, ver \texttt{CLAUDE.md} y \texttt{README.md} en la raíz.
+\end{center}
+
+\end{document}
