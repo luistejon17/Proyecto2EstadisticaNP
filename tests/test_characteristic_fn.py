@@ -12,11 +12,14 @@ from src.bootstrap_sn import bootstrap_test_Sn
 from src.characteristic_fn import (
     Sn_multi_theta,
     Sn_statistic,
+    _Sn_precompute,
+    _Sn_value_and_grad_q2,
     cauchy_weight,
     gaussian_weight,
     laplace_weight,
     make_t_grid,
     theta_argmin_Sn,
+    theta_argmin_Sn_grid,
     theta_median,
     theta_trimmed,
     uniform_weight,
@@ -85,6 +88,48 @@ def test_theta_argmin_Sn_recovers_center():
         assert abs(th - c) < 0.3, f"argmin={th:.3f}, true={c}"
 
 
+def test_Sn_gradient_matches_finite_differences():
+    """El gradiente analítico debe coincidir con diferencias centrales."""
+    rng = np.random.default_rng(7)
+    w = gaussian_weight(1.0)
+    t_grid = make_t_grid(w, n_points=301)
+    for _ in range(6):
+        x = rng.normal(loc=0.5, size=50)
+        a_n, b_n, abs_cn, w_vals = _Sn_precompute(x, w, t_grid)
+        for theta in [-0.3, 0.0, 0.4, 1.1]:
+            _, dS = _Sn_value_and_grad_q2(theta, a_n, b_n, abs_cn, w_vals, t_grid)
+            eps = 1e-5
+            S_plus, _ = _Sn_value_and_grad_q2(theta + eps, a_n, b_n, abs_cn, w_vals, t_grid)
+            S_minus, _ = _Sn_value_and_grad_q2(theta - eps, a_n, b_n, abs_cn, w_vals, t_grid)
+            dS_num = (S_plus - S_minus) / (2 * eps)
+            assert np.isclose(dS, dS_num, rtol=1e-4, atol=1e-7), (theta, dS, dS_num)
+
+
+def test_Sn_argmin_grad_matches_grid():
+    """L-BFGS con gradiente debe coincidir con grid+Brent en magnitud."""
+    rng = np.random.default_rng(42)
+    w = gaussian_weight(1.0)
+    for _ in range(8):
+        n = int(rng.integers(40, 200))
+        x = rng.normal(loc=1.0, scale=1.0, size=n)
+        th_grad = theta_argmin_Sn(x, w_fn=w, q=2)
+        th_grid = theta_argmin_Sn_grid(x, w_fn=w, q=2)
+        # Compararemos valores de S_n: el óptimo de gradiente debe ser
+        # al menos tan bueno como el del grid
+        S_grad = Sn_statistic(x, th_grad, w, q=2)
+        S_grid = Sn_statistic(x, th_grid, w, q=2)
+        assert S_grad <= S_grid + 1e-6, (n, th_grad, th_grid, S_grad, S_grid)
+
+
+def test_Sn_argmin_q1_falls_back_to_grid():
+    """Para q=1 debe seguir funcionando vía la implementación grid+Brent."""
+    rng = np.random.default_rng(13)
+    w = gaussian_weight(1.0)
+    x = rng.normal(loc=2.0, size=80)
+    th = theta_argmin_Sn(x, w_fn=w, q=1)
+    assert abs(th - 2.0) < 0.5, th
+
+
 def test_estimators_simple():
     rng = np.random.default_rng(11)
     x = rng.normal(loc=3.0, scale=1.0, size=500)
@@ -141,6 +186,9 @@ if __name__ == "__main__":
         ("Sn translation invariance", test_Sn_invariant_under_translation),
         ("Sn_multi vs loop", test_Sn_multi_matches_loop),
         ("argmin recovers center", test_theta_argmin_Sn_recovers_center),
+        ("Sn gradient vs finite diff", test_Sn_gradient_matches_finite_differences),
+        ("Sn argmin grad <= grid", test_Sn_argmin_grad_matches_grid),
+        ("Sn argmin q=1 fallback", test_Sn_argmin_q1_falls_back_to_grid),
         ("median/trimmed", test_estimators_simple),
         ("weights integrate to 1", test_weight_functions_integrate_to_one_approx),
         ("bootstrap H0 level", test_bootstrap_h0_level),

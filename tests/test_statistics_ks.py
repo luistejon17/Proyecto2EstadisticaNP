@@ -11,9 +11,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.bootstrap_ks import bootstrap_test_Tn
 from src.statistics_ks import (
     ESTIMATORS,
+    Tn_multi,
     Tn_statistic,
+    _walsh_averages,
     symmetrized_sample,
     theta_argmin,
+    theta_argmin_grid,
+    theta_argmin_walsh_full,
     theta_median,
     theta_trimmed,
 )
@@ -74,6 +78,45 @@ def test_theta_argmin_recovers_symmetry_center():
         assert abs(est - c) < 0.25, f"argmin={est:.3f}, true={c}"
 
 
+def test_argmin_is_a_walsh_average():
+    """El argmin devuelto por theta_argmin siempre es uno de los Walsh averages."""
+    rng = np.random.default_rng(2026)
+    for n in [10, 25, 50]:
+        x = rng.normal(size=n)
+        th = theta_argmin(x)
+        W = _walsh_averages(x)
+        # th debe coincidir EXACTAMENTE con alguno de los Walsh averages
+        assert np.min(np.abs(W - th)) < 1e-12, (n, th)
+
+
+def test_argmin_local_matches_exhaustive_walsh_small_n():
+    """En muestras pequeñas (n ≤ 25) la versión local con k generoso debe
+    coincidir con la enumeración exhaustiva."""
+    rng = np.random.default_rng(2026)
+    for n in [10, 15, 20, 25]:
+        x = rng.normal(size=n)
+        th_local = theta_argmin(x)  # heurística por defecto
+        th_full = theta_argmin_walsh_full(x)
+        v_local = Tn_statistic(x, th_local)
+        v_full = Tn_statistic(x, th_full)
+        # No exigimos igualdad de theta (puede haber empate), sí igualdad
+        # de valor del estadístico (que es lo único que importa)
+        assert np.isclose(v_local, v_full, atol=1e-12), (n, v_local, v_full)
+
+
+def test_argmin_local_at_least_as_good_as_grid():
+    """En muchos casos el grid pierde el mínimo global; el Walsh local lo
+    encuentra. T_n(theta_argmin) <= T_n(theta_argmin_grid) siempre."""
+    rng = np.random.default_rng(99)
+    for _ in range(20):
+        n = rng.integers(20, 100)
+        x = rng.normal(size=int(n))
+        v_walsh = Tn_statistic(x, theta_argmin(x))
+        v_grid = Tn_statistic(x, theta_argmin_grid(x))
+        # tolerancia minúscula por aritmética flotante
+        assert v_walsh <= v_grid + 1e-9, (n, v_walsh, v_grid)
+
+
 def test_theta_median_and_trimmed():
     rng = np.random.default_rng(11)
     x = rng.normal(loc=3.0, scale=1.0, size=500)
@@ -130,6 +173,9 @@ if __name__ == "__main__":
         ("Tn vanishes for symmetric", test_Tn_vanishes_for_perfectly_symmetric_sample),
         ("Tn translation invariance", test_Tn_invariant_under_translation),
         ("argmin recovers center", test_theta_argmin_recovers_symmetry_center),
+        ("argmin is Walsh average", test_argmin_is_a_walsh_average),
+        ("argmin local == exhaustive (n small)", test_argmin_local_matches_exhaustive_walsh_small_n),
+        ("argmin local <= argmin grid", test_argmin_local_at_least_as_good_as_grid),
         ("median/trimmed", test_theta_median_and_trimmed),
         ("symmetrized sample", test_symmetrized_sample_is_symmetric_around_theta),
         ("bootstrap H0 level", test_bootstrap_under_h0_p_value_uniform),

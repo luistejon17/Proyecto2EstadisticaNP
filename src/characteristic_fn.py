@@ -37,7 +37,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 import numpy as np
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize, minimize_scalar
 from scipy.stats import trim_mean
 
 
@@ -210,30 +210,117 @@ def theta_trimmed(sample: np.ndarray, trim: float = 0.1) -> float:
     return float(trim_mean(sample, proportiontocut=trim))
 
 
+def _Sn_precompute(
+    sample: np.ndarray, w_fn: WeightFn, t_grid: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Precomputa (a_n(t), b_n(t), |c_n|(t), w(t)) — independientes de θ."""
+    x = np.asarray(sample, dtype=float)
+    arg = t_grid[:, None] * x[None, :]
+    a_n = np.mean(np.cos(arg), axis=1)
+    b_n = np.mean(np.sin(arg), axis=1)
+    abs_cn = np.sqrt(a_n ** 2 + b_n ** 2)
+    w_vals = w_fn.fn(t_grid)
+    return a_n, b_n, abs_cn, w_vals
+
+
+def _Sn_value_and_grad_q2(
+    theta: float,
+    a_n: np.ndarray,
+    b_n: np.ndarray,
+    abs_cn: np.ndarray,
+    w_vals: np.ndarray,
+    t_grid: np.ndarray,
+) -> tuple[float, float]:
+    """
+    Evalúa S_n(θ) y su gradiente analítico ∂S_n/∂θ para q=2.
+
+    Usando la descomposición c_n(t) e^{-itθ} = A_n + i B_n con
+        A_n = a_n cos(tθ) + b_n sin(tθ)
+        B_n = -a_n sin(tθ) + b_n cos(tθ)
+    y la identidad |c_n e^{-itθ} - |c_n||² = 2|c_n|(|c_n| - A_n),
+
+        S_n(θ)  = ∫ 2 |c_n| (|c_n| - A_n) w(t) dt
+        ∂S_n/∂θ = -2 ∫ t |c_n| B_n w(t) dt
+
+    (equivalente a la forma clásica -2 ∫ t |c_n|² sin(Φ_n - tθ) w dt).
+    """
+    t_theta = t_grid * theta
+    cos_tt = np.cos(t_theta)
+    sin_tt = np.sin(t_theta)
+    A = a_n * cos_tt + b_n * sin_tt
+    B = -a_n * sin_tt + b_n * cos_tt
+
+    integrand = 2.0 * abs_cn * (abs_cn - A)
+    np.maximum(integrand, 0.0, out=integrand)
+    S_n = float(np.trapezoid(integrand * w_vals, t_grid))
+
+    grad_integ = -2.0 * t_grid * abs_cn * B * w_vals
+    dS_n = float(np.trapezoid(grad_integ, t_grid))
+    return S_n, dS_n
+
+
 def theta_argmin_Sn(
     sample: np.ndarray,
     w_fn: WeightFn,
     q: int = 2,
     bracket: tuple[float, float] | None = None,
-    n_grid: int = 40,
     t_grid: np.ndarray | None = None,
+    theta0: float | None = None,
 ) -> float:
     """argmin de S_n(θ) sobre θ.
 
-    Búsqueda en dos etapas:
-      1. Grid uniforme en el rango muestral ampliado un 10%.
-      2. Refinamiento Brent local alrededor del mejor punto del grid.
+    Para ``q=2`` usa L-BFGS-B con gradiente analítico (Leibniz):
+        ∂S_n/∂θ = -2 ∫ t |c_n|² sin(Φ_n(t) - tθ) w(t) dt.
+    El precompute de (a_n, b_n, |c_n|, w) se hace una vez (O(K n)) y cada
+    iteración del optimizador cuesta O(K). El punto de partida por defecto
+    es la mediana muestral.
+
+    Para ``q != 2`` (donde el integrando contiene una raíz no diferenciable
+    en ceros) se recurre a la implementación de grid + Brent.
     """
     x = np.asarray(sample, dtype=float)
+    if t_grid is None:
+        t_grid = make_t_grid(w_fn)
+
     if bracket is None:
         lo, hi = float(x.min()), float(x.max())
         pad = 0.1 * (hi - lo) if hi > lo else 1.0
         bracket = (lo - pad, hi + pad)
+
+    if q != 2:
+        return _theta_argmin_Sn_grid(
+            x, w_fn, q=q, bracket=bracket, t_grid=t_grid,
+        )
+
+    a_n, b_n, abs_cn, w_vals = _Sn_precompute(x, w_fn, t_grid)
+
+    if theta0 is None:
+        theta0 = float(np.median(x))
+
+    def fun(theta_arr):
+        S, dS = _Sn_value_and_grad_q2(
+            float(theta_arr[0]), a_n, b_n, abs_cn, w_vals, t_grid,
+        )
+        return S, np.array([dS])
+
+    res = minimize(
+        fun, x0=np.array([theta0]), jac=True,
+        method="L-BFGS-B", bounds=[bracket],
+        options={"gtol": 1e-7, "ftol": 1e-10, "maxiter": 50},
+    )
+    return float(res.x[0])
+
+
+def _theta_argmin_Sn_grid(
+    x: np.ndarray,
+    w_fn: WeightFn,
+    q: int,
+    bracket: tuple[float, float],
+    t_grid: np.ndarray,
+    n_grid: int = 40,
+) -> float:
+    """Variante grid + Brent (usada como fallback para q != 2)."""
     lo, hi = bracket
-
-    if t_grid is None:
-        t_grid = make_t_grid(w_fn)
-
     grid = np.linspace(lo, hi, n_grid)
     vals = Sn_multi_theta(x, grid, w_fn=w_fn, q=q, t_grid=t_grid)
     k = int(np.argmin(vals))
@@ -254,6 +341,25 @@ def theta_argmin_Sn(
         return float(res.x)
     except Exception:
         return th0
+
+
+def theta_argmin_Sn_grid(
+    sample: np.ndarray,
+    w_fn: WeightFn,
+    q: int = 2,
+    bracket: tuple[float, float] | None = None,
+    n_grid: int = 40,
+    t_grid: np.ndarray | None = None,
+) -> float:
+    """Variante explícita grid + Brent (conservada para comparación)."""
+    x = np.asarray(sample, dtype=float)
+    if t_grid is None:
+        t_grid = make_t_grid(w_fn)
+    if bracket is None:
+        lo, hi = float(x.min()), float(x.max())
+        pad = 0.1 * (hi - lo) if hi > lo else 1.0
+        bracket = (lo - pad, hi + pad)
+    return _theta_argmin_Sn_grid(x, w_fn, q, bracket, t_grid, n_grid)
 
 
 # ---------------------------------------------------------------------------
