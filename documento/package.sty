@@ -133,3 +133,108 @@ showspaces=false,
 showstringspaces=false,
 literate={á}{{\'a}}1 {é}{{\'e}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {í}{{\'i}}1  {±}{{$\pm$}}1 {σ}{{$\sigma$}}1 {µ}{{$\mu$}}1,
 }
+
+% =====================================================================
+% Ambientes tipo teorema (estilo apuntes Randles & Wolfe)
+% =====================================================================
+
+% Colores
+\definecolor{greendefi}{RGB}{0, 140, 58}
+\definecolor{bluePropo}{RGB}{0, 160, 215}
+\definecolor{blueCoro}{RGB}{32, 133, 215}
+\definecolor{blueThm}{RGB}{0, 79, 139}
+\definecolor{blueLem}{RGB}{0, 103, 138}
+\definecolor{amaObs}{RGB}{255, 193, 20}
+\definecolor{verdee}{rgb}{0.0, 0.5, 0.0}
+\definecolor{dunkelmagenta}{rgb}{0.7, 0, 0}
+\definecolor{brightmaroon}{rgb}{0.76, 0.13, 0.28}
+\definecolor{cadetblue}{rgb}{0.37, 0.62, 0.63}
+\definecolor{darkraspberry}{rgb}{0.53, 0.15, 0.34}
+
+% Contador único compartido, reseteado por sección
+\newtheorem{thmcounter}{Thm}[section]
+
+% Definición (verde)
+\newtheoremstyle{definicionStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{verdee}\bfseries}{.}{ }{}
+\theoremstyle{definicionStyle}
+\newtheorem{definicion}[thmcounter]{Definici\'on}
+
+% Proposición (azul claro)
+\newtheoremstyle{proposicionStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{bluePropo}\bfseries}{.}{ }{}
+\theoremstyle{proposicionStyle}
+\newtheorem{proposicion}[thmcounter]{Proposici\'on}
+
+% Corolario (azul medio)
+\newtheoremstyle{corolarioStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{blueCoro}\bfseries}{.}{ }{}
+\theoremstyle{corolarioStyle}
+\newtheorem{corolario}[thmcounter]{Corolario}
+
+% Teorema (azul oscuro) — `teorema` (ES) y `theorem` (EN, alias)
+\newtheoremstyle{teoremaStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{blueThm}\bfseries}{.}{ }{}
+\theoremstyle{teoremaStyle}
+\newtheorem{teorema}[thmcounter]{Teorema}
+\newtheorem{theorem}[thmcounter]{Theorem}
+
+% Lema (azul-verdoso)
+\newtheoremstyle{lemaStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{cadetblue}\bfseries}{.}{ }{}
+\theoremstyle{lemaStyle}
+\newtheorem{lema}[thmcounter]{Lema}
+\newtheorem{lemma}[thmcounter]{Lemma}
+
+% Observación (amarillo/oro)
+\newtheoremstyle{observacionStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{amaObs}\bfseries}{.}{ }{}
+\theoremstyle{observacionStyle}
+\newtheorem{observacion}[thmcounter]{Observaci\'on}
+
+% Remark (magenta oscuro)
+\newtheoremstyle{remarkStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{dunkelmagenta}\bfseries}{.}{ }{}
+\theoremstyle{remarkStyle}
+\newtheorem{remark}[thmcounter]{Remark}
+
+% Hecho (frambuesa)
+\newtheoremstyle{hechoStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{darkraspberry}\bfseries}{.}{ }{}
+\theoremstyle{hechoStyle}
+\newtheorem{hecho}[thmcounter]{Hecho}
+
+% Datazo (granate brillante) — el favorito
+\newtheoremstyle{datazoStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{brightmaroon}\bfseries}{.}{ }{}
+\theoremstyle{datazoStyle}
+\newtheorem{datazo}[thmcounter]{Datazo}
+
+% Ejemplo (oliva)
+\newtheoremstyle{ejemploStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{olive}\bfseries}{.}{ }{}
+\theoremstyle{ejemploStyle}
+\newtheorem{ejemplo}[thmcounter]{Ejemplo}
+
+% Estrategia (rojo cursiva, dos puntos)
+\newtheoremstyle{estrategiaStyle}
+{3pt}{3pt}{\normalfont}{}
+{\color{red}\itshape}{:}{ }{}
+\theoremstyle{estrategiaStyle}
+\newtheorem{estrategia}[thmcounter]{Estrategia}
+
+% Restaurar estilo "plain" para que `proof` (amsthm) salga normal
+\theoremstyle{plain}
+
+% Formato de la numeración: sección.número (ej. 2.3)
+\renewcommand{\thethmcounter}{\thesection.\arabic{thmcounter}}
