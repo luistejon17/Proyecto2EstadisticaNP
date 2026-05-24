@@ -112,36 +112,36 @@
     \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Revisar los tres estimadores del centro de simetría (argmin, mediana, media afeitada) para ambos tests.
     \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Revisar el procedimiento bootstrap de $T_n$: verificar que las remuestras se generan de $sF_n(\tilde\theta)$ y que el p-valor se calcula correctamente.
     \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Revisar el procedimiento bootstrap de $S_n$ y las funciones de peso $w(t)$ candidatas.
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Agregar y revisar la medición de tiempo de ejecución por test, estimador y configuración.
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Agregar y revisar la medición de tiempo de ejecución por test, estimador y configuración.
 \end{itemize}
 
 \subsection*{Fase 3: Diseño y Ejecución de Simulaciones}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Definir parámetros de las distribuciones bajo $H_0$ (Uniforme no centrada, Cauchy con localización $\neq 0$) y verificar generadores.
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Definir parámetros de las distribuciones bajo $H_a$ (Gamma, Weibull, Pareto) y verificar generadores.
+    \item[\textbf{[\checkmark]}] \textcolor{red}{(Ing. Juan David)} Definir parámetros de las distribuciones bajo $H_0$ (Uniforme no centrada, Cauchy con localización $\neq 0$) y verificar generadores.
+    \item[\textbf{[\checkmark]}] \textcolor{green}{(Gabriel)} Definir parámetros de las distribuciones bajo $H_a$ (Gamma, Weibull, Pareto) y verificar generadores.
     \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Realizar estudio piloto para fijar los tamaños muestrales $n$ adecuados.
     \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Diseñar la matriz experimental completa: 2 tests $\times$ 3 estimadores $\times$ $w(t)$ candidatas $\times$ $q\in\{1,2\}$ $\times$ distribuciones $\times$ tamaños $n$.
     \item[\textbf{[ ]}] (Cualquiera) Ejecutar simulaciones definitivas con $B=500$ y $R$ réplicas Monte Carlo acordadas.
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Almacenar resultados de potencia, error Tipo I y tiempos en formato reproducible (CSV/Parquet).
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Almacenar resultados de potencia, error Tipo I y tiempos en formato reproducible (CSV/Parquet).
 \end{itemize}
 
 \subsection*{Fase 4: Visualización y Gráficos}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Gráfico de tasa de Error Tipo I bajo $H_0$ con banda de fluctuación $\sigma_{\hat\alpha}$.
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Gráfico de tasa de Error Tipo I bajo $H_0$ con banda de fluctuación $\sigma_{\hat\alpha}$.
     \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Heatmap de potencia empírica por test, estimador de $\theta$ y distribución alternativa.
     \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Comparativa de potencia para distintas $w(t)$ y para $q=1$ vs.\ $q=2$ en $S_n$.
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Gráfico de tiempos de ejecución y scatter de Costo Computacional vs.\ Potencia.
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Gráfico de tiempos de ejecución y scatter de Costo Computacional vs.\ Potencia.
     \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Densidades teóricas de las distribuciones empleadas (ilustrativo).
 \end{itemize}
 
 \subsection*{Fase 5: Redacción del Informe}
 \begin{itemize}
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Introducción (sección 0): problema de simetría univariada y motivación del enfoque bootstrap.
-    \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Marco Teórico: definición de simetría, simetrización empírica $sF_n(\theta)$ y motivación del estadístico $T_n$.
-    \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Marco Teórico: función característica empírica $c_n(t)$ y propiedad clave ($c(t)\in\mathbb{R}\iff X$ simétrica en $0$).
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Marco Teórico: definición de $S_n$, justificación de $c_s(t)=\|c_n(t)\|$ y rol de $w(t)$ y $q$.
+    \item[\textbf{[\checkmark]}] \textcolor{green}{(Gabriel)} Introducción (sección 0): problema de simetría univariada y motivación del enfoque bootstrap.
+    \item[\textbf{[\checkmark]}] \textcolor{red}{(Ing. Juan David)} Marco Teórico: definición de simetría, simetrización empírica $sF_n(\theta)$ y motivación del estadístico $T_n$.
+    \item[\textbf{[\checkmark]}] \textcolor{blue}{(Luis Tejón)} Marco Teórico: función característica empírica $c_n(t)$ y propiedad clave ($c(t)\in\mathbb{R}\iff X$ simétrica en $0$).
+    \item[\textbf{[\checkmark]}] \textcolor{green}{(Gabriel)} Marco Teórico: definición de $S_n$, justificación de $c_s(t)=\|c_n(t)\|$ y rol de $w(t)$ y $q$.
     \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Enunciar el resultado teórico de Arcones \& Giné que justifica la validez del bootstrap (sin demostración).
-    \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Discusión teórica: demostrar que $X\sim\text{sim}(\theta)\iff c(t)=e^{it\theta}c_0(t)$ con $c_0$ real.
+    \item[\textbf{[\checkmark]}] \textcolor{green}{(Gabriel)} Discusión teórica: demostrar que $X\sim\text{sim}(\theta)\iff c(t)=e^{it\theta}c_0(t)$ con $c_0$ real.
     \item[\textbf{[ ]}] \textcolor{blue}{(Luis Tejón)} Metodología (sección 2): protocolo Monte Carlo, diseño experimental y estimadores del centro de simetría.
     \item[\textbf{[ ]}] \textcolor{red}{(Ing. Juan David)} Implementación (sección 3): descripción del código con fragmentos clave, apoyándose en la documentación de Claudio.
     \item[\textbf{[ ]}] \textcolor{green}{(Gabriel)} Resultados: control del Error Tipo I y cumplimiento del nivel bajo $H_0$.
