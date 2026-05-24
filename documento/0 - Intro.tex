@@ -1,5 +1,31 @@
-La simetría univariada es una de las propiedades más importantes en estadística no paramétrica. Formalmente, una distribución es simétrica respecto a un punto $\theta$ si las probabilidades a ambos lados de dicho centro se reflejan. Esta propiedad permite simplificar tanto el análisis teórico como la construcción de estimadores y pruebas de hipótesis. Por esto, es de gran interés desarrollar métodos para evaluar si una muestra proviene o no de una distribución simétrica.
+% =================================================================
+% INTRODUCCIÓN — pendiente de redactar al final del proyecto.
+% El borrador anterior quedó comentado abajo. Ver la nota visible
+% (caja en el PDF) para entender por qué.
+% =================================================================
 
-En este proyecto se estudian dos metodologías bootstrap para evaluar la hipótesis de simetría univariada. El primer enfoque se basa en una idea geométrica: comparar la distribución empírica observada con su versión “simetrizada”, utilizando una distancia tipo Kolmogorov–Smirnov. Basandose en que, si la distribución subyacente es realmente simétrica, entonces la distribución empírica debería encontrarse cercana a su transformación simétrica; por el contrario, ante distribuciones asimétricas, esta discrepancia debería aumentar considerablemente. El segundo enfoque utiliza propiedades de la función característica empírica, aprovechando el hecho de que la función característica de una distribución simétrica posee parte imaginaria nula. A partir de esta propiedad se construyen métricas que cuantifican el grado de alejamiento respecto a la simetría.
+\begin{center}
+\fbox{\parbox{0.92\linewidth}{\small
+\textbf{Nota interna sobre esta sección.}
+La introducción se escribirá al final del proyecto, no ahora.
+El lector (el profesor Adolfo) ya conoce el contexto del enunciado, así
+que parafrasear definiciones estándar o motivar el problema desde cero
+aporta poco. El contenido útil de la introducción es justamente lo que
+\emph{no} aparece en el enunciado: nuestras decisiones metodológicas
+propias, observaciones empíricas, escenarios adicionales que decidimos
+explorar y, en general, lo que diferencia nuestro trabajo del de los
+demás equipos. Hasta no haber producido esos aportes no tiene sentido
+redactarla; este placeholder se reemplaza una vez tengamos resultados
+y conclusiones que valga la pena destacar.
+}}
+\end{center}
 
-En estos escenarios bootstrap surge del inconveniente que presenta calcular la distribución de estos estadísticos bajo la hipótesis nula ya que depende la distribución que genera los datos. La idea central es generar muestras bootstrap desde una versión simétrica estimada de la distribución empírica, aproximando así la distribución nula de los estadísticos de prueba. Con esto es posible calcular p-valores de manera flexible y estudiar empíricamente el comportamiento de los tests sin imponer supuestos. A lo largo del proyecto se analizarán aspectos como el cumplimiento de la potencia frente a alternativas asimétricas, la influencia del estimador del centro de simetría, el efecto de distintas funciones peso en el enfoque basado en funciones características y la complejidad computacional asociada a cada procedimiento.
+%% --------- BORRADOR ANTERIOR DE LA INTRODUCCIÓN (COMENTADO) ---------
+%% Se conserva por si algún fragmento sirve cuando reescribamos esta
+%% sección al final. NO descomentar todavía.
+%
+% La simetría univariada es una de las propiedades más importantes en estadística no paramétrica. Formalmente, una distribución es simétrica respecto a un punto $\theta$ si las probabilidades a ambos lados de dicho centro se reflejan. Esta propiedad permite simplificar tanto el análisis teórico como la construcción de estimadores y pruebas de hipótesis. Por esto, es de gran interés desarrollar métodos para evaluar si una muestra proviene o no de una distribución simétrica.
+%
+% En este proyecto se estudian dos metodologías bootstrap para evaluar la hipótesis de simetría univariada. El primer enfoque se basa en una idea geométrica: comparar la distribución empírica observada con su versión ``simetrizada'', utilizando una distancia tipo Kolmogorov--Smirnov. Basandose en que, si la distribución subyacente es realmente simétrica, entonces la distribución empírica debería encontrarse cercana a su transformación simétrica; por el contrario, ante distribuciones asimétricas, esta discrepancia debería aumentar considerablemente. El segundo enfoque utiliza propiedades de la función característica empírica, aprovechando el hecho de que la función característica de una distribución simétrica posee parte imaginaria nula. A partir de esta propiedad se construyen métricas que cuantifican el grado de alejamiento respecto a la simetría.
+%
+% En estos escenarios bootstrap surge del inconveniente que presenta calcular la distribución de estos estadísticos bajo la hipótesis nula ya que depende la distribución que genera los datos. La idea central es generar muestras bootstrap desde una versión simétrica estimada de la distribución empírica, aproximando así la distribución nula de los estadísticos de prueba. Con esto es posible calcular p-valores de manera flexible y estudiar empíricamente el comportamiento de los tests sin imponer supuestos. A lo largo del proyecto se analizarán aspectos como el cumplimiento de la potencia frente a alternativas asimétricas, la influencia del estimador del centro de simetría, el efecto de distintas funciones peso en el enfoque basado en funciones características y la complejidad computacional asociada a cada procedimiento.
