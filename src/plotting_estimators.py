@@ -10,24 +10,22 @@ import seaborn as sns
 
 COLORS = {
     "argmin":  "#2196F3",   # azul
-    "HL":      "#FF9800",   # naranja
     "median":  "#4CAF50",   # verde
     "trimmed": "#9C27B0",   # morado
 }
 LABELS = {
     "argmin":  r"$\hat\theta_{\min}$ (argmin $T_n$)",
-    "HL":      r"$\hat\theta_{HL}$ (Hodges–Lehmann)",
     "median":  r"$\hat\theta_{\rm med}$ (mediana)",
     "trimmed": r"$\hat\theta_\alpha$ (media afeitada)",
 }
-MARKERS = {"argmin": "o", "HL": "s", "median": "^", "trimmed": "D"}
+MARKERS = {"argmin": "o", "median": "^", "trimmed": "D"}
 
 
 def plot_rmse_h0(summary: pd.DataFrame, outdir: Path) -> Path:
     """RMSE vs n por estimador bajo H0, panel por distribución nula."""
     h0 = summary[summary["under_h0"]].copy()
     dists = sorted(h0["dist"].unique())
-    ests  = ["argmin", "HL", "median", "trimmed"]
+    ests  = ["argmin", "median", "trimmed"]
 
     fig, axes = plt.subplots(1, len(dists), figsize=(5.5 * len(dists), 4.2),
                              sharey=False, squeeze=False)
@@ -58,7 +56,7 @@ def plot_bias_h0(summary: pd.DataFrame, outdir: Path) -> Path:
     """Sesgo vs n por estimador bajo H0, panel por distribución nula."""
     h0 = summary[summary["under_h0"]].copy()
     dists = sorted(h0["dist"].unique())
-    ests  = ["argmin", "HL", "median", "trimmed"]
+    ests  = ["argmin", "median", "trimmed"]
 
     fig, axes = plt.subplots(1, len(dists), figsize=(5.5 * len(dists), 4.2),
                              sharey=True, squeeze=False)
@@ -90,7 +88,7 @@ def plot_mean_ha(summary: pd.DataFrame, outdir: Path) -> Path:
     """Media ± std de theta_hat bajo Ha por estimador y distribución."""
     ha = summary[~summary["under_h0"]].copy()
     dists = sorted(ha["dist"].unique())
-    ests  = ["argmin", "HL", "median", "trimmed"]
+    ests  = ["argmin", "median", "trimmed"]
 
     n_cols = len(dists)
     fig, axes = plt.subplots(1, n_cols, figsize=(4.8 * n_cols, 4.2),
@@ -128,7 +126,7 @@ def plot_rmse_heatmap(summary: pd.DataFrame, outdir: Path) -> Path:
     h0 = summary[summary["under_h0"]].copy()
     pivot = h0.pivot_table(index=["dist", "n"], columns="estimator",
                            values="rmse")
-    pivot = pivot[["argmin", "HL", "median", "trimmed"]]
+    pivot = pivot[["argmin", "median", "trimmed"]]
     pivot.index = [f"{d} | n={n}" for d, n in pivot.index]
 
     fig, ax = plt.subplots(figsize=(8, max(4, 0.45 * len(pivot) + 1.5)))
@@ -156,7 +154,7 @@ def plot_combined_appendix(summary: pd.DataFrame, outdir: Path) -> Path:
     """Figura combinada 2×2 para el apéndice: RMSE H0 + media Ha + heatmap."""
     h0 = summary[summary["under_h0"]].copy()
     ha = summary[~summary["under_h0"]].copy()
-    ests = ["argmin", "HL", "median", "trimmed"]
+    ests = ["argmin", "median", "trimmed"]
     ns   = sorted(h0["n"].unique())
 
     fig = plt.figure(figsize=(16, 12))

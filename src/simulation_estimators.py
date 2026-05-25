@@ -2,9 +2,8 @@
 Simulación Monte Carlo para evaluar la calidad de los estimadores del centro
 de simetría como estimadores puntuales (bias, RMSE, MAE).
 
-Se evalúan 4 estimadores:
+Se evalúan los 3 estimadores usados en las pruebas bootstrap:
   - argmin   : Schuster-Narvarte exacto (minimiza T_n)
-  - HL       : Hodges-Lehmann (mediana de Walsh averages)
   - median   : mediana muestral
   - trimmed  : media afeitada 10%
 
@@ -22,7 +21,6 @@ import pandas as pd
 
 from .statistics_ks import (
     theta_argmin_schuster_narvarte,
-    theta_hodges_lehmann,
     theta_median,
     theta_trimmed,
 )
@@ -34,14 +32,12 @@ from .distributions import (
 
 ESTIMATORS_QUALITY = {
     "argmin":  theta_argmin_schuster_narvarte,
-    "HL":      theta_hodges_lehmann,
     "median":  theta_median,
     "trimmed": theta_trimmed,
 }
 
 ESTIMATOR_LABELS = {
     "argmin":  r"$\hat\theta_{\min}$ (argmin $T_n$)",
-    "HL":      r"$\hat\theta_{HL}$ (Hodges-Lehmann)",
     "median":  r"$\hat\theta_{\mathrm{med}}$ (mediana)",
     "trimmed": r"$\hat\theta_{\alpha}$ (media afeitada)",
 }

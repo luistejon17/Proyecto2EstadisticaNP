@@ -1,12 +1,12 @@
 
 \subsection*{Calidad de los estimadores del centro de simetría}
 
-Se evalúan cuatro estimadores de $\theta$ como estimadores puntuales de la localización,
-empleando $R=500$ réplicas Monte Carlo por combinación (distribución $\times$ $n$):
+Se evalúan los tres estimadores del centro usados en las pruebas bootstrap,
+ahora como estimadores puntuales de la localización ($R=500$ réplicas Monte Carlo
+por combinación distribución $\times$ $n$):
 
 \begin{enumerate}
-  \item $\hat\theta_{\min}$ \textbf{(argmin $T_n$, Schuster-Narvarte)}: minimizador exacto de $T_n$ obtenido por el algoritmo combinatorio de Schuster-Narvarte.
-  \item $\hat\theta_{HL}$ \textbf{(Hodges-Lehmann)}: mediana de todos los promedios de Walsh $W_{ij}=(X_i+X_j)/2$, $i\le j$; minimiza $\sum_{i\le j}|X_i+X_j-2\theta|$ (criterio Wilcoxon de rango con signo). Punto de ruptura $29\%$ y eficiencia asintótica relativa $\approx0.955$ bajo normalidad.
+  \item $\hat\theta_{\min}$ \textbf{(argmin de $T_n$, Schuster-Narvarte)}: minimizador exacto de $T_n(\theta)$ obtenido por el algoritmo combinatorio de Schuster-Narvarte.
   \item $\hat\theta_{\mathrm{med}}$ \textbf{(mediana muestral)}: minimiza $\sum_i|X_i-\theta|$. Máxima robustez (breakdown $50\%$), asintóticamente eficiente para distribuciones de Cauchy.
   \item $\hat\theta_\alpha$ \textbf{(media afeitada $10\%$)}: media de los datos sin el $10\%$ extremo en cada cola.
 \end{enumerate}
@@ -18,44 +18,42 @@ empleando $R=500$ réplicas Monte Carlo por combinación (distribución $\times$
   \centering
   \includegraphics[width=\textwidth]{../results/figures/apendice_rmse_h0.png}
   \caption{
-    \textbf{RMSE} de los cuatro estimadores bajo $H_0$ en función de $n$ (escala log).
+    \textbf{RMSE} de los tres estimadores bajo $H_0$ en función de $n$ (escala log).
     Izquierda: Cauchy$(2,1)$ (colas pesadas); derecha: Uniforme$(1,3)$ (colas ligeras).
     El centro verdadero es $\theta=2$ en ambos casos.
   }
   \label{fig:apendice-rmse-h0}
 \end{figure}
 
-Los patrones difieren según la distribución nula:
+Los patrones de RMSE difieren según la distribución nula:
 
 \begin{itemize}
   \item \textbf{Cauchy$(2,1)$} (Figura~\ref{fig:apendice-rmse-h0}, izquierda).
-    La mediana es el estimador con menor RMSE en todos los $n$, en consonancia con ser el estimador de máxima verosimilitud de la Cauchy. El argmin ocupa el segundo lugar, seguido de $\hat\theta_{HL}$. La media afeitada tiene el mayor RMSE, pues no es eficiente bajo colas tan pesadas.
+    La mediana es el estimador con menor RMSE en todos los $n$ (es el estimador de máxima verosimilitud de la Cauchy). El argmin ocupa el segundo lugar. La media afeitada presenta el mayor RMSE, pues no es eficiente bajo colas tan pesadas: para $n=20$ su RMSE es $0.572$, frente a $0.356$ de la mediana.
 
   \item \textbf{Uniforme$(1,3)$} (Figura~\ref{fig:apendice-rmse-h0}, derecha).
-    El orden se invierte: argmin y Hodges-Lehmann tienen el menor RMSE (virtualmente idéntico para $n\ge80$), seguidos de la media afeitada. La mediana sorprende con el \emph{mayor} RMSE entre los cuatro, porque para la Uniforme el centro de masa de los datos tiene mayor información sobre el centro que la observación mediana.
+    El orden se invierte: la media afeitada y el argmin tienen los menores RMSE (virtualmente iguales para $n\ge40$), mientras que la mediana tiene el \emph{mayor} RMSE. Para $n=160$: argmin~$0.047$, media afeitada~$0.054$, mediana~$0.083$. Esto se explica porque para la Uniforme, cuya densidad es constante, la media de la muestra transporta más información sobre el centro que la observación mediana; la media afeitada captura esto parcialmente, y el argmin la explota completamente al integrar todos los pares de Walsh.
 \end{itemize}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{../results/figures/apendice_bias_h0.png}
   \caption{
-    \textbf{Sesgo} de los cuatro estimadores bajo $H_0$ ($\theta=2$) en función de $n$.
-    La línea punteada marca sesgo cero. Todos los estimadores son asintóticamente
-    insesgados; las desviaciones respecto a cero son compatibles con variabilidad Monte
-    Carlo ($R=500$, $\mathrm{SE}\approx\mathrm{RMSE}/\sqrt{500}$).
+    \textbf{Sesgo} de los tres estimadores bajo $H_0$ ($\theta=2$) en función de $n$.
+    La línea punteada marca sesgo cero. Las desviaciones respecto a cero son
+    estadísticamente indistinguibles de cero ($R=500$, $\mathrm{SE}\approx\mathrm{RMSE}/\sqrt{500}$).
   }
   \label{fig:apendice-bias-h0}
 \end{figure}
 
-Como muestra la Figura~\ref{fig:apendice-bias-h0}, los cuatro estimadores son prácticamente insesgados bajo $H_0$: el sesgo es estadísticamente indistinguible de cero en todos los casos ($|$sesgo$|<0.015$ en todos los $n$ y distribuciones nulas). Este resultado confirma que la conservatidad de $T_n$ con estimador argmin no se debe a sesgo en la estimación de $\theta$, sino a que minimizar $T_n$ sobre los datos observados reduce directamente el estadístico.
+Como muestra la Figura~\ref{fig:apendice-bias-h0}, los tres estimadores son prácticamente insesgados bajo $H_0$ ($|\text{sesgo}|<0.015$ en todos los casos). Este resultado confirma que el conservatismo del test $T_n$ con estimador argmin no proviene de un sesgo en la estimación de $\theta$, sino de que minimizar $T_n$ sobre los datos observados reduce directamente el estadístico.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{../results/figures/apendice_rmse_heatmap.png}
   \caption{
-    \textbf{Heatmap de RMSE} bajo $H_0$: los valores menores (tonos más claros / amarillos)
-    corresponden al mejor estimador en cada configuración.  Argmin y Hodges-Lehmann
-    dominan bajo Uniforme; la mediana domina bajo Cauchy.
+    \textbf{Heatmap de RMSE} bajo $H_0$: tonos más claros indican menor RMSE (mejor estimador).
+    El argmin domina bajo Uniforme; la mediana domina bajo Cauchy.
   }
   \label{fig:apendice-rmse-heatmap}
 \end{figure}
@@ -71,10 +69,8 @@ Bajo las distribuciones alternativas (Gamma, Weibull, Pareto) no existe un centr
   \caption{
     \textbf{Media $\pm$ desviación estándar} de $\hat\theta$ bajo $H_a$:
     Gamma$(2,1)$ (izquierda), Weibull$(1.5,1)$ (centro) y Pareto$(3,1)$ (derecha).
-    Las barras de error muestran $\pm 1\hat\sigma$ sobre las $R=500$ réplicas.
     La distribución de $\hat\theta$ converge con $n$ hacia un valor determinístico
-    específico de cada estimador; la mediana tiende al cuantil $0.5$ teórico,
-    mientras que argmin y Hodges-Lehmann se ubican ligeramente por encima.
+    específico de cada estimador.
   }
   \label{fig:apendice-theta-ha}
 \end{figure}
@@ -82,14 +78,14 @@ Bajo las distribuciones alternativas (Gamma, Weibull, Pareto) no existe un centr
 Las diferencias entre estimadores son más pronunciadas bajo $H_a$:
 
 \begin{itemize}
-  \item \textbf{Mediana ($\hat\theta_{\mathrm{med}}$)}: converge al cuantil $0.5$ de la distribución asimétrica, que es inferior al del argmin.
+  \item \textbf{Mediana ($\hat\theta_{\mathrm{med}}$)}: converge al cuantil $0.5$ de la distribución asimétrica.
     Para Gamma$(2,1)$: $\bar{\hat\theta}\approx 1.68$ (cuantil $0.5$ teórico $\approx 1.68$); para Pareto$(3,1)$: $\bar{\hat\theta}\approx 0.26$.
 
-  \item \textbf{Argmin ($\hat\theta_{\min}$) y Hodges-Lehmann}: localizan el centro en un punto intermedio entre la mediana y la media de la distribución. Para Gamma$(2,1)$: $\bar{\hat\theta}\approx 1.84$; para Pareto$(3,1)$: $\bar{\hat\theta}\approx 0.35$, consistentemente por encima de la mediana. Este sesgo positivo es propio de cualquier estimador que promedia pares (Walsh averages).
+  \item \textbf{Argmin ($\hat\theta_{\min}$)}: localiza el centro en un punto intermedio entre la mediana y la media de la distribución. Para Gamma$(2,1)$: $\bar{\hat\theta}\approx 1.84$; para Pareto$(3,1)$: $\bar{\hat\theta}\approx 0.35$. Este desplazamiento positivo respecto a la mediana es propio de un estimador que promedia pares (Walsh averages): bajo asimetría derecha, hay más pares con suma elevada que baja, desplazando el argmin hacia arriba.
 
-  \item \textbf{Media afeitada}: perfil intermedio, muy cercano a argmin y Hodges-Lehmann.
+  \item \textbf{Media afeitada}: perfil muy similar al argmin ($\bar{\hat\theta}\approx 1.82$--$1.84$ para Gamma), con ligera ventaja en varianza para $n$ grande.
 
-  \item \textbf{Variabilidad}: la desviación estándar de $\hat\theta$ disminuye como $\mathcal{O}(n^{-1/2})$ en todos los estimadores (pendiente $-0.5$ en log-log); no hay diferencias apreciables de dispersión entre los cuatro para $n\ge40$.
+  \item \textbf{Variabilidad}: la desviación estándar decrece como $\mathcal{O}(n^{-1/2})$ en los tres estimadores; no hay diferencias apreciables de dispersión entre ellos para $n\ge 40$.
 \end{itemize}
 
-La diferencia en la localización de $\hat\theta$ entre la mediana y los demás estimadores es relevante para el poder del test: el argmin ubica el centro en un punto que hace la distribución empírica ``más alejada'' de su simetrización que el punto elegido por la mediana, de modo que $T_n^{\text{obs}}(\hat\theta_{\min})\le T_n^{\text{obs}}(\hat\theta_{\mathrm{med}})$ bajo $H_a$ cuando la asimetría es pronunciada. El bootstrap calibra este efecto correctamente (las remuestras también se minimizan con argmin), y el resultado neto es la mayor potencia del argmin observada en la Sección~\ref{sec:potencia}.
+La diferencia en la localización de $\hat\theta$ entre la mediana y los demás estimadores es relevante para la potencia del test: el argmin ubica el centro en un punto que hace la distribución empírica ``más alejada'' de su simetrización, de modo que $T_n(\hat\theta_{\min})$ resulta comparativamente mayor bajo $H_a$ que $T_n(\hat\theta_{\mathrm{med}})$. El bootstrap calibra este efecto correctamente (también minimiza sobre cada remuestra), y el resultado neto es la mayor potencia del argmin observada en la Sección~\ref{sec:potencia}.
