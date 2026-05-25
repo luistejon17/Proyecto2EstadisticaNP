@@ -236,18 +236,14 @@ def plot_power_heatmap(summary: pd.DataFrame, outdir: Path) -> Path | None:
 # Comparativas: q=1 vs q=2
 # ---------------------------------------------------------------------------
 def plot_q1_vs_q2(summary: pd.DataFrame, outdir: Path) -> Path | None:
-    """Compara potencia entre q=1 y q=2 (promediado sobre estimadores y pesos).
-
-    Nota: q=1 solo dispone de estimadores median y trimmed (argmin se excluye
-    porque no tiene gradiente analítico para q=1). Se promedia sobre todos los
-    estimadores disponibles para cada q a fin de que la comparación sea justa.
-    """
+    """Compara potencia entre q=1 y q=2 (argmin, promediado sobre pesos)."""
     ha = summary[~summary["under_h0"]].copy()
     if ha.empty or ha["q"].nunique() < 2:
         return None
-    # Promediamos sobre estimadores Y pesos para cada (dist, n, q).
-    # Esto incluye q=1 (median + trimmed) y q=2 (argmin + median + trimmed).
-    g = ha.groupby(["dist", "n", "q"], as_index=False).agg(
+    sub = ha[ha["estimator"] == "argmin"].copy()
+    if sub.empty:
+        sub = ha.copy()
+    g = sub.groupby(["dist", "n", "q"], as_index=False).agg(
         reject_rate=("reject_rate", "mean"),
     )
     # Paleta distinguible para q=1 y q=2
@@ -281,13 +277,9 @@ def plot_q1_vs_q2(summary: pd.DataFrame, outdir: Path) -> Path | None:
         ax.grid(True, linestyle="--", alpha=0.5)
     for ax in axes_flat[len(dists):]:
         ax.set_visible(False)
-    axes[0, 0].set_ylabel("Potencia empírica (promedio sobre estimadores y pesos)")
+    axes[0, 0].set_ylabel("Potencia empírica (promedio sobre pesos)")
     axes_flat[0].legend(loc="best", fontsize=9)
-    fig.suptitle(
-        "S_n: comparación q=1 vs q=2\n"
-        "(promedio sobre estimadores disponibles y funciones de peso)",
-        y=1.02,
-    )
+    fig.suptitle("S_n: comparación q=1 vs q=2 (estimador argmin)", y=1.02)
     fig.tight_layout()
     out = outdir / "sn_compare_q.png"
     fig.savefig(out, dpi=150, bbox_inches="tight")
