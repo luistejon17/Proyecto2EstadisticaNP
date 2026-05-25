@@ -140,6 +140,23 @@ def theta_trimmed(sample: np.ndarray, trim: float = 0.1) -> float:
     return float(trim_mean(sample, proportiontocut=trim))
 
 
+def theta_hodges_lehmann(sample: np.ndarray) -> float:
+    """
+    Estimador de Hodges-Lehmann: mediana de todos los promedios de Walsh
+    W_{ij} = (X_i + X_j) / 2, i <= j.
+
+    Equivale al estimador que minimiza
+        sum_{i<=j} |X_i + X_j - 2*theta|
+    (función objetivo del tipo Wilcoxon de rango con signo).
+    Es robusto (breakdown point 29%) y asintóticamente normal con
+    eficiencia relativa de Pitman ≈ 0.955 bajo normalidad.
+
+    Complejidad: O(n²) para generar Walsh + O(n²) para la mediana.
+    """
+    W = _walsh_averages(np.asarray(sample, dtype=float))
+    return float(np.median(W))
+
+
 # ---------------------------------------------------------------------------
 # argmin de T_n basado en Walsh averages
 # ---------------------------------------------------------------------------
@@ -377,6 +394,7 @@ ESTIMATORS: dict[str, Callable[[np.ndarray], float]] = {
     "argmin_walsh": theta_argmin,               # vecindad Walsh alrededor de mediana
     "argmin_walsh_full": theta_argmin_walsh_full,
     "argmin_grid": theta_argmin_grid,
+    "hodges_lehmann": theta_hodges_lehmann,
     "median": theta_median,
     "trimmed": theta_trimmed,
 }
