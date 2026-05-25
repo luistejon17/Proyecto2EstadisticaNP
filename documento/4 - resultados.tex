@@ -12,9 +12,9 @@ Las Figuras~\ref{fig:tn-tipo1} y \ref{fig:sn-tipo1} muestran las tasas de rechaz
   \label{fig:tn-tipo1}
 \end{figure}
 
-El estimador \textbf{argmin} es marcadamente conservador: la tasa de rechazo es cero para $n\ge 40$ tanto bajo Uniforme como bajo Cauchy, y apenas alcanza $1\%$ en $n=20$. Este comportamiento no constituye un error de implementación, sino que refleja una propiedad intrínseca del estimador: minimizar $T_n$ sobre los datos observados reduce artificialmente el estadístico, desplazando su distribución nula hacia valores bajos. En consecuencia, $T_n^{\text{obs}}$ tiende a ser pequeño, y las remuestras bootstrap también lo son (pues se generan de $sF_n(\hat\theta_{\min})$, exactamente simétrica); el rechazo se produce únicamente cuando la asimetría es muy marcada.
+El estimador \textbf{argmin} es conservador: las tasas de rechazo oscilan entre $0.7\%$ y $3\%$ en todos los $n$ y distribuciones nulas (Uniforme y Cauchy), siempre por debajo del $5\%$ nominal. Este conservatismo no constituye un error de implementación, sino una propiedad intrínseca: minimizar $T_n$ sobre los datos observados reduce el estadístico, por lo que $T_n^{\text{obs}}$ tiende a ser pequeño y el bootstrap (generado de $sF_n(\hat\theta_{\min})$, exactamente simétrica) produce remuestras con estadísticos igualmente pequeños; el rechazo solo ocurre cuando la asimetría es muy pronunciada. El test permanece válido (no supera el nivel nominal), y como se verá, la conservatidad se compensa con mayor potencia en las alternativas.
 
-Los estimadores \textbf{mediana} y \textbf{media afeitada} controlan el nivel de forma satisfactoria: la mayoría de las tasas de rechazo caen dentro de las bandas de Monte Carlo. La mediana presenta tasas de rechazo de $8$--$9\%$ bajo Uniforme para $n\ge 40$ (ligeramente liberal), y la media afeitada se mantiene más cerca de $5\%$. Bajo Cauchy ambos estimadores funcionan bien. Las discrepancias observadas son coherentes con variabilidad Monte Carlo ($\mathrm{SE}_R\approx 1.3\%$) y no indican sesgo sistemático.
+El estimador \textbf{mediana} controla el nivel de forma aceptable bajo Cauchy ($2$--$3\%$), pero resulta ligeramente liberal bajo Uniforme ($6$--$9\%$), superando las bandas de un error estándar Monte Carlo para $n\ge 40$. La \textbf{media afeitada} es marcadamente conservadora bajo Uniforme ($0.3$--$3.3\%$) y se aproxima al nivel nominal bajo Cauchy ($3$--$7\%$). Las discrepancias observadas son coherentes con variabilidad Monte Carlo ($\mathrm{SE}_R\approx 1.3\%$ para $R=300$).
 
 \subsubsection*{Test \texorpdfstring{$S_n$}{Sn}}
 
@@ -48,14 +48,14 @@ La Figura~\ref{fig:tn-pval-h0} muestra los histogramas de p-valores bajo $H_0$ p
   \label{fig:tn-potencia}
 \end{figure}
 
-Los patrones de potencia de $T_n$ dependen fuertemente del estimador:
+Los patrones de potencia de $T_n$ muestran que el estimador argmin, pese a su conservatismo bajo $H_0$, es el más potente para $n\ge 40$:
 
 \begin{itemize}
-  \item \textbf{Media afeitada}: el estimador con mejor nivel en $H_0$ alcanza la mayor potencia en la mayoría de los escenarios. Para Pareto$(3,1)$ llega a $100\%$ con $n=160$, y para Gamma$(2,1)$ alcanza $95\%$. Para Weibull$(1.5,1)$, una asimetría más moderada, la potencia es $86\%$ con $n=160$.
+  \item \textbf{Argmin}: potencia más alta en las tres distribuciones alternativas. Para Gamma$(2,1)$ alcanza $25.7\%$ con $n=40$ y $98.7\%$ con $n=160$; para Pareto$(3,1)$ llega a $68.7\%$ con $n=40$ y $100\%$ con $n=160$; para Weibull$(1.5,1)$, cuya asimetría es más sutil, la potencia es $18.7\%$ con $n=40$ y $91\%$ con $n=160$. La ventaja del argmin frente a los estimadores robustos crece con $n$, lo que sugiere que cuando la estimación del centro es exacta el test detecta mejor la asimetría.
 
-  \item \textbf{Mediana}: potencia muy similar a la media afeitada, con ventaja sobre Gamma. Para Pareto alcanza $99.7\%$ con $n=160$. Bajo Weibull la potencia crece más despacio ($67\%$ con $n=160$).
+  \item \textbf{Media afeitada}: segunda en potencia para Gamma ($13.3\%$, $49\%$, $95\%$ en $n=40,80,160$) y Weibull ($7.7\%$, $35.3\%$, $86\%$). Para Pareto alcanza $50.3\%$ con $n=40$ y $100\%$ con $n=160$.
 
-  \item \textbf{Argmin}: como se explicó, el conservatismo bajo $H_0$ conlleva también una potencia inicial inferior. La potencia crece más lentamente, especialmente bajo Weibull (potencia $\le 20\%$ hasta $n=160$). Sin embargo, para alternativas con asimetría intensa —Pareto— la potencia es $99.7\%$ con $n=160$, comparable a los demás estimadores. El argmin penaliza más fuertemente los casos donde la asimetría es sutil.
+  \item \textbf{Mediana}: perfil similar a la media afeitada. Ventaja sobre la media afeitada en Gamma con $n=20$ ($11.7\%$ vs $1.7\%$). Potencia máxima $99.7\%$ para Pareto con $n=160$, pero solo $67\%$ para Weibull (la más difícil de detectar). Bajo Uniforme con argmin, este sesgo liberal de la mediana no transfiere potencia adicional por encima del argmin.
 \end{itemize}
 
 \subsubsection*{Test \texorpdfstring{$S_n$}{Sn}: efecto de $q$ y de $w$}
@@ -109,7 +109,7 @@ La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de ca
 Los costos computacionales observados confirman el análisis teórico de la Sección~\ref{sec:estim-theta}:
 
 \begin{itemize}
-  \item Para $T_n$, la \textbf{mediana} es el estimador más rápido ($\approx 23$--$30$\,ms independientemente de $n$), pues su cálculo es $\mathcal{O}(n\log n)$. La \textbf{media afeitada} es similar ($\approx 80$--$90$\,ms, incluyendo el overhead de \texttt{scipy}). El \textbf{argmin} es considerablemente más lento y crece como $\mathcal{O}(n^{5/2}\log n)$ en la fase exterior: de $63$\,ms en $n=20$ a $3.8$\,s en $n=160$, un factor~$60\times$.
+  \item Para $T_n$, la \textbf{mediana} es el estimador más rápido ($\approx 23$--$27$\,ms independientemente de $n$), pues su cálculo es $\mathcal{O}(n\log n)$. La \textbf{media afeitada} cuesta $\approx 83$--$86$\,ms (overhead de \texttt{scipy.stats.trim\_mean}), prácticamente constante en $n$. El \textbf{argmin} (Schuster-Narvarte) es moderadamente más lento: $33$\,ms en $n=20$ a $66$\,ms en $n=160$, un factor~$2\times$ respecto a $n=20$ y solo $2.5\times$ más lento que la mediana en el peor caso. Esta escalabilidad favorable se debe a que el número de iteraciones $L$ crece como $\mathcal{O}(\log n)$ para distribuciones simétricas, por lo que el coste efectivo es $\mathcal{O}(n\log n)$ y no $\mathcal{O}(n^{5/2}\log n)$ como una búsqueda Walsh completa.
 
   \item Para $S_n$ con $q=2$, el \textbf{argmin} cuesta $\approx 0.3$--$0.7$\,s para $n\in\{20,\dots,160\}$ gracias a L-BFGS-B con gradiente analítico: el costo no crece exponencialmente porque cada evaluación del par valor--gradiente es $\mathcal{O}(K)$ ($K=301$ puntos de cuadratura). Mediana y media afeitada cuestan $50$--$400$\,ms, con crecimiento suave en $n$ (vectorización en lote).
 \end{itemize}
@@ -128,4 +128,4 @@ Los costos computacionales observados confirman el análisis teórico de la Secc
   \label{fig:compare-runtime}
 \end{figure}
 
-La Figura~\ref{fig:tradeoff-tn} ilustra el tradeoff potencia--costo en $T_n$: el argmin ofrece potencia inferior a un costo $100\times$ mayor que la mediana bajo Gamma, lo que lo hace la elección menos atractiva para $T_n$. En $S_n$, en cambio, el argmin es competitivo en tiempo y simultáneamente el más potente (ver Figura~\ref{fig:compare-potencia}), gracias a la diferenciabilidad de $S_n$ que permite un optimizador de orden superior.
+La Figura~\ref{fig:tradeoff-tn} ilustra el tradeoff potencia--costo en $T_n$: con el algoritmo de Schuster-Narvarte, el argmin es solo $2$--$2.5\times$ más lento que la mediana pero consistentemente más potente para $n\ge 40$, invirtiéndose la relación que existía con implementaciones de búsqueda Walsh de costo $\mathcal{O}(n^{5/2}\log n)$. La elección entre argmin y mediana pasa a ser una cuestión de nivel (argmin conservador, mediana ligeramente liberal bajo Uniforme) y no de costo. En $S_n$, el argmin también es competitivo en tiempo y el más potente (Figura~\ref{fig:compare-potencia}), gracias a la diferenciabilidad de $S_n$ que permite L-BFGS-B.

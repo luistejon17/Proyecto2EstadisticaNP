@@ -297,9 +297,84 @@ def theta_argmin_grid(
         return th0
 
 
+def theta_argmin_schuster_narvarte(sample: np.ndarray) -> float:
+    """
+    Argmin exacto de T_n via el algoritmo combinatorio de Schuster-Narvarte.
+
+    Para la muestra ordenada x_0 ≤ ... ≤ x_{n-1} (0-indexed) itera k = 0, 1, …
+    buscando el primer índice L en el que la anti-diagonal INFERIOR ya no supera
+    a la anti-diagonal SUPERIOR en el espacio de promedios de Walsh:
+
+        m(k) = max{ (x_i + x_j)/2 : i+j = (n-1)-k,  0 ≤ i ≤ j ≤ n-1 }
+        M(k) = min{ (x_i + x_j)/2 : i+j = (n-1)+k,  0 ≤ i ≤ j ≤ n-1 }
+
+    La condición de parada es m(L) ≤ M(L); el estimador devuelto es
+    θ̂ = (m(L) + M(L)) / 2.
+
+    Intuición: T_n(θ) es constante entre Walsh averages consecutivos y alcanza
+    su mínimo en el intervalo [m(L), M(L)].  El punto medio de ese intervalo
+    es el estimador.
+
+    Complejidad: O(n) por iteración × L iteraciones.  En la práctica L es
+    pequeño (típicamente O(1) para distribuciones "suaves"), por lo que el
+    algoritmo es O(n) en media.  Peor caso O(n²) (L = n-1).
+
+    Parameters
+    ----------
+    sample : np.ndarray
+        Muestra (no necesariamente ordenada).
+
+    Returns
+    -------
+    float
+        Estimador del centro de simetría.
+    """
+    x = np.sort(np.asarray(sample, dtype=float))
+    n = x.size
+    if n == 0:
+        return 0.0
+    if n == 1:
+        return float(x[0])
+    if n == 2:
+        return float(0.5 * (x[0] + x[1]))
+
+    for k in range(n):
+        # ---- Anti-diagonal inferior: i + j = (n-1) - k  ----------------
+        s_lo = (n - 1) - k
+        # Restricciones: 0 ≤ i ≤ j ≤ n-1  con  i+j = s_lo
+        #   j ≤ n-1  →  i ≥ s_lo-(n-1)
+        #   j ≥ i    →  i ≤ s_lo//2
+        i_lo_min = max(0, s_lo - (n - 1))
+        i_lo_max = s_lo // 2
+        if i_lo_min <= i_lo_max:
+            i_lo = np.arange(i_lo_min, i_lo_max + 1)
+            m_k = 0.5 * float(np.max(x[i_lo] + x[s_lo - i_lo]))
+        else:
+            m_k = -np.inf
+
+        # ---- Anti-diagonal superior: i + j = (n-1) + k  ----------------
+        s_hi = (n - 1) + k
+        #   j ≤ n-1  →  i ≥ s_hi-(n-1) = k
+        #   j ≥ i    →  i ≤ s_hi//2
+        i_hi_min = k                  # = s_hi - (n-1)
+        i_hi_max = s_hi // 2
+        if i_hi_min <= i_hi_max:
+            i_hi = np.arange(i_hi_min, i_hi_max + 1)
+            M_k = 0.5 * float(np.min(x[i_hi] + x[s_hi - i_hi]))
+        else:
+            M_k = np.inf
+
+        if m_k <= M_k:
+            return 0.5 * (m_k + M_k)
+
+    # No debería llegar aquí (k=n-1 siempre cumple m≤M), pero por seguridad:
+    return float(np.median(x))
+
+
 # Diccionario de estimadores disponibles -----------------------------------
 ESTIMATORS: dict[str, Callable[[np.ndarray], float]] = {
-    "argmin": theta_argmin,
+    "argmin": theta_argmin_schuster_narvarte,   # algoritmo exacto eficiente
+    "argmin_walsh": theta_argmin,               # vecindad Walsh alrededor de mediana
     "argmin_walsh_full": theta_argmin_walsh_full,
     "argmin_grid": theta_argmin_grid,
     "median": theta_median,
