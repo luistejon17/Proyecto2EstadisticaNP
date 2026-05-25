@@ -2,9 +2,11 @@
 
 En primer lugar, respecto a \(w(t)\), se observa que las tres alternativas consideradas producen comportamientos similares. Ya que la potencia aumenta conforme crece el tamaño muestral \(n\). Sin embargo, sí aparecen diferencias relevantes en la rapidez con que esto ocurre.
 
-La ponderación Laplace muestra una convergencia más rápida, especialmente frente al escenario Pareto. Esto sugiere que asignar mayor peso a las regiones alejadas del origen permite capturar mejor desviaciones de simetría asociadas a colas. En contraste, los pesos gaussianos tienden a concentrar mayor masa alrededor de \(t=0\), priorizando información local de baja frecuencia. Esto produce un comportamiento algo más estable, aunque en algunos escenarios requiere tamaños muestrales ligeramente mayores para alcanzar el mismo nivel de potencia.
+La ponderación Laplace muestra una convergencia más rápida en el escenario Pareto. Esto sugiere que asignar mayor peso a las regiones alejadas del origen permite capturar mejor desviaciones de simetría asociadas a colas. En contraste, los pesos gaussianos tienden a concentrar mayor masa alrededor de \(t=0\), priorizando información local de baja frecuencia. Esto produce un comportamiento más estable en los otros 2 casos, aunque en algunos escenarios requiere tamaños muestrales ligeramente mayores para alcanzar el mismo nivel de potencia.
 
-Entre los pesos gaussianos, la diferencia entre \(\sigma=0.5\) y \(\sigma=1.0\) es moderada. El caso \(\sigma=0.5\) concentra aún más la integral cerca del origen. Empíricamente no se observan diferencias dramáticas entre ambas, aunque \(w=\mathrm{gauss}_{1.0}\) parece ser más estable.
+Entre los pesos gaussianos, la diferencia entre \(\sigma=0.5\) y \(\sigma=1.0\) es moderada. El caso \(\sigma=0.5\) concentra aún más la integral cerca del origen. Empíricamente no se observan diferencias dramáticas entre ambas, aunque \(w=\mathrm{gauss}_{1.0}\) parece ser más estable. Como se evidencia a continuación:
+
+\includegraphics[]  {results/figures/sn_compare_weights.png}
 
 Por otra parte, el parámetro \(q\) controla la forma de penalización de las discrepancias. Cuando \(q=1\), el estadístico agrega desviaciones de forma lineal, resultando menos sensible a diferencias extremas. Cuando \(q=2\), las discrepancias grandes reciben una penalización cuadrática, aumentando la sensibilidad del test frente a desviaciones pronunciadas.
 
