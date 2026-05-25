@@ -87,7 +87,7 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, pese a su co
   \label{fig:compare-potencia}
 \end{figure}
 
-La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de cada test. $S_n$ (con $q=2$, argmin) supera sistemáticamente a $T_n$ (mediana o media afeitada) en Gamma y Weibull para tamaños intermedios ($n=40,80$): la potencia de $S_n$ a $n=40$ bajo Gamma es $47.5\%$ frente al $15.7\%$ de $T_n$ (media afeitada). Para Pareto ambos tests alcanzan potencias altas en $n=80$ y $n=160$. El poder diferenciador de $S_n$ se explica porque la función característica captura la asimetría global (en todas las frecuencias), mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
+La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de cada test, ambas con estimador argmin: $T_n$ con Schuster-Narvarte, $S_n$ con $q=2$ y $w_1=\mathcal{N}(0,1)$ resuelto por L-BFGS-B. $S_n$ supera a $T_n$ en Gamma y Weibull para tamaños intermedios: la potencia de $S_n$ a $n=40$ bajo Gamma es $47.5\%$ frente al $25.7\%$ de $T_n$, y bajo Weibull a $n=80$ alcanza $92\%$ frente al $40.3\%$ de $T_n$. Para Pareto ambos tests alcanzan potencia $\approx 100\%$ en $n=80$ y $n=160$. El poder diferenciador de $S_n$ se explica porque la función característica captura la asimetría global (en todas las frecuencias), mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
 
 %--------------------------------------------------------------------------
 \subsection{Costo computacional}\label{sec:costo}

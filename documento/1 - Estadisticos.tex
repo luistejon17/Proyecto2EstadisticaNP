@@ -78,7 +78,7 @@ Al variar $\theta$, el orden de los saltos es invariante, manteniendo $T_n(\thet
 En consecuencia, $T_n(\theta)$ es constante en los intervalos entre elementos de $\mathcal{W}_n$. Al depender de funciones càdlàg, el ínfimo se alcanza en la clausura de alguno de estos trozos constantes, asegurando que el mínimo global recaiga sobre un punto en $\mathcal{W}_n$.
 \end{proof}
 
-La Proposición~\ref{prop:Tn-steps} reduce el problema continuo a una búsqueda discreta sobre un conjunto finito de $\tfrac{n(n+1)}{2}$ candidatos. Esto es la base teórica del estimador localizado (evaluar $T_n(\theta)$ en los $K$ promedios de Walsh más cercanos a la mediana) descrito en la Sección~\ref{impl:argmin-Tn}.
+La Proposición~\ref{prop:Tn-steps} reduce el problema continuo a una búsqueda discreta sobre un conjunto finito de $\tfrac{n(n+1)}{2}$ candidatos. La Sección~\ref{impl:argmin-Tn} describe el algoritmo combinatorio exacto de Schuster-Narvarte, que localiza el mínimo iterando sobre las anti-diagonales de la matriz de promedios de Walsh sin enumerar todos los candidatos.
 
 \subsubsection{Argmin de $S_n$: diferenciación bajo el signo integral}
 

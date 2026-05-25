@@ -175,7 +175,7 @@ def _sn_boot_batch(Y, thetas, w_fn, q, t_grid):
     return S_boot
 \end{lstlisting}
 
-Para el estimador argmin, la optimización iterativa (\texttt{L-BFGS-B}) impide vectorizar: se mantiene el bucle secuencial, con el punto de partida de \texttt{L-BFGS-B} en las remuestras fijado en $\hat\theta_{\min}$ de la muestra original.
+Para el estimador argmin, la optimización iterativa (\texttt{L-BFGS-B}) impide vectorizar: se mantiene el bucle secuencial, con el punto de partida $x_0=\mathrm{mediana}(Y^{*(b)})$ recalculado en cada remuestra (la mediana de la remuestra es $\sqrt{n}$-consistente para el centro de $sF_n(\hat\theta)$).
 
 \subsection{Paralelización del estudio Monte Carlo}
 
@@ -193,7 +193,7 @@ def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
             'time_s': time.perf_counter() - t0,
             'under_h0': spec.under_h0}
 \end{lstlisting}
- Con 11 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=199$) corre en $\approx 4$ minutos y el de $S_n$ ($60\,000$ tests, $K=301$, $B=199$) en $\approx 20$--$30$ minutos. La reducción de $B=500$ a $B=199$ y la vectorización del bucle bootstrap para los estimadores mediana y media afeitada (eliminando el bucle de Python y evaluando $S_n$ en lote sobre matrices $(B,K,n)$) son las principales ganancias de velocidad.
+ Con 11 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=199$) corre en $\approx 1.5$ minutos (gracias al algoritmo exacto de Schuster-Narvarte para el argmin) y el de $S_n$ ($60\,000$ tests, $K=301$, $B=199$) en $\approx 20$--$30$ minutos. La reducción de $B=500$ a $B=199$ y la vectorización del bucle bootstrap para los estimadores mediana y media afeitada (eliminando el bucle de Python y evaluando $S_n$ en lote sobre matrices $(B,K,n)$) son las principales ganancias de velocidad.
 
 \subsection{Verificación empírica con pruebas unitarias}
 
@@ -205,4 +205,4 @@ Antes de lanzar el estudio masivo se desarrollaron pruebas unitarias para verifi
   \item \textbf{$\hat\theta_{\min}$ recupera el centro}: en muestras grandes simétricas (Normal, Uniforme) el argmin de $T_n$ y $S_n$ debe estar a menos de $0.1$ del verdadero centro.
   \item \textbf{Sanidad del bootstrap}: bajo $H_0$ los p-valores empíricos son aproximadamente uniformes en $(0,1)$ (la figura del p-valor en la sección de resultados sirve como verificación visual); bajo $H_a$ con $n$ grande la potencia tiende a $1$.
 \end{itemize}
-Las pruebas se encuentran en \texttt{tests/} y se ejecutan con \texttt{pytest -q}.
+Las pruebas se encuentran en \texttt{tests/} y se ejecutan con \texttt{python tests/test\_statistics\_ks.py} y \texttt{python tests/test\_characteristic\_fn.py}. Las~$22$ pruebas pasan satisfactoriamente con la implementación actual.
