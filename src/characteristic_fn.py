@@ -40,6 +40,8 @@ import numpy as np
 from scipy.optimize import minimize, minimize_scalar
 from scipy.stats import trim_mean
 
+from .pyomo_argmin import solve_discrete_argmin_pyomo
+
 
 # ---------------------------------------------------------------------------
 # Funciones de peso w(t) (simétricas alrededor de 0)
@@ -362,6 +364,50 @@ def theta_argmin_Sn_grid(
     return _theta_argmin_Sn_grid(x, w_fn, q, bracket, t_grid, n_grid)
 
 
+def theta_argmin_Sn_pyomo(
+    sample: np.ndarray,
+    w_fn: WeightFn,
+    q: int = 2,
+    bracket: tuple[float, float] | None = None,
+    n_theta_grid: int = 40,
+    t_grid: np.ndarray | None = None,
+    *,
+    solver: str | None = None,
+    solver_options: dict | None = None,
+    tee: bool = False,
+) -> float:
+    """Argmin de S_n seleccionado con Pyomo sobre una grilla de theta.
+
+    Esta variante construye una grilla uniforme en el intervalo de búsqueda,
+    evalúa ``S_n`` en cada punto y usa Pyomo para seleccionar el candidato con
+    menor valor. Es útil para correr las pruebas con un estimador explícitamente
+    seleccionado por Pyomo sin cambiar el resto del pipeline.
+    """
+    x = np.asarray(sample, dtype=float)
+    if x.size == 0:
+        return 0.0
+    if t_grid is None:
+        t_grid = make_t_grid(w_fn)
+    if bracket is None:
+        lo, hi = float(x.min()), float(x.max())
+        pad = 0.1 * (hi - lo) if hi > lo else 1.0
+        bracket = (lo - pad, hi + pad)
+
+    if n_theta_grid < 2:
+        raise ValueError("n_theta_grid debe ser al menos 2.")
+
+    lo, hi = bracket
+    cands = np.linspace(lo, hi, n_theta_grid)
+    vals = Sn_multi_theta(x, cands, w_fn=w_fn, q=q, t_grid=t_grid)
+    return solve_discrete_argmin_pyomo(
+        cands,
+        vals,
+        solver=solver,
+        solver_options=solver_options,
+        tee=tee,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Catálogo de estimadores indexados por nombre
 # ---------------------------------------------------------------------------
@@ -374,6 +420,8 @@ def get_estimator(
     """Devuelve la función estimadora dado el nombre y la config (w, q)."""
     if name == "argmin":
         return lambda x: theta_argmin_Sn(x, w_fn=w_fn, q=q, t_grid=t_grid)
+    if name in ("argmin_pyomo", "argmin_pyomo_grid"):
+        return lambda x: theta_argmin_Sn_pyomo(x, w_fn=w_fn, q=q, t_grid=t_grid)
     if name == "median":
         return theta_median
     if name == "trimmed":

@@ -45,6 +45,8 @@ import numpy as np
 from scipy.optimize import minimize_scalar
 from scipy.stats import trim_mean
 
+from .pyomo_argmin import solve_discrete_argmin_pyomo
+
 
 # ---------------------------------------------------------------------------
 # Estadístico T_n
@@ -388,12 +390,92 @@ def theta_argmin_schuster_narvarte(sample: np.ndarray) -> float:
     return float(np.median(x))
 
 
+def theta_argmin_pyomo(
+    sample: np.ndarray,
+    n_walsh: int | None = None,
+    anchor: str | float = "median",
+    *,
+    exact: bool = False,
+    solver: str | None = None,
+    solver_options: dict | None = None,
+    tee: bool = False,
+) -> float:
+    """Argmin de T_n seleccionado con Pyomo sobre candidatos de Walsh.
+
+    Por defecto evalúa una vecindad de promedios de Walsh alrededor de la
+    mediana, igual que ``theta_argmin``. Para forzar la enumeración completa
+    de todos los promedios de Walsh use ``exact=True``.
+
+    Nota: Pyomo se usa para resolver la selección discreta final entre
+    candidatos ya evaluados. Si Pyomo o el solver no están instalados, esta
+    función levanta un error explicativo.
+    """
+    x = np.asarray(sample, dtype=float)
+    n = x.size
+    if n == 0:
+        return 0.0
+    if n == 1:
+        return float(x[0])
+
+    if isinstance(anchor, str):
+        if anchor == "median":
+            theta_anchor = float(np.median(x))
+        elif anchor == "trimmed":
+            theta_anchor = float(trim_mean(x, 0.1))
+        else:
+            raise ValueError(f"anchor inválido: {anchor!r}")
+    else:
+        theta_anchor = float(anchor)
+
+    W = _walsh_averages(x)
+    if exact:
+        cands = W
+    else:
+        if n_walsh is None:
+            n_walsh = _default_k_walsh(n)
+        if n_walsh >= W.size:
+            cands = W
+        else:
+            dists = np.abs(W - theta_anchor)
+            idx = np.argpartition(dists, n_walsh - 1)[:n_walsh]
+            cands = W[idx]
+
+    cands = np.unique(cands)
+    vals = Tn_multi(x, cands)
+    return solve_discrete_argmin_pyomo(
+        cands,
+        vals,
+        solver=solver,
+        solver_options=solver_options,
+        tee=tee,
+    )
+
+
+def theta_argmin_pyomo_full(
+    sample: np.ndarray,
+    *,
+    solver: str | None = None,
+    solver_options: dict | None = None,
+    tee: bool = False,
+) -> float:
+    """Argmin de T_n con Pyomo sobre todos los promedios de Walsh."""
+    return theta_argmin_pyomo(
+        sample,
+        exact=True,
+        solver=solver,
+        solver_options=solver_options,
+        tee=tee,
+    )
+
+
 # Diccionario de estimadores disponibles -----------------------------------
 ESTIMATORS: dict[str, Callable[[np.ndarray], float]] = {
     "argmin": theta_argmin_schuster_narvarte,   # algoritmo exacto eficiente
     "argmin_walsh": theta_argmin,               # vecindad Walsh alrededor de mediana
     "argmin_walsh_full": theta_argmin_walsh_full,
     "argmin_grid": theta_argmin_grid,
+    "argmin_pyomo": theta_argmin_pyomo,
+    "argmin_pyomo_full": theta_argmin_pyomo_full,
     "hodges_lehmann": theta_hodges_lehmann,
     "median": theta_median,
     "trimmed": theta_trimmed,
