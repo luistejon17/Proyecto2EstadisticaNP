@@ -225,6 +225,37 @@ def _Sn_precompute(
     return a_n, b_n, abs_cn, w_vals
 
 
+def _Sn_value_and_grad_q1(
+    theta: float,
+    a_n: np.ndarray,
+    b_n: np.ndarray,
+    abs_cn: np.ndarray,
+    w_vals: np.ndarray,
+    t_grid: np.ndarray,
+) -> tuple[float, float]:
+    """
+    Evalúa S_n(θ) y su gradiente analítico ∂S_n/∂θ para q=1.
+
+    Usando la identidad 1 - cos(u) = 2 sin²(u/2):
+        |c_n e^{-itθ} - |c_n|| = 2 |c_n| |sin((Φ_n - tθ)/2)|
+
+    El gradiente existe para casi todo θ (los ceros del seno forman un
+    conjunto de medida cero en t para cada θ fijo):
+        ∂S_n/∂θ = -∫ t |c_n| sgn(sin((Φ_n-tθ)/2)) cos((Φ_n-tθ)/2) w dt
+    """
+    Phi_n = np.arctan2(b_n, a_n)
+    half = (Phi_n - t_grid * theta) / 2.0
+    sin_h = np.sin(half)
+    cos_h = np.cos(half)
+
+    integrand = 2.0 * abs_cn * np.abs(sin_h)
+    S_n = float(np.trapezoid(integrand * w_vals, t_grid))
+
+    grad_integ = -t_grid * abs_cn * np.sign(sin_h) * cos_h * w_vals
+    dS_n = float(np.trapezoid(grad_integ, t_grid))
+    return S_n, dS_n
+
+
 def _Sn_value_and_grad_q2(
     theta: float,
     a_n: np.ndarray,
@@ -289,7 +320,7 @@ def theta_argmin_Sn(
         pad = 0.1 * (hi - lo) if hi > lo else 1.0
         bracket = (lo - pad, hi + pad)
 
-    if q != 2:
+    if q not in (1, 2):
         return _theta_argmin_Sn_grid(
             x, w_fn, q=q, bracket=bracket, t_grid=t_grid,
         )
@@ -299,10 +330,10 @@ def theta_argmin_Sn(
     if theta0 is None:
         theta0 = float(np.median(x))
 
+    grad_fn = _Sn_value_and_grad_q1 if q == 1 else _Sn_value_and_grad_q2
+
     def fun(theta_arr):
-        S, dS = _Sn_value_and_grad_q2(
-            float(theta_arr[0]), a_n, b_n, abs_cn, w_vals, t_grid,
-        )
+        S, dS = grad_fn(float(theta_arr[0]), a_n, b_n, abs_cn, w_vals, t_grid)
         return S, np.array([dS])
 
     res = minimize(

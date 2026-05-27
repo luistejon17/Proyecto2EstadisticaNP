@@ -76,7 +76,7 @@ La Proposición~\ref{prop:Tn-steps} reduce el problema continuo a una búsqueda 
 
 A diferencia de $T_n(\theta)$, el estadístico $S_n(\theta)$ no es una función escalonada del centro de simetría. En particular, para el caso $q=2$, el criterio tiene una estructura suave en $\theta$, lo que permite usar métodos de optimización basados en gradiente, como quasi-Newton. La idea es escribir el integrando de $S_n$ de manera que su dependencia en $\theta$ sea explícita y luego justificar el intercambio entre derivación e integración.
 
-Esta justificación se presenta únicamente para el caso $q=2$. Para $q=1$, el integrando involucra una norma no cuadrática y puede presentar puntos de no diferenciabilidad; por tanto, en ese caso es más natural usar optimización sin gradiente o aproximaciones numéricas.
+Esta justificación se presenta para $q=2$; en la Sección~\ref{sssec:grad-q1} se extiende a $q=1$.
 
 \begin{proposicion}[Leibniz para $S_n$, $q=2$]\label{prop:leibniz-Sn}
 Sea $w:\R\to\R_{\ge 0}$ una densidad simétrica tal que \(\int_{-\infty}^{\infty}|t|w(t)\,dt<\infty\).
@@ -182,7 +182,23 @@ En dimensión uno, este funciona como el método de la secante sobre la curvatur
 \theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
 \]
 
-Como punto inicial tomamos \(\theta^{(0)}=\hat\theta_{\mathrm{med}}\). Esta elección es natural porque, bajo simetría y condiciones regulares, la mediana poblacional coincide con el centro de simetría. En la práctica, este punto inicial suele ubicar la optimización cerca de una región razonable del criterio. No obstante, como \(S_n(\theta)\) no necesariamente es convexo, el procedimiento debe entenderse como una búsqueda numérica de un mínimo local; por ello, en la implementación conviene comparar el resultado con una búsqueda en grilla o usar varios puntos iniciales cuando sea necesario.
+Como punto inicial tomamos \(\theta^{(0)}=\hat\theta_{\mathrm{med}}\). Esta elección es natural porque, bajo simetría y condiciones regulares, la mediana poblacional coincide con el centro de simetría.
+
+\subsubsection{Extensión al caso \texorpdfstring{$q=1$}{q=1}}\label{sssec:grad-q1}
+
+Para $q=1$ el integrando contiene $|\cdot|^1$, lo que sugiere a primera vista que no existe gradiente en $\theta$. Sin embargo, usando la identidad $1-\cos u = 2\sin^2(u/2)$ se puede reescribir el estadístico como
+
+\[
+S_n(\theta)\big|_{q=1} \;=\; 2\int_{-\infty}^{\infty} |c_n(t)|\,\bigl|\sin\tfrac{\Phi_n(t)-t\theta}{2}\bigr|\,w(t)\,dt,
+\]
+
+donde $\Phi_n(t)=\arg c_n(t)$. Derivando bajo el signo integral con el mismo argumento de dominación (la cota $4|t|w(t)$ sigue siendo integrable), se obtiene
+
+\begin{equation}\label{eq:grad-Sn-q1}
+\frac{\partial S_n}{\partial\theta}\bigg|_{q=1}(\theta) \;=\; -\int_{-\infty}^{\infty} t\,|c_n(t)|\;\mathrm{sgn}\!\left(\sin\frac{\Phi_n(t)-t\theta}{2}\right)\cos\!\left(\frac{\Phi_n(t)-t\theta}{2}\right) w(t)\,dt.
+\end{equation}
+
+Esta expresión existe para casi todo $\theta$: los ceros del seno forman un conjunto de medida cero en $t$ para cada $\theta$ fijo, de modo que el integrando es acotado e integrable. En consecuencia, $S_n(\cdot)$ para $q=1$ es diferenciable en casi todo punto y el método de la secante —implementado vía \texttt{L-BFGS-B}— puede aplicarse directamente usando \eqref{eq:grad-Sn-q1}, eliminando la necesidad de la búsqueda en grilla utilizada anteriormente.
 
 \begin{comment}
 \subsubsection{Iteración de quasi-Newton}
