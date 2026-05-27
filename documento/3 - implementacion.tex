@@ -123,9 +123,7 @@ def theta_argmin_Sn(sample, w_fn, q=2, t_grid=None):
     return float(res.x[0])
 \end{lstlisting}
 
-El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero} sugiere que el verdadero centro es un punto estacionario asintótico, y la mediana es $\sqrt n$-consistente). Para $q=1$ el integrando contiene un $\sqrt{\cdot}$ no diferenciable en sus ceros, por lo que se recurre a la búsqueda grid + Brent (\texttt{theta\_argmin\_Sn\_grid}).
-
-
+El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero} sugiere que el verdadero centro es un punto estacionario asintótico, y la mediana es $\sqrt n$-consistente).
 \subsubsection{argmin de \texorpdfstring{$S_n$}{Sn} para \texorpdfstring{$q=1$}{q=1}: selección discreta con Pyomo}\label{impl:argmin-Sn-pyomo}
 
 Para $q=1$, el estadístico $S_n$ sigue siendo evaluable numéricamente, pero el criterio no es diferenciable en los puntos donde \(c_n(t)e^{-it\theta}-|c_n(t)|=0\).
