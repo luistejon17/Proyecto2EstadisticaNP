@@ -176,11 +176,12 @@ La existencia del gradiente \eqref{eq:grad-Sn} permite emplear métodos de optim
 \]
 donde \(\eta_k>0\) es un tamaño de paso. Sin embargo, en este caso usamos \texttt{L-BFGS-B}, un método quasi-Newton de memoria limitada que aproxima a partir de diferencias sucesivas entre iterados y gradientes, y que selecciona el paso mediante una búsqueda lineal \cite{nocedal2006numerical}.
 
-En dimensión uno, este funciona como el método de la secante sobre la curvatura local de \(S_n\), aunque el algoritmo \texttt{L-BFGS-B} incluye además una estrategia de búsqueda lineal y, en general, restricciones de caja. Por esto último, este método se considera una aproximación quasi-Newton estabilizada, aunque en este caso se invita a interpretarlo como método de la secante:
+Para un solo parámetro, este aplica el método de la secante sobre la curvatura local de \(S_n\) \eqref{secant_method}, aunque el algoritmo \texttt{L-BFGS-B} incluye además una estrategia de búsqueda lineal y restricciones de caja. Por esto último, este método se considera una aproximación quasi-Newton estabilizada.
 
-\[
+\begin{equation} \label{secant_method}
 \theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
-\]
+\end{equation}
+
 
 Como punto inicial tomamos \(\theta^{(0)}=\hat\theta_{\mathrm{med}}\). Esta elección es natural porque, bajo simetría y condiciones regulares, la mediana poblacional coincide con el centro de simetría. En la práctica, este punto inicial suele ubicar la optimización cerca de una región razonable del criterio. No obstante, como \(S_n(\theta)\) no necesariamente es convexo, el procedimiento debe entenderse como una búsqueda numérica de un mínimo local; por ello, en la implementación conviene comparar el resultado con una búsqueda en grilla o usar varios puntos iniciales cuando sea necesario.
 
