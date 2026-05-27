@@ -25,6 +25,13 @@ El estimador \textbf{mediana} controla el nivel de forma aceptable bajo Cauchy (
   \label{fig:sn-tipo1}
 \end{figure}
 
+\begin{figure}
+    \centering [H]
+    \includegraphics[width=\linewidth]{../results/figures/sn_type_i_error_q1_gauss_1p0.png}
+    \caption{Error Tipo I de $S_n$ ($q=1$, $w_1=\mathcal{N}(0,1)$) bajo $H_0$.}
+    \label{fig:placeholder}
+\end{figure}
+
 Para $S_n$ las tasas de rechazo bajo $H_0$ son en general cercanas a $5\%$, independientemente de $q$ y $w$. El estimador argmin tiende a ser ligeramente conservador (similar a $T_n$), mientras que mediana y media afeitada muestran tasas entre $3\%$ y $7\%$ según la distribución y el peso. La distribución Uniforme genera tasas algo más elevadas que Cauchy, probablemente porque su soporte compacto hace que el estimador de $\theta$ tenga mayor variabilidad relativa. En ningún caso se observa un sesgo sistemático superior a dos errores estándar Monte Carlo.
 
 La Figura~\ref{fig:tn-pval-h0} muestra los histogramas de p-valores bajo $H_0$ para $T_n$ con mediana. Se observa una distribución aproximadamente uniforme en $[0,1]$, confirmando que el procedimiento bootstrap calibra correctamente el nivel.
@@ -94,7 +101,7 @@ La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de ca
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\textwidth]{../results/figures/tn_runtime.png}
+  \includegraphics[width=0.9\textwidth]{../results/figures/tn_runtime.png}
   \caption{Tiempo de ejecución de $T_n$ por test (segundos) para los tres estimadores y $n\in\{20,40,80,160\}$.}
   \label{fig:tn-runtime}
 \end{figure}

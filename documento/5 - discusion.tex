@@ -1,3 +1,67 @@
+
+\subsection{Comparación de los estimadores del centro}
+
+En esta parte se compara el comportamiento de los tres estimadores del centro de simetría considerados en el proyecto: el estimador por minimización \(\hat\theta_{\min}\), la mediana \(\hat\theta_{\mathrm{med}}\) y la media afeitada \(\hat\theta_\alpha\). La comparación se divide en dos escenarios. Bajo \(H_0\), como la distribución sí es simétrica y el centro verdadero es conocido, se evalúa la precisión de cada estimador mediante RMSE, MAE, sesgo y distribución del error. Bajo \(H_a\), en cambio, no existe un centro verdadero de simetría; por tanto, solo se analiza la estabilidad de los estimadores a través de la variabilidad de \(\hat\theta\) entre réplicas.
+
+\subsubsection*{Precisión bajo \texorpdfstring{$H_0$}{H0}: RMSE, MAE y sesgo}
+
+Para evaluar directamente la calidad de los estimadores bajo \(H_0\), se consideran las dos distribuciones simétricas usadas en las simulaciones: Cauchy\((2,1)\) y Uniforme\((1,3)\). En ambos casos el centro verdadero es \(\theta=2\), por lo que se reportan el RMSE, el MAE y el sesgo empírico de cada estimador.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../results/figures/discusion/theta_estimators_h0_all_metrics.png}
+  \caption{Comparación de los estimadores del centro bajo \(H_0\). Se muestran RMSE, MAE y sesgo para Cauchy\((2,1)\) y Uniforme\((1,3)\), usando \(n\in\{20,40,80,160\}\).}
+  \label{fig:theta-estimators-h0}
+\end{figure}
+
+En la distribución Cauchy, la mediana presenta el mejor comportamiento global en RMSE y MAE para todos los tamaños muestrales. Esto es consistente con la robustez de la mediana frente a colas pesadas. El estimador \(\hat\theta_{\min}\) mejora al aumentar \(n\) y se acerca mucho a la mediana para \(n=80\) y \(n=160\), mientras que la media afeitada muestra errores mayores, especialmente para muestras pequeñas.
+
+En la distribución Uniforme, el patrón cambia: \(\hat\theta_{\min}\) tiene el menor RMSE y MAE para \(n\ge 40\), mientras que la media afeitada es competitiva para \(n=20\). La mediana resulta menos eficiente en este caso, con errores sistemáticamente mayores. Esto sugiere que, en distribuciones simétricas de soporte acotado, el estimador por minimización aprovecha mejor la estructura global de la muestra.
+
+El sesgo empírico es pequeño para los tres estimadores y tiende a cero al crecer \(n\). Por tanto, las diferencias principales entre ellos no se deben a sesgo sistemático, sino a varianza y sensibilidad frente a colas pesadas. En conjunto, \(\hat\theta_{\min}\) es el estimador más competitivo bajo soporte acotado, mientras que la mediana es preferible cuando hay colas pesadas.
+
+\subsubsection*{Distribución de los errores de estimación bajo \texorpdfstring{$H_0$}{H0}}
+
+Para complementar las métricas anteriores, se analiza la distribución completa de los errores \(\hat\theta-\theta\). Esto permite observar no solo el error promedio, sino también la dispersión y la estabilidad de cada estimador.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../results/figures/discusion/theta_estimator_error_boxplots_h0.png}
+  \caption{Distribución de los errores de estimación \(\hat\theta-\theta\) bajo \(H_0\), para Cauchy\((2,1)\) y Uniforme\((1,3)\). Se muestran diagramas de caja para \(\hat\theta_{\min}\), la mediana y la media afeitada, en \(n\in\{20,40,80,160\}\).}
+  \label{fig:theta-error-boxplots-h0}
+\end{figure}
+
+La Figura~\ref{fig:theta-error-boxplots-h0} confirma las conclusiones anteriores. En ambos modelos, la dispersión de \(\hat\theta-\theta\) disminuye al aumentar \(n\), como es esperable por consistencia. Sin embargo, la forma en que se concentra la distribución del error depende del estimador y de la distribución subyacente.
+
+Bajo Cauchy, la mediana presenta cajas más estrechas y centradas alrededor de \(0\) que los otros estimadores, especialmente para \(n=20\) y \(n=40\), lo que refuerza su mayor estabilidad en presencia de colas pesadas. El estimador \(\hat\theta_{\min}\) también mejora con \(n\), pero exhibe una dispersión algo mayor en muestras pequeñas. La media afeitada es la más variable, en concordancia con sus mayores valores de RMSE y MAE.
+
+Bajo Uniforme, en cambio, \(\hat\theta_{\min}\) y la media afeitada muestran una dispersión menor que la mediana para \(n\ge 40\). En particular, \(\hat\theta_{\min}\) exhibe cajas más compactas para \(n=80\) y \(n=160\), lo que explica su ventaja en RMSE y MAE en esta distribución. La mediana conserva un sesgo pequeño, pero su variabilidad es mayor de forma sistemática.
+
+En conjunto, los diagramas de caja muestran que las diferencias entre estimadores provienen principalmente de la variabilidad de \(\hat\theta\), más que de sesgos apreciables. Esto respalda la conclusión de que la mediana es preferible bajo colas pesadas, mientras que \(\hat\theta_{\min}\) resulta más eficiente en distribuciones simétricas de soporte acotado.
+
+
+\subsubsection*{Estabilidad bajo \texorpdfstring{$H_a$}{Ha}}
+
+Bajo \(H_a\), las distribuciones consideradas no son simétricas; por tanto, no existe un verdadero centro de simetría contra el cual comparar los estimadores. En este caso, no se calculan RMSE ni sesgo respecto a un parámetro real. En su lugar, se analiza la estabilidad de \(\hat\theta\), medida por su desviación estándar entre réplicas de Monte Carlo.
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{../results/figures/discusion/theta_estimator_std_ha.png}
+  \caption{Desviación estándar de \(\hat\theta\) bajo \(H_a\), para las distribuciones Gamma\((2,1)\), Pareto\((3,1)\) y Weibull\((1.5,1)\).}
+  \label{fig:theta-std-ha}
+\end{figure}
+
+Bajo \(H_a\) no existe un verdadero centro de simetría, por lo que ya no tiene sentido comparar los estimadores mediante RMSE o sesgo respecto a un parámetro real. En este caso, el interés se desplaza hacia la estabilidad de \(\hat\theta\), medida aquí por su desviación estándar a través de las réplicas de Monte Carlo.
+
+La Figura~\ref{fig:theta-std-ha} muestra que la variabilidad de los tres estimadores disminuye con \(n\) en las tres distribuciones asimétricas consideradas. Sin embargo, el orden relativo entre ellos depende de la forma de la distribución. En Gamma y Weibull, la media afeitada \(\hat\theta_\alpha\) es la más estable en casi todos los tamaños muestrales, seguida muy de cerca por \(\hat\theta_{\min}\), mientras que la mediana presenta mayor dispersión. En cambio, bajo Pareto, la mediana resulta ser el estimador más estable para todos los \(n\), lo cual es coherente con su mayor robustez frente a colas pesadas.
+
+En conjunto, estos resultados sugieren que, fuera de la hipótesis de simetría, la elección del estimador depende en buena medida de la severidad de la asimetría y del peso de las colas. La media afeitada ofrece la mejor estabilidad en alternativas moderadamente asimétricas como Gamma y Weibull, mientras que la mediana vuelve a destacar cuando la asimetría viene acompañada de colas más pesadas, como en Pareto.
+
+
+
 \subsection{¿Cómo afectan los distintos $w(t)$ y la elección de $q$ al desempeño de $S_n$?}
 
 En primer lugar, respecto a \(w(t)\), se observa que las tres alternativas consideradas producen comportamientos similares. Ya que la potencia aumenta conforme crece el tamaño muestral \(n\). Sin embargo, sí aparecen diferencias relevantes en la rapidez con que esto ocurre.
@@ -6,11 +70,15 @@ La ponderación Laplace muestra una convergencia más rápida en el escenario Pa
 
 Entre los pesos gaussianos, la diferencia entre \(\sigma=0.5\) y \(\sigma=1.0\) es moderada. El caso \(\sigma=0.5\) concentra aún más la integral cerca del origen. Empíricamente no se observan diferencias dramáticas entre ambas, aunque \(w=\mathrm{gauss}_{1.0}\) parece ser más estable. Como se evidencia a continuación:
 
-\includegraphics[]  {results/figures/sn_compare_weights.png}
+\includegraphics[scale = 0.5]  {results/figures/sn_compare_weights.png}
 
-Por otra parte, el parámetro \(q\) controla la forma de penalización de las discrepancias. Cuando \(q=1\), el estadístico agrega desviaciones de forma lineal, resultando menos sensible a diferencias extremas. Cuando \(q=2\), las discrepancias grandes reciben una penalización cuadrática, aumentando la sensibilidad del test frente a desviaciones pronunciadas.
+Por otra parte, el parámetro \(q\) controla la forma de penalización de las discrepancias. Cuando \(q=1\), el estadístico agrega desviaciones de forma lineal, resultando menos sensible a diferencias extremas. Cuando \(q=2\), las discrepancias grandes reciben una penalización cuadrática, aumentando la sensibilidad del test frente a desviaciones pronunciadas. Esto se evidencia en la siguiente gráfica: \\
+\includegraphics[scale = 0.5]{results/figures/sn_compare_q.png}
 
-Esto implica que \(q=2\) puede detectar con mayor facilidad asimetrías marcadas, mientras que \(q=1\) tiende a comportarse mejor cuando la asimetría está distribuida a lo largo de la distribución. En las simulaciones $q=1$ resulta sistemáticamente superior a $q=2$ con mediana y media afeitada (por ejemplo, con media afeitada y Pareto a $n=40$ la potencia pasa de $38.5\%$ con $q=2$ a $50\%$ con $q=1$).
+Esto implica que \(q=2\) puede detectar con mayor facilidad asimetrías marcadas, mientras que \(q=1\) tiende a comportarse mejor cuando la asimetría está distribuida a lo largo de la distribución. En las simulaciones $q=1$ resulta sistemáticamente superior a $q=2$ con mediana y media afeitada (por ejemplo, con media afeitada y Pareto a $n=40$ la potencia pasa de $38.5\%$ con $q=2$ a $50\%$ con $q=1$). Notando estas diferencias notables para el caso gamma: \\
+\includegraphics[scale=0.5]{results/figures/sn_power_curves_q1_laplace_1p0.png}
+\\
+\includegraphics[scale=0.5]{results/figures/sn_power_curves_q2_laplace_1p0.png}
 
 Respecto a la elección del estimador del centro $\hat\theta$, los resultados son matizados (véase el Apéndice). Bajo Cauchy, la mediana exhibe el menor RMSE como estimador puntual, mientras que bajo Uniforme el orden se invierte: el argmin tiene el menor RMSE, y la mediana el mayor. En cuanto a la potencia de $S_n$, el argmin es de hecho \emph{el estimador más potente} cuando es compatible con $q$: para Gamma con $q=2$ y $w_1$, alcanza $47.5\%$ en $n=40$ frente al $32\%$ de la mediana; ventaja que se mantiene en todas las distribuciones alternativas. La explicación es que el argmin minimiza $S_n$ sobre la muestra observada, dejando $S_n^{\text{obs}}$ pequeño pero, simultáneamente, las remuestras bootstrap (provenientes de $sF_n(\hat\theta_{\min})$) producen $S_n^*$ comparablemente pequeño, de manera que la calibración relativa es correcta y el test detecta la asimetría con mayor sensibilidad. La limitación práctica del argmin es su exclusión bajo $q=1$ —ya que el integrando $|\cdot|^{1/2}$ no es diferenciable en sus ceros y la búsqueda en grilla resulta prohibitiva en el bootstrap— por lo que en ese caso solo se evalúan mediana y media afeitada.
 

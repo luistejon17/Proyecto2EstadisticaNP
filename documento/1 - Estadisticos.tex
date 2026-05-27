@@ -1,47 +1,38 @@
 \subsection{Un estadístico de remuestreo tipo Kolmogorov--Smirnov}
 
-Una variable aleatoria $X$ es simétrica respecto a $\theta$ si $P(A)=P(2\theta-A)$ para todo $A$ medible o, equivalentemente, si $X-\theta\overset{d}{=}-(X-\theta)$; bajo esta hipótesis la transformación $X\mapsto 2\theta-X$ deja invariante la densidad de $X$. Dada una muestra i.i.d.\ $X_1,\dots,X_n$ con distribución empírica $F_n(x)=\frac{1}{n}\sum_{i=1}^{n}\mathbf{1}_{\{X_i\le x\}}$ esperaríamos entonces que $F_n$ esté cerca de su \emph{simetrización empírica},
+Una variable aleatoria $X$ es simétrica respecto a $\theta$ si $P(A)=P(2\theta-A)$ para todo $A$ medible o, equivalentemente, si $X-\theta\overset{d}{=}-(X-\theta)$; bajo esta hipótesis la transformación $X\mapsto 2\theta-X$ deja invariante la densidad de $X$. Dada una muestra i.i.d.\ $X_1,\dots,X_n$ con distribución empírica $F_n(x)=\frac{1}{n}\sum_{i=1}^{n}\mathbf{1}_{\{X_i\le x\}}$ esperaríamos entonces que $F_n$ esté cerca de su \df{simetrización empírica},
 \[
 sF_n(x;\theta) \;=\; \frac{1}{2n}\sum_{i=1}^{n}\bigl(\delta_{X_i}+\delta_{2\theta-X_i}\bigr)(x),
 \]
 es decir, la cdf empírica de los $2n$ puntos $\{X_i,\,2\theta-X_i\}_{i\le n}$, simétrica por construcción. Para cuantificar la discrepancia entre $F_n$ y $sF_n(\,\cdot\,;\hat\theta)$, Schuster y Barker~\cite{schuster1987bootstrap} propusieron
 \begin{equation}\label{eq:Tn}
 T_n \;=\; \sqrt{n}\,\bigl\|F_n - sF_n(\hat\theta)\bigr\|_\infty,
-\qquad \|G\|_\infty=\sup_{x\in\mathbb{R}}|G(x)|,
+\qquad \|G\|_\infty=\sup_{x\in\R}|G(x)|,
 \end{equation}
 con $\hat\theta$ un estimador del centro. Si $F$ es simétrica $T_n$ es pequeño; en caso contrario $sF_n(\hat\theta)$ debe distorsionar mucho a $F_n$ y $T_n$ crece.
 
-La distribución nula de $T_n$ depende de la $F$ desconocida, por lo que el cuantil de rechazo se aproxima vía bootstrap: para $b=1,\dots,B$ se remuestrea $X_1^{*(b)},\dots,X_n^{*(b)}\sim sF_n(\hat\theta)$ (la distribución simétrica más cercana a los datos), se recalcula $\hat\theta^{*(b)}$ sobre la remuestra y se obtiene $T_n^{*(b)}=\sqrt{n}\,\|F_n^{*(b)}-sF_n^{*(b)}(\hat\theta^{*(b)})\|_\infty$. El p-valor se aproxima por la fracción $\#\{b:T_n^{*(b)}\ge T_n\}/B$ (en la práctica usamos la corrección $(1+\#\{\cdot\})/(B+1)$). La consistencia de este procedimiento la justifican Arcones y Giné~\cite{arcones1991bootstrap}.
+Para estimar el $p$-valor, bajo $H_0$ y validez del bootstrap~\cite{arcones1991bootstrap}, tenemos que las muestras bootstrap provienen aproximadamente de la misma distribución que la muestra original, por tanto poseemos $B+1$ muestras distintas  con  las que estimar el $p$-valor, vía $\hat{p}:= \frac{1+\#\{b:T_n^{*(b)}\ge T_n\}}{B+1}$, es decir, de las $B+1$ muestras contamos el número de veces que el estadístico dio un valor igual, o más extremo que el $T_n$ observado. 
 
-\begin{teorema}[Arcones y Giné, 1991~\cite{arcones1991bootstrap}]\label{thm:arcones-gine}
-Sea $X_1,\dots,X_n$ i.i.d.\ con distribución continua $F$ simétrica respecto a $\theta_0$, y sea $\hat\theta_n$ un estimador débilmente consistente de $\theta_0$. Entonces, cuando $n\to\infty$,
-\[
-\sup_{t\ge 0}\bigl|P^*\!\bigl(T_n^*\le t\bigr)-P(T_n\le t)\bigr|\;\xrightarrow{P}\;0,
-\]
-donde $T_n^*=\sqrt{n}\,\|F_n^*-sF_n^*(\hat\theta_n^*)\|_\infty$ y $P^*$ es la probabilidad condicional dados $X_1,\dots,X_n$. En consecuencia: bajo $H_0$ el p-valor bootstrap $\to U(0,1)$ (nivel asintótico $\alpha$ garantizado); bajo $H_a$ el p-valor $\to 0$ (consistencia del test). El resultado análogo vale para $S_n$.
-\end{teorema}
 
-\begin{observacion}[Selección de $B$: Hall y Wilson, 1991~\cite{hall1991bootstrap}]\label{obs:hall-wilson}
-El p-valor $\hat p_B=\bigl(1+\#\{b:T_n^{*(b)}\ge T_n\}\bigr)/(B+1)$ toma valores en $\{1/(B+1),\dots,1\}$. Para evitar sesgo de discretización al nivel $\alpha$, se exige $\alpha(B+1)\in\mathbb{Z}$. Para $\alpha=0{.}05$: $B\in\{19,\,39,\,99,\,199,\,499,\dots\}$. Con $R=300$ réplicas el error Monte Carlo es $\mathrm{SE}_R\approx1{.}3\%$; el error de discretización $1/(B+1)=0{.}5\%$ para $B=199$ es despreciable. Se adopta $\boxed{B=199}$ ($B+1=200$, $0{.}05\times 200=10\in\mathbb{Z}$).
-\end{observacion}
+
 
 \subsection{La función característica empírica}
 
-La función característica de una variable real $X$ es $\varphi_X(t)=\mathbb{E}(e^{itX})=\mathbb{E}\cos(tX)+i\,\mathbb{E}\sin(tX)$, $t\in\mathbb{R}$, $i=\sqrt{-1}$. La simetría se traduce en una factorización limpia de $\varphi_X$:
+La función característica de una variable real $X$ es $\varphi_X(t)=\E(e^{itX})$, $t\in\R$. La simetría se traduce en una factorización limpia de $\varphi_X$:
 
 \begin{theorem}\label{thm:fc}
-$X\sim\mathrm{sim}(\theta)$ si y solo si $\varphi_X(t)=e^{it\theta}\,c_0(t)$ con $c_0:\mathbb{R}\to\mathbb{R}$.
+$X\sim\mathrm{sim}(\theta)$ si y solo si $\varphi_X(t)=e^{it\theta}\,c_0(t)$ con $c_0:\R\to\R$.
 \end{theorem}
 
 \begin{proof}
-$(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y$, de la igualdad $\varphi_Y(t) = \mathbb{E}[\cos(tY)] + i\mathbb{E}[\sin(tY)]$ es fácil verificar que $\varphi_Y(-t)=\overline{\varphi_Y(t)}$, entonces $\varphi_Y(t)=\varphi_Y(-t)=\overline{\varphi_Y(t)}$, así que $\varphi_Y$ es real. De $X=Y+\theta$ se sigue $\varphi_X(t)=e^{it\theta}\varphi_Y(t)$, y basta tomar $c_0:=\varphi_Y$.
+$(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y=\theta-X$, de la igualdad $\varphi_Y(t) = \E[\cos(tY)] + i\E[\sin(tY)]$ es fácil verificar que $\varphi_Y(-t)=\overline{\varphi_Y(t)}$. Así, como $\varphi_Y(t)=\varphi_Y(-t)=\overline{\varphi_Y(t)}$, se tiene que $\varphi_Y$ es real. De $X=Y+\theta$ se sigue $\varphi_X(t)=e^{it\theta}\varphi_Y(t)$, y basta tomar $c_0:=\varphi_Y$.
 
 $(\Leftarrow)$ Si $\varphi_X(t)=e^{it\theta}c_0(t)$ con $c_0$ real, entonces $\varphi_Y(t):=e^{-it\theta}\varphi_X(t)=c_0(t)$ es real, luego $\varphi_Y(t)=\overline{\varphi_Y(t)}=\varphi_Y(-t)$. Por unicidad de la función característica, $Y\overset{d}{=}-Y$, es decir $X-\theta\overset{d}{=}-(X-\theta)$.
 \end{proof}
 
-Dada una muestra $X_1,\dots,X_n$, la función característica empírica~\cite{feuerverger1977empirical} es $c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$ (misma magnitud, parte imaginaria nula), el estadístico de penalización considerado en este trabajo es
+Dada una muestra $X_1,\dots,X_n$, la función característica empírica es $c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$, el estadístico de penalización considerado en este trabajo es
 \begin{equation}\label{eq:Sn}
-S_n \;=\; \int_{-\infty}^{\infty}\bigl|c_n(t)e^{-it\hat\theta}-c_s(t)\bigr|^q\,w(t)\,dt,
+S_n \;=\; \int_{-\infty}^{\infty}\bigl\|c_n(t)e^{-it\hat\theta}-c_s(t)\bigr\|^q\,w(t)\,dt,
 \end{equation}
 con $q\in\{1,2\}$ y $w$ una densidad simétrica. Bajo $H_0$ la parte imaginaria de $c_n(t)e^{-it\hat\theta}$ se anula y $S_n$ es pequeño; bajo asimetría no se anula y $S_n$ crece. El exponente $q$ controla la penalización ($q{=}2$ amplifica desviaciones grandes, $q{=}1$ es más robusto), y la densidad $w$ pondera las frecuencias: como $c_n(t)$ se vuelve ruidoso para $|t|$ grande, conviene concentrar la masa de $w$ cerca del origen. El p-valor se obtiene por un bootstrap análogo al de $T_n$, remuestreando de $sF_n(\hat\theta)$.
 
@@ -49,12 +40,12 @@ con $q\in\{1,2\}$ y $w$ una densidad simétrica. Bajo $H_0$ la parte imaginaria 
 
 Ambos estadísticos requieren un estimador $\hat\theta$ del centro. Consideramos tres candidatos clásicos \cite{schuster1987bootstrap}: la mediana muestral $\hat\theta_{\mathrm{med}}=\mathrm{med}(X_1,\dots,X_n)$, la media afeitada $\hat\theta_\alpha=\bar X_{0.1}$, y el \emph{minimizador} del estadístico,
 \[
-\hat\theta_{\min} \;=\; \arg\min_{\theta\in\mathbb{R}} M_n(\theta),
+\hat\theta_{\min} \;=\; \arg\min_{\theta\in\R} M_n(\theta),
 \qquad M_n\in\{T_n,\,S_n\}.
 \]
-Los dos primeros son explícitos y baratos; el tercero exige una optimización numérica cuyo costo es crítico, pues el procedimiento bootstrap repite $B{+}1$ veces el cálculo de $\hat\theta_{\min}$ por test. La estructura matemática de cada estadístico permite diseñar un optimizador adaptado: $T_n$ es escalonada y se resuelve por enumeración de candidatos discretos (\textbf{promedios de Walsh}); $S_n$ es suave y admite un esquema de \emph{quasi-Newton} basado en su gradiente analítico.
+Los dos primeros son explícitos y baratos; el tercero exige una optimización numérica cuyo costo es crítico, pues el procedimiento bootstrap repite $B{+}1$ veces el cálculo de $\hat\theta_{\min}$ por test. En las siguientes dos secciones se explica cómo la estructura matemática de cada estadístico permite diseñar un  estimador eficiente de este argmin.
 
-\subsubsection{Argmin de $T_n$: promedios de Walsh}
+\subsubsection{Argmin de $T_n$}
 
 \begin{definicion}[Promedio de Walsh]\label{def:walsh}
 Sea $X_1,\dots,X_n$ una muestra. Los \emph{promedios de Walsh} son las $\binom{n}{2}+n=\tfrac{n(n+1)}{2}$ semisumas
@@ -80,50 +71,116 @@ En consecuencia, $T_n(\theta)$ es constante en los intervalos entre elementos de
 
 La Proposición~\ref{prop:Tn-steps} reduce el problema continuo a una búsqueda discreta sobre un conjunto finito de $\tfrac{n(n+1)}{2}$ candidatos. La Sección~\ref{impl:argmin-Tn} describe el algoritmo combinatorio exacto de Schuster-Narvarte, que localiza el mínimo iterando sobre las anti-diagonales de la matriz de promedios de Walsh sin enumerar todos los candidatos.
 
-\subsubsection{Argmin de $S_n$: diferenciación bajo el signo integral}
 
-Para $S_n$ con $q=2$, el integrando es una función suave de $\theta$ y de $t$, lo que permite usar métodos basados en el gradiente. Se requiere justificar el intercambio $\partial_\theta\!\int = \int\!\partial_\theta$.
+\subsubsection{Argmin de $S_n$}
+
+A diferencia de $T_n(\theta)$, el estadístico $S_n(\theta)$ no es una función escalonada del centro de simetría. En particular, para el caso $q=2$, el criterio tiene una estructura suave en $\theta$, lo que permite usar métodos de optimización basados en gradiente, como quasi-Newton. La idea es escribir el integrando de $S_n$ de manera que su dependencia en $\theta$ sea explícita y luego justificar el intercambio entre derivación e integración.
+
+Esta justificación se presenta únicamente para el caso $q=2$. Para $q=1$, el integrando involucra una norma no cuadrática y puede presentar puntos de no diferenciabilidad; por tanto, en ese caso es más natural usar optimización sin gradiente o aproximaciones numéricas.
 
 \begin{proposicion}[Leibniz para $S_n$, $q=2$]\label{prop:leibniz-Sn}
-Sea $w:\mathbb{R}\to\mathbb{R}_{\ge 0}$ una densidad simétrica con primer momento absoluto finito, $\int|t|w(t)\,dt<\infty$ (caso Normal y Laplace). Defínase
+Sea $w:\R\to\R_{\ge 0}$ una densidad simétrica tal que \(\int_{-\infty}^{\infty}|t|w(t)\,dt<\infty\).
+Esta condición se cumple, por ejemplo, para pesos normales o de Laplace. Sea \(c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}\) la función característica empírica y defínase, para $q=2$,
 \[
-S_n(\theta) \;=\; \int_{-\infty}^{\infty} \bigl|c_n(t)e^{-it\theta}-|c_n(t)|\bigr|^2 w(t)\,dt.
+S_n(\theta)
+=
+\int_{-\infty}^{\infty}
+\bigl|c_n(t)e^{-it\theta}-|c_n(t)|\bigr|^2w(t)\,dt.
 \]
-Entonces $S_n$ es de clase $C^1$ en $\theta$ y
+Entonces $S_n$ es de clase $C^1$ como función de $\theta$ y su derivada está dada por
 \begin{equation}\label{eq:grad-Sn}
-\frac{\partial S_n}{\partial \theta}(\theta) \;=\; -2\int_{-\infty}^{\infty} t\,|c_n(t)|^2\,\sin\!\bigl(\Phi_n(t)-t\theta\bigr)\,w(t)\,dt,
+\frac{\partial S_n}{\partial \theta}(\theta)
+=
+-2\int_{-\infty}^{\infty}
+t\,|c_n(t)|^2
+\sin\!\bigl(\Phi_n(t)-t\theta\bigr)
+w(t)\,dt,
 \end{equation}
-donde $\Phi_n(t)=\arg c_n(t)$ es la fase de la función característica empírica.
+donde $\Phi_n(t)=\arg c_n(t)$, es decir, \(c_n(t)=|c_n(t)|e^{i\Phi_n(t)}\)
+cuando $c_n(t)\neq 0$. En los puntos donde $c_n(t)=0$, el integrando de
+\eqref{eq:grad-Sn} se interpreta como cero.
 \end{proposicion}
 
 \begin{proof}
-Escribiendo $A_n(t;\theta)=a_n(t)\cos(t\theta)+b_n(t)\sin(t\theta)$ con $a_n=\Re c_n$ y $b_n=\Im c_n$, se tiene
+Escribamos \(c_n(t)=a_n(t)+ib_n(t)\), con \(a_n(t)=\Re c_n(t)\) y \(b_n(t)=\Im c_n(t)\). Entonces la parte real de \(c_n(t)e^{-it\theta}\) es
 \[
-\bigl|c_n e^{-it\theta}-|c_n|\bigr|^2 \;=\; 2|c_n|\bigl(|c_n|-A_n(t;\theta)\bigr).
+A_n(t;\theta)
+:=
+a_n(t)\cos(t\theta)+b_n(t)\sin(t\theta).
 \]
-Sea $g(t,\theta)$ ese integrando. La derivada parcial es
+Denotemos $z := c_n(t)e^{-it\theta}$ y $r := |c_n(t)|$. 
+Como  $|z|=r$ se tiene
+$g(t,\theta)
+:= |z - r|^2
+= (z-r)\overline{(z-r)}
+ = (z-r)(\bar{z}-r) 
+= |z|^2 - r(\bar{z}+z) + r^2 
+= r^2 - 2r\operatorname{Re}(z) + r^2 
+= 2r\bigl(r - \operatorname{Re}(z)\bigr)
+ = 2|c_n(t)|\bigl(|c_n(t)| - A_n(t;\theta)\bigr).$  Entonces
 \[
-\frac{\partial g}{\partial \theta}(t,\theta) \;=\; -2|c_n(t)|\bigl(-a_n(t)\,t\sin(t\theta)+b_n(t)\,t\cos(t\theta)\bigr)
-\;=\; -2t\,|c_n(t)|\,B_n(t;\theta),
+\partial_\theta g(t,\theta)
+=
+-2t|c_n(t)|
+\bigl[-a_n(t)\sin(t\theta)+b_n(t)\cos(t\theta)\bigr].
 \]
-con $B_n(t;\theta)=-a_n(t)\sin(t\theta)+b_n(t)\cos(t\theta)$. Como $|a_n|,|b_n|\le 1$, se tiene la cota uniforme en $\theta$,
+
+Ahora, para cada \(t\), la función \(\theta\mapsto g(t,\theta)\) es continuamente diferenciable. Además, como \(|a_n(t)|\le 1\), \(|b_n(t)|\le 1\) y \(|c_n(t)|\le 1\), se obtiene, uniformemente en \(\theta\), que \(
+|\partial_\theta g(t,\theta)|w(t)
+\le
+4|t|w(t)
+\). Por hipótesis, \(4|t|w(t)\) es integrable en \(\R\). Luego, por convergencia dominada, o equivalentemente por la regla de Leibniz para integrales dependientes de un parámetro, podemos derivar bajo el signo integral:
 \[
-\bigl|\partial_\theta g(t,\theta)\bigr|\,w(t) \;\le\; 4|t|\,w(t),
+\frac{\partial S_n}{\partial\theta}(\theta)
+=
+\int_{-\infty}^{\infty}
+\partial_\theta g(t,\theta)w(t)\,dt.
 \]
-y $\int 4|t|w(t)\,dt<\infty$ por hipótesis. El Teorema de convergencia dominada (regla de Leibniz, ver p.\,ej. Folland~\cite{folland1999real}, Thm.\,2.27) permite intercambiar derivada e integral, obteniendo
+
+Por tanto,
 \[
-\frac{\partial S_n}{\partial \theta} \;=\; \int \partial_\theta g(t,\theta)\,w(t)\,dt \;=\; -2\int t\,|c_n(t)|\,B_n(t;\theta)\,w(t)\,dt.
+\frac{\partial S_n}{\partial\theta}(\theta)
+=
+-2\int_{-\infty}^{\infty}
+t|c_n(t)|
+\bigl[-a_n(t)\sin(t\theta)+b_n(t)\cos(t\theta)\bigr]
+w(t)\,dt.
 \]
-Usando $|c_n|\,B_n = |c_n|^2 \sin(\Phi_n-t\theta)$ (un cálculo trigonométrico) se obtiene la forma~\eqref{eq:grad-Sn}.
+Finalmente, escribiendo \(c_n(t)=|c_n(t)|e^{i\Phi_n(t)}\), se tiene \(a_n(t)=|c_n(t)|\cos\Phi_n(t)\) y \(b_n(t)=|c_n(t)|\sin\Phi_n(t)\). Por la identidad \(\sin(u-v)=\sin u\cos v-\cos u\sin v\),
+\[
+-a_n(t)\sin(t\theta)+b_n(t)\cos(t\theta)
+=
+|c_n(t)|\sin\bigl(\Phi_n(t)-t\theta\bigr).
+\]
+Sustituyendo esta expresión se obtiene \eqref{eq:grad-Sn}.
 \end{proof}
+
 
 \begin{corolario}\label{cor:H0-gradient-zero}
-Si $X_1,\dots,X_n$ es i.i.d.\ con distribución simétrica respecto a $\theta_0$, entonces $\mathbb{E}\bigl[\partial_\theta S_n(\theta_0)\bigr]=0$. En particular, el verdadero centro $\theta_0$ es un punto estacionario asintótico de $S_n$.
+Si $X_1,\dots,X_n$ es i.i.d.\ con distribución simétrica respecto a $\theta_0$, entonces $\E\bigl[\partial_\theta S_n(\theta_0)\bigr]=0$. En particular, el verdadero centro $\theta_0$ es un punto estacionario asintótico de $S_n$.
 \end{corolario}
 \begin{proof}
-Bajo simetría en $\theta_0$, la distribución de $c_n(t)e^{-it\theta_0}$ es real (Teorema~\ref{thm:fc}), luego $\mathbb{E}[B_n(t;\theta_0)]=0$ para todo $t$. Aplicando esperanza a~\eqref{eq:grad-Sn} y usando Fubini (justificado por las mismas cotas que arriba) se concluye.
+Bajo simetría en $\theta_0$, la distribución de $c_n(t)e^{-it\theta_0}$ es real (Teorema~\ref{thm:fc}), luego $\E[B_n(t;\theta_0)]=0$ para todo $t$. Aplicando esperanza a~\eqref{eq:grad-Sn} y usando Fubini (justificado por las mismas cotas que arriba) se concluye.
 \end{proof}
 
+
+
+\subsubsection{Iteración de quasi-Newton}
+
+La existencia del gradiente \eqref{eq:grad-Sn} permite emplear métodos de optimización basados en derivadas para aproximar el minimizador de \(S_n(\theta)\). Una opción básica sería el descenso por gradiente,
+\[
+\theta^{(k+1)}
+=
+\theta^{(k)}-\eta_k S_n'(\theta^{(k)}),
+\qquad k=0,1,2,\dots,
+\]
+donde \(\eta_k>0\) es un tamaño de paso. Sin embargo, en la implementación usamos \texttt{L-BFGS-B}, un método quasi-Newton de memoria limitada que aproxima información de curvatura a partir de diferencias sucesivas entre iterados y gradientes, y que selecciona el paso mediante una búsqueda lineal \cite{nocedal2006numerical}.
+
+En dimensión uno, la idea puede interpretarse como una aproximación secante de la curvatura local de \(S_n\), aunque el algoritmo \texttt{L-BFGS-B} incluye además una estrategia de búsqueda lineal y, en general, restricciones de caja. Por esta razón, no se trata simplemente de aplicar la regla de la secante, sino de usar una aproximación quasi-Newton estabilizada.
+
+Como punto inicial tomamos \(\theta^{(0)}=\hat\theta_{\mathrm{med}}\). Esta elección es natural porque, bajo simetría y condiciones regulares, la mediana poblacional coincide con el centro de simetría. En la práctica, este punto inicial suele ubicar la optimización cerca de una región razonable del criterio. No obstante, como \(S_n(\theta)\) no necesariamente es convexo, el procedimiento debe entenderse como una búsqueda numérica de un mínimo local; por ello, en la implementación conviene comparar el resultado con una búsqueda en grilla o usar varios puntos iniciales cuando sea necesario.
+
+\begin{comment}
 \subsubsection{Iteración de quasi-Newton}
 
 La existencia del gradiente \eqref{eq:grad-Sn} habilita métodos iterativos de descenso. El más simple es el \emph{descenso por gradiente}: dado $\theta^{(0)}$, iterar
@@ -135,3 +192,113 @@ con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-B
 \theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
 \]
 salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto, de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.
+
+\end{comment}
+
+
+\subsection{Validez del Bootstrap}
+
+En esta sección definimos formalmente las condiciones y validez del Bootstrap para $T_n$ tomado de \cite{arcones1991bootstrap}, y damos razones para pensar que es válido también para $S_n$. 
+
+Primero fijamos la notación, dado $D\s\R$, denotamos por $\mathcal{P}(D)$ es el conjunto de medidas de probabilidad en $D$, con $\ell^\infty(D)$ al conjunto de funciones medibles en $D$ acotadas y   $\rightsquigarrow$ denota convergencia débil o convergencia en distribución de elementos aleatorios con valores en  $\ell^\infty(D)$.
+
+A pesar de que Arcones y Giné~\cite{arcones1991bootstrap} dan los resultados en mayor generalidad, en este texto $\theta:\mathcal{P(\R) \to \R}$ denota la mediana de una distribución.
+
+
+
+\begin{definicion}[$\sqrt{n}$-bootstrap consistencia]
+Si $\Pi\s \mathcal{P}(\R)$ es cerrado bajo simetrización. Se dice que $\theta$ es \df{$\sqrt{n}$-bootstrap consistente} para
+$\Pi$ si se cumplen las tres condiciones siguientes.
+\begin{enumerate}
+  \item[\textup{(a)}] $\theta(P_n)\to\theta(P)$ casi seguramente.
+  \item[\textup{(b)}] $\forall P\in\Pi$ simétrica , existe una variable aleatoria
+        $\widetilde{\theta}(P)$ tal que
+        \[
+          \sqrt{n}\,\bigl(\theta(P_n)-\theta(P)\bigr)\;\rightsquigarrow\;\widetilde{\theta}(P),
+        \]
+        conjuntamente con el proceso empírico $\sqrt{n}(F_n-F)(\cdot)$. 
+  \item[\textup{(c)}]  $\forall P\in\Pi$, condicionalmente a la muestra y para casi toda
+        sucesión de muestras,
+        \[
+          \sqrt{n}\,\bigl(\theta(P_n^{*})-\theta(P_n)\bigr)\;\rightsquigarrow\;
+          \widetilde{\theta}(sP),
+        \]
+        conjuntamente con $\sqrt{n}(F_n^{*}-sF_n)$, donde $P_n^{*}$ es la empírica
+        obtenida al remuestrear iid de $sP_n$.
+\end{enumerate}
+\end{definicion}
+
+\begin{observacion}
+    En esencia, definición previa nos dice que bajo la hipótesis de que $P$ es simétrica, el límite de la parte $(b)$ y $(c)$ es el mismo y por tanto \display{ \theta(P_n)-\theta(P) \;\overset{d}{\approx}\;\theta(P_n^{*})-\theta(P_n). }
+    Tomando cuantiles empíricos del lado derecho de esta última expresión (que se calculan vía remuestreo) podemos hallar cuantiles aproximados del lado izquierdo.
+\end{observacion}
+
+
+\begin{teorema}[Arcones y Giné, 1991~\cite{arcones1991bootstrap}]\label{thm:arcones-gine}
+    Sea $\Pi\s \mathcal{P}(\R)$ que cumple condiciones del Teorema~2.3 en \cite{arcones1991bootstrap}. Si  $\theta$ es un parámetro de localización $\sqrt{n}$\emph{-bootstrap consistente} para $\Pi$. 
+Arcones y Giné, hallan un proceso $Z_P(t)$, i.e., un elemento aleatorio  en $\ell^\infty(D_P)$ donde $D_P:=\{x \mid 0<F(x)<1\}$  tal que:
+\begin{enumerate}
+  \item[\textup{(i)}] Para toda $P\in\Pi$, condicionalmente a la muestra y para casi
+        toda sucesión de muestras,
+        \[
+          \sqrt{n}\,\bigl(F_n^{*}-sF_n^{*}\bigr) \;\rightsquigarrow\; Z_{sP}
+          \quad\text{débilmente en } \ell^\infty(D_{sP}).
+        \]
+  \item[\textup{(ii)}] Para toda $P\in\Pi$ \emph{simétrica}
+        \[
+          \sqrt{n}\,\bigl(F_n-sF_n\bigr) \;\rightsquigarrow\; Z_{P}
+          \quad\text{débilmente en } \ell^\infty(D_{P}),
+        \]
+        y, como $sP=P$ bajo $H_0$, ambos límites coinciden:
+        $\norm{Z_{sP}}_\infty \overset{d}{=} \norm{Z_P}_\infty$.
+\end{enumerate}
+\end{teorema}
+
+\medskip
+
+Como el mapa $\|\cdot\|_\infty : \ell^\infty(D) \to \R$ es continuo, el
+\ent{Teorema del Mapa Continua}  aplicado a las partes \textup{(i)} y
+\textup{(ii)} del Teorema anterior da
+\[
+  T_n \;\rightsquigarrow\; \|Z_P\|_\infty \quad \text{bajo } H_0,
+  \qquad
+  \widehat{T}_n \;\rightsquigarrow\; \|Z_{sP}\|_\infty
+  \quad \text{condicional a la muestra, c.s.}
+\]
+Bajo $H_0$, como $sP = P$, ambos límites coinciden en distribución. Por tanto los
+cuantiles bootstrap $t_{n,\alpha}$ convergen al cuantil $t_\alpha$ de $\|Z_P\|_\infty$, y
+por continuidad de su fda se obtiene el nivel asintótico $\alpha$.
+
+Para la consistencia: bajo $H_1$ se tiene $\|F - sF\|_\infty > 0$, y por el Teorema de
+Glivenko--Cantelli $\|F_n - sF_n\|_\infty \to \|F - sF\|_\infty$ c.s., luego
+\[
+  T_n \;=\; \sqrt{n}\,\|F_n - sF_n\|_\infty \;\longrightarrow\; \infty,
+\]
+mientras que $t_{n,\alpha}$ permanece acotado. De ahí que
+$\Pr(T_n \ge t_{n,\alpha} \mid H_1) \to 1$.
+\medskip
+
+\begin{corolario}[Validez del test bootstrap con $T_n$]
+En el teorema anterior,  si la \textup{fda} de $\norm{Z_{sP}}_\infty$ es continua. es continua.
+Sea $\Pi_s \s\Pi$ el subconjunto de medidas simétricas en $\Pi$, y defínase el \df{valor crítico
+bootstrap}
+\[
+  t_{n,\alpha}\;:=\;\inf\!\Big\{t:\widehat{\Pr}\!\bigl(\sqrt{n}\,\norm{F_n^{*}-sF_n^{*}}_\infty\ge t\bigr)\le \alpha\Big\},
+\]
+donde $\widehat{\Pr}$ denota la probabilidad condicional a la muestra.  Para probar
+\[
+  H_0:\ P\in\Pi_s\qquad\text{vs}\qquad H_1:\ P\in\Pi\setminus\Pi_s,
+\]
+con región de rechazo $\bigl\{\sqrt{n}\,\norm{F_n-sF_n}_\infty\ge t_{n,\alpha}\bigr\}$.
+Entonces
+\[
+  \Pr\!\Bigl(\sqrt{n}\,\norm{F_n-sF_n}_\infty\ge t_{n,\alpha}\,\Big|\,H_0\Bigr)
+  \;\xrightarrow[n\to\infty]{}\;\alpha,
+\]
+\[
+  \Pr\!\Bigl(\sqrt{n}\,\norm{F_n-sF_n}_\infty\ge t_{n,\alpha}\,\Big|\,H_1\Bigr)
+  \;\xrightarrow[n\to\infty]{}\;1.
+\]
+Además, la fda $\norm{Z_{sP}}_\infty$ es estrictamente creciente en $t_\alpha$, entonces
+$t_{n,\alpha}\to t_\alpha$ casi seguramente.
+\end{corolario}

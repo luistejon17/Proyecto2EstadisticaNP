@@ -1,11 +1,18 @@
 
-\subsection{Protocolo Monte Carlo}
+\subsection{Estimación del nivel y potencia por Monte Carlo}
 
 Para estimar el nivel y la potencia de cada test se repite $R$ veces el siguiente experimento: (i)~generar $X_1,\dots,X_n$ i.i.d.\ de la distribución de interés; (ii)~calcular el p-valor $p_r$ del test mediante $B=199$ remuestras bootstrap de $sF_n(\hat\theta)$; (iii)~registrar $I_r=\mathbf{1}\{p_r\le\alpha\}$. La tasa de rechazo empírica
 \[
 \hat\pi_n \;=\; \frac{1}{R}\sum_{r=1}^{R} I_r
 \]
 estima el error Tipo I bajo $H_0$ o la potencia bajo $H_a$, con error estándar $\sqrt{\hat\pi_n(1-\hat\pi_n)/R}$. Se fijó $\alpha=0.05$, y se usaron $R=300$ réplicas para $T_n$ y $R=200$ para $S_n$.
+
+\begin{observacion}
+El p-valor $\hat p=\bigl(1+\#\{b:T_n^{*(b)}\ge T_n\}\bigr)/(B+1)$. Para rechazar a nivel $\alpha$, se requiere que $\p( p\leq \alpha) = \alpha$, bajo la validez del bootstrap, $p(B+1)$ es aproximadamente uniforme en $\{1,...,B+1\}$. Es decir, $\p( p \leq \alpha) = \p(p(B+1) \leq \alpha(B+1)) = \sum_{i=1}^{\lfloor \alpha(B+1) \rfloor} \frac{1}{B+1} = \frac{\lfloor \alpha(B+1) \rfloor}{B+1}.$ Para poder rechazar a nivel $\alpha$ exacto basta pedir $\alpha\cdot(B+1) \in \N$.
+
+Por otro lado,  como $\hat{p}\in \{\frac{1}{B+1},...,1\}$ esto introduce un sesgo de discretización pues obliga a nuestra estimación a saltar en escalones de $\frac{1}{B+1}$. Para que este riesgo sea despreciable en comparación al la desviación estándar del Montecarlo ($SE_R= \sqrt{\frac{0.05\cdot0.95}{R}} \approx 0.0125 \approx 1.3 \%$. Pedimos que $\frac{1}{B+1}< 0.0125/2.$ Así, con $B= 199$ basta.
+\end{observacion}
+
 
 \subsection{Distribuciones}
 
@@ -30,15 +37,20 @@ Los tamaños de muestra son $n\in\{20,40,80,160\}$, elegidos para que la potenci
 
 Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker~\cite{schuster1987bootstrap}:
 \begin{itemize}
-  \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$). La Sección~\ref{sec:estim-theta} detalla los esquemas numéricos. Para $T_n$, se usa el algoritmo combinatorio exacto de Schuster-Narvarte (Sección~\ref{impl:argmin-Tn}) tanto sobre la muestra original como en cada remuestra bootstrap: las remuestras provienen de $sF_n(\hat\theta)$, que es exactamente simétrica, por lo que el algoritmo converge en pocas iteraciones ($L$ mediana $\approx 3$--$8$ para $n\in\{20,\dots,160\}$) y la búsqueda es exacta y eficiente sin necesidad de fijar ventanas ni anclas.
-  Para $S_n$ con $q=2$, \texttt{L-BFGS-B} con gradiente analítico reemplaza la búsqueda Walsh y también se aplica de manera idéntica a cada remuestra. El caso $q=1$ se excluye del estimador argmin (véase la subsección siguiente).
-  \item $\hat\theta_{\mathrm{med}} = \mathrm{mediana}(X_1,\dots,X_n)$.
-  \item $\hat\theta_\alpha = \bar{X}_{0.1}$: media afeitada con fracción $0.1$ en cada cola.
+
+      \item $\hat\theta_{\mathrm{med}} = \mathrm{mediana}(X_1,\dots,X_n)$.
+  
+    \item $\hat\theta_\alpha = \bar{X}_{0.1}$: media afeitada con fracción $0.1$ en cada cola.
+    
+    \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$). La Sección~\ref{sec:estim-theta} detalla los esquemas numéricos utilizados. Para $T_n$, se usa el algoritmo combinatorio exacto de Schuster-Narvarte (Sección~\ref{impl:argmin-Tn}) tanto sobre la muestra original como en cada remuestra bootstrap: las remuestras provienen de $sF_n(\hat\theta)$, que es exactamente simétrica, por lo que el algoritmo converge en pocas iteraciones y la búsqueda es exacta y eficiente.
+
+    Para $S_n$ con $q=2$, se usa \texttt{L-BFGS-B} con el gradiente analítico dado en \eqref{eq:grad-Sn}. En cambio, para $S_n$ con $q=1$, el integrando involucra una norma no diferenciable en sus ceros, por lo que no se usa el gradiente analítico. En este caso, el estimador por argmin se calcula mediante la libreria de \texttt{Python} llamada \texttt{Pyomo}, formulando la búsqueda como un problema de optimización numérica y resolviéndolo con los solvers disponibles entre \texttt{appsi\_highs}, \texttt{highs}, \texttt{glpk} y \texttt{cbc}. Esta estrategia permite incluir también la combinación $(q=1,\hat\theta_{\min})$ dentro del estudio comparativo.
 \end{itemize}
 
 \subsection{Funciones de peso para $S_n$}
 
-La integral \eqref{eq:Sn} depende de $q$ y de $w$. Se consideran los dos exponentes $q\in\{1,2\}$ y tres densidades simétricas. Para $q=1$, el integrando $|\cdot|^{1/2}$ no es diferenciable en sus ceros, lo que impide el uso del gradiente analítico; la búsqueda en grilla resulta demasiado imprecisa y costosa dentro del bootstrap, por lo que la combinación $(q=1,\,\hat\theta_{\min})$ queda excluida del estudio: en el caso $q=1$ solo se evalúan los estimadores $\hat\theta_{\mathrm{med}}$ y $\hat\theta_\alpha$.
+La integral \eqref{eq:Sn} depende de $q$ y de $w$. Se consideran los dos exponentes $q\in\{1,2\}$ y tres densidades simétricas. Para $q=2$, el criterio es diferenciable respecto a $\theta$ y se usa el gradiente analítico de \eqref{eq:grad-Sn}. Para $q=1$, el integrando contiene una norma absoluta y puede no ser diferenciable en los puntos donde \(c_n(t)e^{-it\theta}-|c_n(t)|=0\).
+Por esta razón, el estimador $\hat\theta_{\min}$ en el caso $q=1$ se calcula con una estrategia de optimización sin gradiente implementada en un modulo de \texttt{Python} llamada \texttt{Pyomo}, usando los solvers disponibles entre \texttt{appsi\_highs}, \texttt{highs}, \texttt{glpk} y \texttt{cbc}. Así, en el estudio se evalúan los tres estimadores del centro también para $q=1$: mediana, media afeitada y argmin.
 \begin{align*}
   w_1(t) &= \frac{1}{\sqrt{2\pi}}\,e^{-t^2/2} & &(\mathcal{N}(0,1)),\\
   w_2(t) &= \frac{1}{0.5\sqrt{2\pi}}\,e^{-t^2/(2\cdot 0.5^2)} & &(\mathcal{N}(0,\,0.5^2)),\\

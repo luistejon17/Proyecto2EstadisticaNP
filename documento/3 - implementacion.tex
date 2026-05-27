@@ -67,7 +67,7 @@ Como $T_n$ es escalonada con saltos exactamente en $\mathcal{W}_n=\{(X_i+X_j)/2:
   M(k)=\min_{i+j=(n-1)+k} \tfrac{x_i+x_j}{2}.
 \]
 Al primer $L$ con $m(L)\le M(L)$ se devuelve $\hat\theta=(m(L)+M(L))/2$. La complejidad es $\mathcal{O}(L\cdot n)$; empíricamente $L$ mediana es $3$--$8$ para $n\in\{20,\dots,160\}$, por lo que el algoritmo corre en tiempo $\mathcal{O}(n\log n)$ en la práctica.
-
+\newpage
 \begin{lstlisting}[language=Python]
 def theta_argmin_schuster_narvarte(sample):
     x = np.sort(sample)
@@ -87,8 +87,9 @@ def theta_argmin_schuster_narvarte(sample):
             return 0.5 * (m_k + M_k)
     return float(np.median(x))
 \end{lstlisting}
+La misma función se usa tanto en la muestra original como en cada remuestra bootstrap: las remuestras provienen de $sF_n(\hat\theta)$, que es simétrica por construcción, por lo que $L$ es pequeño también en el bootstrap.
 
-La misma función se usa tanto en la muestra original como en cada remuestra bootstrap: las remuestras provienen de $sF_n(\hat\theta)$, que es simétrica por construcción, por lo que $L$ es pequeño también en el bootstrap. En benchmarks directos esta estrategia resultó 4--400$\times$ más rápida que una búsqueda por ventana asintótica (que genera $\mathcal{O}(n^{3/2})$ candidatos y evalúa $T_n$ sobre todos ellos) y es exacta sin necesidad de anclas ni fallbacks.
+Otro enfoque que intentamos fue hallar los $K$ promedios de Walsh más cercanos a la mediana o a un estimador a la mediana, y asumir que el argmin estaría en esta ventana, así evitando calcular los $O(n^2)$ promedios de Walsh. Este enfoque aunque funcionó para $K=8n$,  de media resultó de 4 a 400 veces más lento que usar el algoritmo de Schuster-Narvarte explicado en \cite{schuster1987bootstrap}.
 
 \subsubsection{argmin de \texorpdfstring{$S_n$}{Sn}: L-BFGS-B con gradiente analítico}\label{impl:argmin-Sn}
 
@@ -123,6 +124,28 @@ def theta_argmin_Sn(sample, w_fn, q=2, t_grid=None):
 \end{lstlisting}
 
 El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero} sugiere que el verdadero centro es un punto estacionario asintótico, y la mediana es $\sqrt n$-consistente). Para $q=1$ el integrando contiene un $\sqrt{\cdot}$ no diferenciable en sus ceros, por lo que se recurre a la búsqueda grid + Brent (\texttt{theta\_argmin\_Sn\_grid}).
+
+
+\subsubsection{argmin de \texorpdfstring{$S_n$}{Sn} para \texorpdfstring{$q=1$}{q=1}: selección discreta con Pyomo}\label{impl:argmin-Sn-pyomo}
+
+Para $q=1$, el estadístico $S_n$ sigue siendo evaluable numéricamente, pero el criterio no es diferenciable en los puntos donde \(c_n(t)e^{-it\theta}-|c_n(t)|=0\).
+Por esta razón, no se usa el gradiente analítico de la Proposición~\ref{prop:leibniz-Sn}, que fue derivado específicamente para el caso $q=2$. En su lugar, se construye una grilla finita de candidatos para $\theta$, se evalúa $S_n(\theta)$ en cada candidato mediante la rutina vectorizada \texttt{Sn\_multi\_theta}, y luego se selecciona el candidato con menor valor objetivo.
+
+Esta selección discreta se implementa opcionalmente con \texttt{Pyomo}. Si los candidatos son $\theta_1,\dots,\theta_m$ y los valores correspondientes del estadístico son $v_i=S_n(\theta_i)$, el problema se formula como el siguiente programa lineal entero mixto:
+\[
+\min_{y_1,\dots,y_m} \sum_{i=1}^m v_i y_i,
+\qquad
+\sum_{i=1}^m y_i=1,
+\qquad
+y_i\in\{0,1\}.
+\]
+La variable binaria $y_i$ indica si el candidato $\theta_i$ es seleccionado. Como exactamente una variable debe tomar el valor $1$, la solución óptima escoge el candidato con menor valor de $S_n$.
+
+En la implementación, \texttt{Pyomo} no se importa al cargar el paquete, sino únicamente cuando se invoca explícitamente el estimador \texttt{argmin\_pyomo}. El solver se selecciona automáticamente entre los disponibles en la lista
+\[
+\texttt{appsi\_highs},\quad \texttt{highs},\quad \texttt{glpk},\quad \texttt{cbc}.
+\]
+Si ninguno está instalado, la rutina informa el error y sugiere instalar un solver compatible, por ejemplo \texttt{highspy}. Esta estrategia permite incluir el caso $(q=1,\hat\theta_{\min})$ dentro del estudio, evitando el uso de derivadas y manteniendo una formulación reproducible del problema de selección del argmin.
 
 
 \subsection{Procedimiento bootstrap}
