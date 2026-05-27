@@ -11,14 +11,14 @@ T_n \;=\; \sqrt{n}\,\bigl\|F_n - sF_n(\hat\theta)\bigr\|_\infty,
 \end{equation}
 con $\hat\theta$ un estimador del centro. Si $F$ es simétrica $T_n$ es pequeño; en caso contrario $sF_n(\hat\theta)$ debe distorsionar mucho a $F_n$ y $T_n$ crece.
 
-Para estimar el $p$-valor, bajo $H_0$ y validez del bootstrap~\cite{arcones1991bootstrap}, tenemos que las muestras bootstrap provienen aproximadamente de la misma distribución que la muestra original, por tanto poseemos $B+1$ muestras distintas  con  las que estimar el $p$-valor, vía $\hat{p}:= \frac{1+\#\{b:T_n^{*(b)}\ge T_n\}}{B+1}$, es decir, de las $B+1$ muestras contamos el número de veces que el estadístico dio un valor igual, o más extremo que el $T_n$ observado. 
+Para estimar el $p$-valor, bajo $H_0$ y validez del bootstrap~\cite{arcones1991bootstrap} sobre $T_n$ , tenemos que las muestras bootstrap provienen aproximadamente de la misma distribución que la muestra original, por tanto poseemos $B+1$ muestras distintas  con  las que estimar el $p$-valor, vía $\hat{p}:= \frac{1+\#\{b:T_n^{*(b)}\ge T_n\}}{B+1}$, es decir, de las $B+1$ muestras contamos el número de veces que el estadístico dio un valor igual, o más extremo que el $T_n$ observado. 
 
 
 
 
 \subsection{La función característica empírica}
 
-La función característica de una variable real $X$ es $\varphi_X(t)=\E(e^{itX})$, $t\in\R$. La simetría se traduce en una factorización limpia de $\varphi_X$:
+La función característica de una variable real $X$ se define como $\varphi_X(t):=\E(e^{itX})$, $t\in\R$. La simetría se relaciona con esta de la siguiente forma:
 
 \begin{theorem}\label{thm:fc}
 $X\sim\mathrm{sim}(\theta)$ si y solo si $\varphi_X(t)=e^{it\theta}\,c_0(t)$ con $c_0:\R\to\R$.
@@ -30,7 +30,7 @@ $(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y=\theta-X$, de la igualdad $\varp
 $(\Leftarrow)$ Si $\varphi_X(t)=e^{it\theta}c_0(t)$ con $c_0$ real, entonces $\varphi_Y(t):=e^{-it\theta}\varphi_X(t)=c_0(t)$ es real, luego $\varphi_Y(t)=\overline{\varphi_Y(t)}=\varphi_Y(-t)$. Por unicidad de la función característica, $Y\overset{d}{=}-Y$, es decir $X-\theta\overset{d}{=}-(X-\theta)$.
 \end{proof}
 
-Dada una muestra $X_1,\dots,X_n$, la función característica empírica es $c_n(t)=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$, el estadístico de penalización considerado en este trabajo es
+Dada una muestra $X_1,\dots,X_n$, la función característica empírica es $c_n(t):=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$, el estadístico de penalización considerado en este trabajo es
 \begin{equation}\label{eq:Sn}
 S_n \;=\; \int_{-\infty}^{\infty}\bigl\|c_n(t)e^{-it\hat\theta}-c_s(t)\bigr\|^q\,w(t)\,dt,
 \end{equation}
@@ -43,7 +43,7 @@ Ambos estadísticos requieren un estimador $\hat\theta$ del centro. Consideramos
 \hat\theta_{\min} \;=\; \arg\min_{\theta\in\R} M_n(\theta),
 \qquad M_n\in\{T_n,\,S_n\}.
 \]
-Los dos primeros son explícitos y baratos; el tercero exige una optimización numérica cuyo costo es crítico, pues el procedimiento bootstrap repite $B{+}1$ veces el cálculo de $\hat\theta_{\min}$ por test. En las siguientes dos secciones se explica cómo la estructura matemática de cada estadístico permite diseñar un  estimador eficiente de este argmin.
+Los dos primeros son explícitos y fáciles de calcular; el tercero exige una optimización numérica, debido a que el bootstrap repite $B{+}1$ veces el cálculo de $\hat\theta_{\min}$ por test. En las siguientes dos secciones se explica cómo la estructura matemática de cada estadístico permite diseñar un  estimador eficiente de este argmin.
 
 \subsubsection{Argmin de $T_n$}
 
@@ -174,9 +174,13 @@ La existencia del gradiente \eqref{eq:grad-Sn} permite emplear métodos de optim
 \theta^{(k)}-\eta_k S_n'(\theta^{(k)}),
 \qquad k=0,1,2,\dots,
 \]
-donde \(\eta_k>0\) es un tamaño de paso. Sin embargo, en la implementación usamos \texttt{L-BFGS-B}, un método quasi-Newton de memoria limitada que aproxima información de curvatura a partir de diferencias sucesivas entre iterados y gradientes, y que selecciona el paso mediante una búsqueda lineal \cite{nocedal2006numerical}.
+donde \(\eta_k>0\) es un tamaño de paso. Sin embargo, en este caso usamos \texttt{L-BFGS-B}, un método quasi-Newton de memoria limitada que aproxima a partir de diferencias sucesivas entre iterados y gradientes, y que selecciona el paso mediante una búsqueda lineal \cite{nocedal2006numerical}.
 
-En dimensión uno, la idea puede interpretarse como una aproximación secante de la curvatura local de \(S_n\), aunque el algoritmo \texttt{L-BFGS-B} incluye además una estrategia de búsqueda lineal y, en general, restricciones de caja. Por esta razón, no se trata simplemente de aplicar la regla de la secante, sino de usar una aproximación quasi-Newton estabilizada.
+En dimensión uno, este funciona como el método de la secante sobre la curvatura local de \(S_n\), aunque el algoritmo \texttt{L-BFGS-B} incluye además una estrategia de búsqueda lineal y, en general, restricciones de caja. Por esto último, este método se considera una aproximación quasi-Newton estabilizada, aunque en este caso se invita a interpretarlo como método de la secante:
+
+\[
+\theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
+\]
 
 Como punto inicial tomamos \(\theta^{(0)}=\hat\theta_{\mathrm{med}}\). Esta elección es natural porque, bajo simetría y condiciones regulares, la mediana poblacional coincide con el centro de simetría. En la práctica, este punto inicial suele ubicar la optimización cerca de una región razonable del criterio. No obstante, como \(S_n(\theta)\) no necesariamente es convexo, el procedimiento debe entenderse como una búsqueda numérica de un mínimo local; por ello, en la implementación conviene comparar el resultado con una búsqueda en grilla o usar varios puntos iniciales cuando sea necesario.
 
