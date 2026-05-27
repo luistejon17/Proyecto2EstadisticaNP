@@ -20,10 +20,24 @@ from src.characteristic_fn import (
     make_t_grid,
     theta_argmin_Sn,
     theta_argmin_Sn_grid,
+    theta_argmin_Sn_pyomo,
     theta_median,
     theta_trimmed,
     uniform_weight,
 )
+from src.pyomo_argmin import DEFAULT_PYOMO_SOLVERS
+
+
+def _has_pyomo_solver() -> bool:
+    """True si Pyomo y al menos un solver configurado estan disponibles."""
+    try:
+        import pyomo.environ as pyo
+    except ImportError:
+        return False
+    return any(
+        pyo.SolverFactory(s).available(exception_flag=False)
+        for s in DEFAULT_PYOMO_SOLVERS
+    )
 
 
 def _Sn_reference(sample, theta, w_fn, q, t_grid):
@@ -130,6 +144,65 @@ def test_Sn_argmin_q1_falls_back_to_grid():
     assert abs(th - 2.0) < 0.5, th
 
 
+def test_Sn_argmin_pyomo_q1_selects_best_grid_candidate():
+    """Para q=1, Pyomo debe escoger el menor S_n entre candidatos discretos."""
+    if not _has_pyomo_solver():
+        return
+
+    rng = np.random.default_rng(2027)
+    w = gaussian_weight(1.0)
+    t_grid = make_t_grid(w, n_points=81)
+    x = rng.normal(loc=1.25, scale=1.0, size=30)
+
+    lo, hi = float(x.min()), float(x.max())
+    pad = 0.1 * (hi - lo)
+    bracket = (lo - pad, hi + pad)
+    n_theta_grid = 25
+
+    theta_pyomo = theta_argmin_Sn_pyomo(
+        x,
+        w_fn=w,
+        q=1,
+        bracket=bracket,
+        n_theta_grid=n_theta_grid,
+        t_grid=t_grid,
+    )
+
+    candidates = np.linspace(bracket[0], bracket[1], n_theta_grid)
+    values = Sn_multi_theta(x, candidates, w_fn=w, q=1, t_grid=t_grid)
+    best_idx = int(np.argmin(values))
+
+    assert np.isclose(theta_pyomo, candidates[best_idx], atol=1e-12)
+    assert abs(theta_pyomo - 1.25) < 0.75, theta_pyomo
+
+
+def test_bootstrap_Sn_q1_argmin_pyomo_smoke():
+    """Smoke test: bootstrap S_n con q=1 y estimador argmin_pyomo."""
+    if not _has_pyomo_solver():
+        return
+
+    rng = np.random.default_rng(2028)
+    w = gaussian_weight(1.0)
+    t_grid = make_t_grid(w, n_points=41)
+    x = rng.normal(loc=0.5, scale=1.0, size=12)
+
+    res = bootstrap_test_Sn(
+        x,
+        w_fn=w,
+        q=1,
+        estimator="argmin_pyomo",
+        B=3,
+        t_grid=t_grid,
+        rng=rng,
+    )
+
+    assert res.q == 1
+    assert res.estimator_name == "argmin_pyomo"
+    assert np.isfinite(res.statistic)
+    assert 0.0 <= res.p_value <= 1.0
+    assert res.boot_statistics.shape == (3,)
+
+
 def test_estimators_simple():
     rng = np.random.default_rng(11)
     x = rng.normal(loc=3.0, scale=1.0, size=500)
@@ -189,6 +262,8 @@ if __name__ == "__main__":
         ("Sn gradient vs finite diff", test_Sn_gradient_matches_finite_differences),
         ("Sn argmin grad <= grid", test_Sn_argmin_grad_matches_grid),
         ("Sn argmin q=1 fallback", test_Sn_argmin_q1_falls_back_to_grid),
+        ("Sn argmin pyomo q=1 grid", test_Sn_argmin_pyomo_q1_selects_best_grid_candidate),
+        ("Sn bootstrap pyomo q=1 smoke", test_bootstrap_Sn_q1_argmin_pyomo_smoke),
         ("median/trimmed", test_estimators_simple),
         ("weights integrate to 1", test_weight_functions_integrate_to_one_approx),
         ("bootstrap H0 level", test_bootstrap_h0_level),
