@@ -73,10 +73,10 @@ Entre los pesos gaussianos, la diferencia entre \(\sigma=0.5\) y \(\sigma=1.0\) 
 \includegraphics[scale = 0.5]  {results/figures/sn_compare_weights.png}
 
 Por otra parte, el parámetro \(q\) controla la forma de penalización de las discrepancias. Cuando \(q=1\), el estadístico agrega desviaciones de forma lineal, resultando menos sensible a diferencias extremas. Cuando \(q=2\), las discrepancias grandes reciben una penalización cuadrática, aumentando la sensibilidad del test frente a desviaciones pronunciadas. Esto se evidencia en la siguiente gráfica: \\
-\includegraphics[scale = 0.5]{results/figures/sn_compare_q.png}
+\includegraphics[scale = 0.25]{results/figures/sn_compare_q.png}
 
 Esto implica que \(q=2\) puede detectar con mayor facilidad asimetrías marcadas, mientras que \(q=1\) tiende a comportarse mejor cuando la asimetría está distribuida a lo largo de la distribución. En las simulaciones $q=1$ resulta sistemáticamente superior a $q=2$ con mediana y media afeitada (por ejemplo, con media afeitada y Pareto a $n=40$ la potencia pasa de $38.5\%$ con $q=2$ a $50\%$ con $q=1$). Notando estas diferencias notables para el caso gamma: \\
-\includegraphics[scale=0.5]{results/figures/sn_power_curves_q1_laplace_1p0.png}
+\includegraphics[scale=0.24]{results/figures/sn_power_curves_q1_laplace_1p0.png}
 \\
 \includegraphics[scale=0.5]{results/figures/sn_power_curves_q2_laplace_1p0.png}
 
