@@ -376,11 +376,15 @@ def bootstrap_test_Sn(
             thetas_b = trim_mean(Y_boot, 0.1, axis=1)      # (B,)
         S_boot = _sn_boot_batch(Y_boot, thetas_b, w_fn, q, t_grid)
     else:
-        # --- Secante batcheado: gradiente analítico vectorizado sobre B ---
         lo, hi = float(support.min()), float(support.max())
         pad = 0.1 * (hi - lo) if hi > lo else 1.0
         bracket = (lo - pad, hi + pad)
-        S_boot = _sn_boot_batch_argmin_secant(Y_boot, w_fn, q, t_grid, bracket)
+        if q == 2:
+            # Gradiente liso (C^1): secante batcheado converge bien
+            S_boot = _sn_boot_batch_argmin_secant(Y_boot, w_fn, q, t_grid, bracket)
+        else:
+            # Gradiente discontinuo (sgn): secante diverge; usar grid vectorizado
+            S_boot = _sn_boot_batch_argmin(Y_boot, w_fn, q, t_grid, bracket)
 
     p_val = (1.0 + np.sum(S_boot >= S_obs)) / (B + 1.0)
 
