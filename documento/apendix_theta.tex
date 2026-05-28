@@ -13,7 +13,7 @@ Para el estadístico \(T_n\), una primera alternativa consistió en aprovechar q
 \]
 En lugar de recorrer todos los \(\mathcal O(n^2)\) candidatos, se intentó restringir la búsqueda a una ventana de tamaño \(K\) alrededor de un estimador inicial del centro, típicamente la mediana. En particular, se probaron ventanas de tamaño proporcional a \(n\), como \(K=n\) y \(K=8n\).
 
-La intuición de que funciona este método es que, bajo simetría, el minimizado debía estar cerca de un centro robusto. Aunque la ventana \(K=8n\) funcionó razonablemente bien en varias muestras, el método dependía de una elección heurística de \(K\) y podía perder candidatos relevantes si la ventana era demasiado estrecha. Además, resultó más lento que el algoritmo exacto de Schuster-Narvarte usado finalmente. Por esta razón, este enfoque fue descartado.
+La intuición de que funciona este método es que, bajo simetría, el minimizador debía estar cerca de un centro robusto. Aunque la ventana \(K=8n\) funcionó razonablemente bien en varias muestras, el método dependía de una elección heurística de \(K\) y podía perder candidatos relevantes si la ventana era demasiado estrecha. Además, resultó más lento que el algoritmo exacto de Schuster-Narvarte usado finalmente. Por esta razón, este enfoque fue descartado.
 
 \subsection*{Búsqueda en grilla y refinamiento con Brent para \texorpdfstring{$S_n$}{Sn}}
 
