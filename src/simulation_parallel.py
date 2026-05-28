@@ -147,7 +147,7 @@ def run_simulation_parallel(
     """
     import os
     if n_workers is None:
-        n_workers = max(1, (os.cpu_count() or 2) - 1)
+        n_workers = max(1, os.cpu_count() or 2)
 
     specs = list(specs)
     sspecs = [_get_sspec(s) for s in specs]

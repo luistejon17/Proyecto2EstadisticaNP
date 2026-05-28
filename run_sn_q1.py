@@ -18,7 +18,7 @@ def main():
     from src.simulation_sn_parallel import run_simulation_sn_parallel
 
     RESULTS = ROOT / "results" / "data"
-    N_WORKERS = max(1, (os.cpu_count() or 2) - 1)
+    N_WORKERS = max(1, os.cpu_count() or 2)
     ALL_SPECS = [
         uniform_h0(1.0, 3.0), cauchy_h0(2.0, 1.0),
         gamma_ha(2.0, 1.0), weibull_ha(1.5, 1.0), pareto_ha(3.0, 1.0),

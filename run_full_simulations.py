@@ -30,7 +30,7 @@ from src.simulation_sn_parallel import run_simulation_sn_parallel
 RESULTS = ROOT / "results" / "data"
 RESULTS.mkdir(parents=True, exist_ok=True)
 
-N_WORKERS = max(1, (os.cpu_count() or 2) - 1)
+N_WORKERS = max(1, os.cpu_count() or 2)
 
 H0_SPECS = [uniform_h0(1.0, 3.0), cauchy_h0(2.0, 1.0)]
 HA_SPECS  = [gamma_ha(2.0, 1.0), weibull_ha(1.5, 1.0), pareto_ha(3.0, 1.0)]
@@ -64,55 +64,32 @@ def run_tn():
 
 def run_sn():
     print("=" * 60)
-    print("TEST 2: S_n  (B=199, R=200, n=20/40/80/160, 11 workers)")
-    print("  q=2: argmin + median + trimmed  (L-BFGS-B con gradiente)")
-    print("  q=1: median + trimmed           (argmin excluido: q=1 no")
-    print("       tiene gradiente analitico, la busqueda en grid es")
-    print("       imprecisa y el costo es prohibitivo en el bootstrap)")
+    print("TEST 2: S_n  (B=199, R=200, n=20/40/80/160, 12 workers)")
+    print("  q=1 y q=2: argmin + median + trimmed")
+    print("  argmin: secante batcheada con gradiente analitico (Sec. 1.3.4)")
     print("  B=199: alpha*(B+1)=0.05*200=10 in Z (Hall & Wilson 1991)")
     print("=" * 60)
 
     WEIGHTS = ("gauss_1.0", "gauss_0.5", "laplace_1.0")
 
-    # q=2: todos los estimadores (L-BFGS-B rapido y preciso)
-    config_q2 = SimConfigSn(
+    config = SimConfigSn(
         sample_sizes=(20, 40, 80, 160),
         estimators=("argmin", "median", "trimmed"),
-        qs=(2,),
-        weight_names=WEIGHTS,
-        B=199, R=200, alpha=0.05, seed=2026, n_t_grid=301,
-    )
-    # q=1: solo median y trimmed (argmin excluido)
-    config_q1 = SimConfigSn(
-        sample_sizes=(20, 40, 80, 160),
-        estimators=("median", "trimmed"),
-        qs=(1,),
+        qs=(1, 2),
         weight_names=WEIGHTS,
         B=199, R=200, alpha=0.05, seed=2026, n_t_grid=301,
     )
 
-    total_q2 = (len(ALL_SPECS) * len(config_q2.sample_sizes)
-                * len(config_q2.estimators) * len(config_q2.qs)
-                * len(config_q2.weight_names) * config_q2.R)
-    total_q1 = (len(ALL_SPECS) * len(config_q1.sample_sizes)
-                * len(config_q1.estimators) * len(config_q1.qs)
-                * len(config_q1.weight_names) * config_q1.R)
-    print(f"Tareas q=2: {total_q2}  |  Tareas q=1: {total_q1}  |  Workers: {N_WORKERS}")
+    total = (len(ALL_SPECS) * len(config.sample_sizes)
+             * len(config.estimators) * len(config.qs)
+             * len(config.weight_names) * config.R)
+    print(f"Total tareas: {total}  |  Workers: {N_WORKERS}")
 
     t0 = time.perf_counter()
-
-    print("\n--- Corriendo q=2 ---")
-    df_q2 = run_simulation_sn_parallel(ALL_SPECS, config_q2, n_workers=N_WORKERS)
-    t_q2 = time.perf_counter() - t0
-    print(f"q=2 completado en {t_q2/60:.1f} min")
-
-    print("\n--- Corriendo q=1 ---")
-    df_q1 = run_simulation_sn_parallel(ALL_SPECS, config_q1, n_workers=N_WORKERS)
+    df = run_simulation_sn_parallel(ALL_SPECS, config, n_workers=N_WORKERS)
     elapsed = time.perf_counter() - t0
-    print(f"q=1 completado. Total S_n: {elapsed/60:.1f} min")
-
-    df = pd.concat([df_q2, df_q1], ignore_index=True)
-    summary = summarize_sn(df, alpha=config_q2.alpha)
+    print(f"S_n completado en {elapsed/60:.1f} min")
+    summary = summarize_sn(df, alpha=config.alpha)
     df.to_csv(RESULTS / "sn_simulation_raw.csv", index=False)
     summary.to_csv(RESULTS / "sn_simulation_summary.csv", index=False)
     print(f"Guardado en {RESULTS}")

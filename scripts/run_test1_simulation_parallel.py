@@ -35,7 +35,7 @@ def main(quick: bool = False) -> None:
     data_dir.mkdir(parents=True, exist_ok=True)
     fig_dir.mkdir(parents=True, exist_ok=True)
 
-    n_workers = max(1, (os.cpu_count() or 2) - 1)
+    n_workers = max(1, os.cpu_count() or 2)
     print(f"CPU cores disponibles: {os.cpu_count()}  |  Workers a usar: {n_workers}")
 
     if quick:
