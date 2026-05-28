@@ -193,7 +193,7 @@ Este enfoque reduce el tiempo por test bootstrap de argmin en $\approx\!8\times$
 
 \subsection{Procedimiento bootstrap}
 
-Ambos tests comparten el mismo esqueleto bootstrap: (i)~calcular el estadístico observado con el estimador sobre la muestra original, (ii)~construir el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$, (iii)~remuestrear $B$ veces y recalcular estimador y estadístico, y (iv)~obtener el p-valor con la corrección de continuidad estándar: $\hat p=(1+\#\{b:T_n^{*(b)}\ge T_n^{\text{obs}}\})/(B+1)$.
+Ambos tests comparten el mismo esqueleto bootstrap: (i)~calcular el estadístico observado con el estimador sobre la muestra original, (ii)~construir el soporte simetrizado $\{X_i,\,2\hat\theta-X_i\}_{i=1}^{n}$, (iii)~remuestrear $B$ veces y recalcular estimador y estadístico, y (iv)~obtener el p-valor  $\hat p=(1+\#\{b:T_n^{*(b)}\ge T_n^{\text{obs}}\})/(B+1)$.
 
 Para \texttt{"argmin"}, tanto la muestra original como cada remuestra usan \texttt{theta\_argmin\_schuster\_narvarte}: como las remuestras son simétricas (vienen de $sF_n(\hat\theta)$), el algoritmo converge en pocos pasos sin necesidad de anclas externas ni ventanas heurísticas.
 

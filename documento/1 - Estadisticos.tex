@@ -165,7 +165,7 @@ Bajo simetría en $\theta_0$, la distribución de $c_n(t)e^{-it\theta_0}$ es rea
 
 
 
-\subsubsection{Iteración de quasi-Newton}
+\subsubsection{Iteración de Gradiente}
 
 La existencia del gradiente \eqref{eq:grad-Sn} permite emplear métodos de optimización basados en derivadas para aproximar el minimizador de \(S_n(\theta)\). Una opción básica sería el descenso por gradiente,
 \[
@@ -185,38 +185,7 @@ Para un solo parámetro, este aplica el método de la secante sobre la curvatura
 
 Como punto inicial tomamos \(\theta^{(0)}=\hat\theta_{\mathrm{med}}\). Esta elección es natural porque, bajo simetría y condiciones regulares, la mediana poblacional coincide con el centro de simetría.
 
-\subsubsection{Extensión al caso \texorpdfstring{$q=1$}{q=1}}\label{sssec:grad-q1}
-
-Para $q=1$ el integrando contiene $|\cdot|^1$, lo que sugiere a primera vista que no existe gradiente en $\theta$. Sin embargo, usando la identidad $1-\cos u = 2\sin^2(u/2)$ se puede reescribir el estadístico como
-
-\[
-S_n(\theta)\big|_{q=1} \;=\; 2\int_{-\infty}^{\infty} |c_n(t)|\,\bigl|\sin\tfrac{\Phi_n(t)-t\theta}{2}\bigr|\,w(t)\,dt,
-\]
-
-donde $\Phi_n(t)=\arg c_n(t)$. Derivando bajo el signo integral con el mismo argumento de dominación (la cota $4|t|w(t)$ sigue siendo integrable), se obtiene
-
-\begin{equation}\label{eq:grad-Sn-q1}
-\frac{\partial S_n}{\partial\theta}\bigg|_{q=1}(\theta) \;=\; -\int_{-\infty}^{\infty} t\,|c_n(t)|\;\mathrm{sgn}\!\left(\sin\frac{\Phi_n(t)-t\theta}{2}\right)\cos\!\left(\frac{\Phi_n(t)-t\theta}{2}\right) w(t)\,dt.
-\end{equation}
-
-Esta expresión existe para casi todo $\theta$: los ceros del seno forman un conjunto de medida cero en $t$ para cada $\theta$ fijo, de modo que el integrando es acotado e integrable. En consecuencia, $S_n(\cdot)$ para $q=1$ es diferenciable en casi todo punto y el método de la secante, implementado vía \texttt{L-BFGS-B}, puede aplicarse directamente usando \eqref{eq:grad-Sn-q1}, eliminando la necesidad de la búsqueda en grilla utilizada anteriormente.
-
-\begin{comment}
-\subsubsection{Iteración de quasi-Newton}
-
-La existencia del gradiente \eqref{eq:grad-Sn} habilita métodos iterativos de descenso. El más simple es el \emph{descenso por gradiente}: dado $\theta^{(0)}$, iterar
-\[
-\theta^{(k+1)} \;=\; \theta^{(k)} - \eta_k\, S_n'(\theta^{(k)}), \qquad k=0,1,2,\dots
-\]
-con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-BFGS-B}, un método de quasi-Newton de memoria limitada que aproxima el Hessiano $S_n''$ a partir de los últimos $m$ pares $(\Delta\theta,\Delta S_n')$ y elige $\eta_k$ por búsqueda lineal con condiciones de Wolfe. En dimensión $1$, esto se reduce esencialmente a la regla de la secante
-\[
-\theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
-\]
-salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto, de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.
-
-\end{comment}
-
-
+\newpage
 \subsection{Validez del Bootstrap}
 
 En esta sección definimos formalmente las condiciones y validez del Bootstrap para $T_n$ tomado de \cite{arcones1991bootstrap}, y damos razones para pensar que es válido también para $S_n$. 
