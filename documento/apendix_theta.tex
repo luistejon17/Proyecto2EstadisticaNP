@@ -1,113 +1,54 @@
-\newpage
+
+
 \section*{Apéndice - Intentos alternativos para estimadores por argmin}
 \addcontentsline{toc}{section}{Apéndice - Intentos alternativos para estimadores por argmin}
 \label{ap:argmin-descartados}
 
-En esta sección se documentan algunos enfoques explorados para calcular estimadores por argmin del centro de simetría. Estos métodos no fueron usados en la versión final del estudio principal, ya sea por mayor costo computacional, menor estabilidad numérica o porque fueron reemplazados por una implementación más simple y robusta.
+En este apéndice se documentan algunos métodos explorados para calcular estimadores del centro de simetría por minimización. Estos métodos fueron útiles durante el desarrollo computacional del proyecto, pero no todos fueron conservados en la versión final del estudio, ya sea por mayor costo, menor estabilidad numérica o peor comportamiento empírico.
 
-\subsection*{Ventana de promedios de Walsh alrededor de la mediana}
+\subsection*{Ventana de promedios de Walsh para \texorpdfstring{$T_n$}{Tn}}
 
-Un primer enfoque para calcular \(\hat\theta_{\min}\) en el estadístico \(T_n\) consistió en evitar la enumeración completa de los \(\mathcal{O}(n^2)\) promedios de Walsh. La idea era tomar solo los \(K\) promedios de Walsh más cercanos a la mediana muestral, o a un estimador inicial del centro, y buscar el mínimo de \(T_n\) dentro de esa ventana.
-
-Este enfoque se basa en la intuición de que, bajo simetría, el minimizador debería estar cerca de un centro robusto como la mediana. En las pruebas preliminares, la ventana con \(K=8n\) solía encontrar buenos candidatos. Sin embargo, el método seguía requiriendo construir, ordenar o filtrar una cantidad considerable de candidatos, y luego evaluar \(T_n\) sobre ellos.
-
-Aunque el enfoque funcionó en varios casos, resultó menos eficiente que el algoritmo de Schuster-Narvarte. En promedio, fue entre \(4\) y \(400\) veces más lento, dependiendo de \(n\) y de la muestra. Por esta razón, fue descartado en favor del algoritmo exacto descrito en la Sección~\ref{impl:argmin-Tn}.
-
-\subsection*{Gradiente analítico para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=1$}{q=1}}
-
-También se exploró extender el método basado en gradiente al caso \(q=1\). Formalmente, usando la identidad \(1-\cos(u)=2\sin^2(u/2)\), el integrando puede escribirse de manera que aparece una expresión proporcional a \(|\sin((\Phi_n(t)-t\theta)/2)|\). Esto sugiere una derivada formal de la forma
+Para el estadístico \(T_n\), una primera alternativa consistió en aprovechar que los posibles cambios de \(T_n(\theta)\) ocurren en los promedios de Walsh
 \[
-\frac{d}{d\theta}
-\left[
-2|c_n(t)|\left|\sin\left(\frac{\Phi_n(t)-t\theta}{2}\right)\right|
-\right],
+\mathcal W_n=\left\{\frac{X_i+X_j}{2}:1\le i\le j\le n\right\}.
 \]
-lo cual conduce a una expresión con funciones signo.
+En lugar de recorrer todos los \(\mathcal O(n^2)\) candidatos, se intentó restringir la búsqueda a una ventana de tamaño \(K\) alrededor de un estimador inicial del centro, típicamente la mediana. En particular, se probaron ventanas de tamaño proporcional a \(n\), como \(K=n\) y \(K=8n\).
 
-En código, el cálculo se implementó de la siguiente manera:
+La intuición era que, bajo simetría, el minimizador debía estar cerca de un centro robusto. Aunque la ventana \(K=8n\) funcionó razonablemente bien en varias muestras, el método dependía de una elección heurística de \(K\) y podía perder candidatos relevantes si la ventana era demasiado estrecha. Además, resultó más lento que el algoritmo exacto de Schuster-Narvarte usado finalmente. Por esta razón, este enfoque fue descartado.
 
-\begin{lstlisting}[language=Python]
-def _Sn_value_and_grad_q1(theta, a_n, b_n, abs_cn, w_vals, t_grid):
-    Phi_n = np.arctan2(b_n, a_n)
-    half = (Phi_n - t_grid * theta) / 2.0
-    S_n  = np.trapezoid(2*abs_cn*np.abs(np.sin(half))*w_vals, t_grid)
-    dS_n = np.trapezoid(-t_grid*abs_cn*np.sign(np.sin(half))
-                         *np.cos(half)*w_vals, t_grid)
-    return float(S_n), float(dS_n)
-\end{lstlisting}
+\subsection*{Búsqueda en grilla y refinamiento con Brent para \texorpdfstring{$S_n$}{Sn}}
 
-Sin embargo, esta expresión no define un gradiente clásico en los puntos donde \(\sin((\Phi_n(t)-t\theta)/2)=0\). En consecuencia, el criterio para \(q=1\) puede presentar puntos de no diferenciabilidad. En la implementación final, este gradiente se usa con \texttt{L-BFGS-B} para la \emph{estimación puntual} sobre la muestra original (funciona bien en la práctica). Sin embargo, en el \emph{bootstrap} la discontinuidad del gradiente hace divergir la secante batcheada (el paso $\Delta\theta \propto 1/dg$ explota cuando los gradientes de dos iterados consecutivos casi no cambian), por lo que el bootstrap de argmin para $q=1$ usa el grid vectorizado \texttt{\_sn\_boot\_batch\_argmin}.
+Para el estadístico \(S_n\), se implementó inicialmente una búsqueda numérica en dos etapas. Primero se construía una grilla uniforme de candidatos \(\theta_1,\dots,\theta_m\) dentro de un intervalo de búsqueda, usualmente definido a partir del mínimo y máximo de la muestra. Luego se evaluaba \(S_n(\theta_i)\) en todos los puntos de la grilla y se refinaba el mínimo local mediante el método de Brent en el intervalo vecino al mejor candidato.
 
-\subsection*{Método de la secante batcheado para el bootstrap de \texorpdfstring{$S_n$}{Sn}}
+Este método tenía la ventaja de ser simple y de no requerir derivadas, por lo que podía aplicarse tanto para \(q=1\) como para \(q=2\). Sin embargo, su precisión dependía mucho de la resolución de la grilla. Una grilla fina aumentaba el costo computacional, especialmente dentro del bootstrap, mientras que una grilla gruesa podía producir estimaciones inestables del argmin. Por esta razón, se conservó solo como implementación auxiliar y no como método principal.
 
-Otro intento consistió en acelerar el cálculo de \(\hat\theta_{\min}\) dentro del bootstrap para \(S_n\). Como cada prueba requiere recalcular el estimador en \(B\) remuestras, una implementación secuencial con \texttt{L-BFGS-B} puede convertirse en un cuello de botella.
+\subsection*{Optimización con \texorpdfstring{\texttt{L-BFGS-B}}{L-BFGS-B} para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=2$}{q=2}}
 
-La estrategia propuesta fue vectorizar una iteración tipo secante sobre todas las remuestras bootstrap simultáneamente. Para cada remuestra \(b\), se actualizaba
+Para \(S_n\) con \(q=2\), se implementó una versión basada en \texttt{L-BFGS-B} usando el gradiente analítico obtenido en la Proposición~\ref{prop:leibniz-Sn}. Esta alternativa fue más eficiente que la búsqueda por grilla, pues permite precomputar \(a_n(t)\), \(b_n(t)\), \(|c_n(t)|\) y \(w(t)\), de modo que cada evaluación del valor y gradiente cuesta solo \(\mathcal O(K)\), donde \(K\) es el número de puntos del grid de integración.
+
+Este método sí fue conservado para el caso \(q=2\), porque mostró buen desempeño numérico y redujo considerablemente el costo de calcular \(\hat\theta_{\min}\). Sin embargo, no se extendió como método principal al caso \(q=1\), debido a la no diferenciabilidad del criterio en algunos puntos.
+
+\subsection*{Gradiente formal para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=1$}{q=1}}
+
+También se exploró una extensión formal del enfoque de gradiente al caso \(q=1\). Usando la identidad \(1-\cos u=2\sin^2(u/2)\), el integrando de \(S_n\) puede escribirse en términos de \(\left|\sin((\Phi_n(t)-t\theta)/2)\right|\). Esto sugiere una derivada formal que involucra funciones signo.
+
+Aunque esta expresión puede ser útil como aproximación numérica, no define un gradiente clásico en los puntos donde el seno se anula. En consecuencia, el criterio puede presentar esquinas o puntos de no diferenciabilidad. Por esta razón, el uso directo de métodos quasi-Newton para \(q=1\) se consideró menos estable y fue descartado como implementación principal.
+
+\subsection*{Selección discreta con \texorpdfstring{\texttt{Pyomo}}{Pyomo} para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=1$}{q=1}}
+
+Para evitar el problema de no diferenciabilidad de \(S_n\) cuando \(q=1\), se probó una formulación discreta usando \texttt{Pyomo}. La idea fue construir una grilla de candidatos \(\theta_1,\dots,\theta_m\), evaluar \(S_n(\theta_i)\) en cada punto y seleccionar el candidato con menor valor mediante el problema
 \[
-\theta_b^{(k+1)}
-=
-\theta_b^{(k)}
--
-\frac{
-S_n'(\theta_b^{(k)})
-\left(\theta_b^{(k)}-\theta_b^{(k-1)}\right)
-}{
-S_n'(\theta_b^{(k)})-S_n'(\theta_b^{(k-1)})
-}.
+\min_{y_1,\dots,y_m}\sum_{i=1}^m S_n(\theta_i)y_i,
+\qquad
+\sum_{i=1}^m y_i=1,
+\qquad
+y_i\in\{0,1\}.
 \]
-Esta actualización se aplicaba en lote a los \(B\) valores de \(\theta_b\), usando operaciones vectorizadas de \texttt{NumPy}. Además, se incluían mecanismos de seguridad: fallback a un paso de descenso cuando el denominador era pequeño y recorte del iterado a un intervalo permitido.
+En esta formulación, \(y_i=1\) indica que el candidato \(\theta_i\) fue elegido. Se probaron distintos solvers disponibles en \texttt{Pyomo}, entre ellos \texttt{appsi\_highs}, \texttt{highs}, \texttt{glpk} y \texttt{cbc}.
 
-\begin{lstlisting}[language=Python]
-for _ in range(max_steps):
-    dg   = grad_curr - grad_prev
-    dt   = thetas - th_prev
-    safe = np.abs(dg) > 1e-12 * (np.abs(grad_curr) + 1e-30)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        step = np.where(safe, grad_curr * dt / dg,
-                        0.1 * half_width * np.sign(grad_curr))
-    thetas = np.clip(thetas - step, lo, hi)
-\end{lstlisting}
+Aunque esta implementación era conceptualmente clara y evitaba usar derivadas, fue descartada en el estudio principal porque produjo un sesgo alto en la estimación del centro para \(q=1\). Este sesgo parece estar asociado a la discretización de la grilla y a la sensibilidad del criterio \(S_n\) cuando se usa la norma absoluta. Por tanto, la versión con \texttt{Pyomo} se dejó como implementación exploratoria, pero no como opción principal para los resultados finales.
 
-Este método redujo el tiempo de cómputo frente al bucle secuencial y se adoptó como implementación final para $q=2$ en el bootstrap. Para $q=1$ no se usa la secante, porque el gradiente discontinuo causa divergencia; en su lugar se usa el grid vectorizado.
+\subsection*{Conclusión}
 
-\subsection*{Conclusión del apéndice}
-
-Los intentos anteriores fueron útiles para entender la estructura numérica de los estimadores por argmin. La búsqueda local en promedios de Walsh mostró que el minimizador de \(T_n\) está fuertemente ligado a la geometría discreta de la muestra, pero fue superada por el algoritmo exacto de Schuster-Narvarte. El gradiente formal para \(q=1\) resultó útil: se usa con \texttt{L-BFGS-B} para la estimación puntual, aunque en el bootstrap su discontinuidad obliga a recurrir al grid vectorizado. La secante batcheada se adoptó como método final para el bootstrap de argmin con $q=2$, donde el gradiente es continuo y la convergencia es fiable.
-
-
-
-
-
-
-
-\subsubsection{Extensión al caso \texorpdfstring{$q=1$}{q=1}}\label{sssec:grad-q1}
-
-Para $q=1$ el integrando contiene $|\cdot|^1$, lo que sugiere a primera vista que no existe gradiente en $\theta$. Sin embargo, usando la identidad $1-\cos u = 2\sin^2(u/2)$ se puede reescribir el estadístico como
-
-\[
-S_n(\theta)\big|_{q=1} \;=\; 2\int_{-\infty}^{\infty} |c_n(t)|\,\bigl|\sin\tfrac{\Phi_n(t)-t\theta}{2}\bigr|\,w(t)\,dt,
-\]
-
-donde $\Phi_n(t)=\arg c_n(t)$. Derivando bajo el signo integral con el mismo argumento de dominación (la cota $4|t|w(t)$ sigue siendo integrable), se obtiene
-
-\begin{equation}\label{eq:grad-Sn-q1}
-\frac{\partial S_n}{\partial\theta}\bigg|_{q=1}(\theta) \;=\; -\int_{-\infty}^{\infty} t\,|c_n(t)|\;\mathrm{sgn}\!\left(\sin\frac{\Phi_n(t)-t\theta}{2}\right)\cos\!\left(\frac{\Phi_n(t)-t\theta}{2}\right) w(t)\,dt.
-\end{equation}
-
-Esta expresión existe para casi todo $\theta$: los ceros del seno forman un conjunto de medida cero en $t$ para cada $\theta$ fijo, de modo que el integrando es acotado e integrable. En consecuencia, $S_n(\cdot)$ para $q=1$ es diferenciable en casi todo punto y el método de la secante, implementado vía \texttt{L-BFGS-B}, puede aplicarse directamente usando \eqref{eq:grad-Sn-q1}, eliminando la necesidad de la búsqueda en grilla utilizada anteriormente.
-
-\begin{comment}
-\subsubsection{Iteración de quasi-Newton}
-
-La existencia del gradiente \eqref{eq:grad-Sn} habilita métodos iterativos de descenso. El más simple es el \emph{descenso por gradiente}: dado $\theta^{(0)}$, iterar
-\[
-\theta^{(k+1)} \;=\; \theta^{(k)} - \eta_k\, S_n'(\theta^{(k)}), \qquad k=0,1,2,\dots
-\]
-con $\eta_k>0$ un tamaño de paso adaptativo. En la práctica usamos \texttt{L-BFGS-B}, un método de quasi-Newton de memoria limitada que aproxima el Hessiano $S_n''$ a partir de los últimos $m$ pares $(\Delta\theta,\Delta S_n')$ y elige $\eta_k$ por búsqueda lineal con condiciones de Wolfe. En dimensión $1$, esto se reduce esencialmente a la regla de la secante
-\[
-\theta^{(k+1)} \;=\; \theta^{(k)} - \frac{S_n'(\theta^{(k)})\,\bigl(\theta^{(k)}-\theta^{(k-1)}\bigr)}{S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})},
-\]
-salvo la corrección del paso. La convergencia es superlineal cerca de un mínimo local estricto, de modo que típicamente $10$--$20$ iteraciones bastan para precisión $10^{-7}$. Como punto de partida tomamos $\theta^{(0)}=\hat\theta_{\mathrm{med}}$, que es $\sqrt n$-consistente para el centro y por tanto cae en la cuenca de atracción del mínimo global con probabilidad tendente a $1$.
-
-\end{comment}
+Los métodos explorados permitieron comparar distintas formas de calcular estimadores por argmin. Para \(T_n\), la búsqueda local en promedios de Walsh fue reemplazada por el algoritmo exacto de Schuster-Narvarte, que evita ventanas heurísticas y resultó más eficiente. Para \(S_n\), la búsqueda grilla--Brent fue útil como referencia, pero fue menos eficiente que \texttt{L-BFGS-B} en el caso \(q=2\). Finalmente, para \(q=1\), tanto el gradiente formal como la formulación con \texttt{Pyomo} presentaron dificultades: el primero por no diferenciabilidad y el segundo por sesgo empírico alto. Por estas razones, estos enfoques se documentan aquí como intentos alternativos, pero no se usan como base principal de las conclusiones del proyecto.
 
