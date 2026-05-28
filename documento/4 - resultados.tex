@@ -72,18 +72,18 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más p
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{../results/figures/sn_compare_q.png}
-  \caption{Comparación de potencia de $S_n$ con $q=1$ vs.\ $q=2$ (mediana, tres distribuciones alternativas, $w_1=\mathcal{N}(0,1)$).}
+  \caption{Comparación de potencia de $S_n$ con $q=1$ vs.\ $q=2$ (estimador argmin, promediado sobre las tres funciones de peso).}
   \label{fig:sn-q}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{../results/figures/sn_compare_weights.png}
-  \caption{Comparación de potencia de $S_n$ ($q=2$, mediana) para las tres funciones de peso.}
+  \caption{Comparación de potencia de $S_n$ ($q=2$, argmin) para las tres funciones de peso.}
   \label{fig:sn-pesos}
 \end{figure}
 
-\paragraph{Efecto de $q$.} El efecto de $q$ depende del estimador y la distribución. Para el estimador \textbf{argmin} (Figura~\ref{fig:compare-potencia}), $q=2$ domina claramente bajo Pareto ($49\%$ vs.\ $30.5\%$ en $n=40$) y Weibull ($87\%$ vs.\ $64\%$ en $n=80$), siendo $q=1$ competitivo únicamente bajo Gamma ($54\%$ vs.\ $31\%$ en $n=40$). Para la \textbf{mediana} (Figura~\ref{fig:sn-q}), los resultados son mixtos: $q=2$ aventaja en algunos escenarios ($39\%$ vs.\ $31.5\%$ bajo Gamma con $n=40$), pero $q=1$ es mejor en otros ($99\%$ vs.\ $94.5\%$ bajo Gamma con $n=160$). Para la \textbf{media afeitada}, $q=1$ tiene ventaja consistente bajo Gamma ($93\%$ vs.\ $74\%$ en $n=80$) y Weibull ($91\%$ vs.\ $88.5\%$ en $n=80$). En conjunto, $q=2$ es preferible cuando se usa argmin (aprovecha mejor el gradiente suave), mientras que $q=1$ puede ser mejor con estimadores robustos del centro.
+\paragraph{Efecto de $q$.} La Figura~\ref{fig:sn-q} muestra la comparación $q=1$ vs.\ $q=2$ con el estimador argmin (promediado sobre los tres pesos). $q=2$ domina bajo Pareto ($49\%$ vs.\ $30.5\%$ en $n=40$) y Weibull ($87\%$ vs.\ $64\%$ en $n=80$); $q=1$ es competitivo únicamente bajo Gamma ($54\%$ vs.\ $31\%$ en $n=40$, $90.5\%$ vs.\ $82\%$ en $n=80$). Para la \textbf{media afeitada} (no mostrada), $q=1$ tiene ventaja consistente bajo Gamma ($93\%$ vs.\ $74\%$ en $n=80$) y Weibull ($91\%$ vs.\ $88.5\%$ en $n=80$). En conjunto, $q=2$ es preferible cuando se usa argmin, mientras que $q=1$ puede competir con estimadores robustos del centro.
 
 \paragraph{Efecto de $w$.} La Figura~\ref{fig:sn-pesos} muestra que la elección de la función de peso tiene un impacto moderado. Las tres funciones $w_1$, $w_2$ y $w_3$ producen potencias similares en la mayoría de los escenarios. $w_2=\mathcal{N}(0,0.25)$ (más concentrada en bajas frecuencias) tiende a ser ligeramente inferior bajo Gamma y Weibull, sugeriendo que las señales de asimetría se ubican en frecuencias medias que $w_2$ pondera menos. $w_3$ (Laplace, colas pesadas) presenta comportamiento similar a $w_1$.
 
