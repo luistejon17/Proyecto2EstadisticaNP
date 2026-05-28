@@ -233,24 +233,35 @@ def plot_power_heatmap(summary: pd.DataFrame, outdir: Path) -> Path | None:
 
 
 # ---------------------------------------------------------------------------
-# Comparativas: q=1 vs q=2
+# Comparativas: q=1 vs q=2, todos los estimadores
 # ---------------------------------------------------------------------------
 def plot_q1_vs_q2(summary: pd.DataFrame, outdir: Path) -> Path | None:
-    """Compara potencia entre q=1 y q=2 (argmin, promediado sobre pesos)."""
+    """Compara potencia: argmin q=1/q=2 (prom. sobre w) + median/trimmed (prom. sobre q,w)."""
     ha = summary[~summary["under_h0"]].copy()
     if ha.empty or ha["q"].nunique() < 2:
         return None
-    sub = ha[ha["estimator"] == "argmin"].copy()
-    if sub.empty:
-        sub = ha.copy()
-    g = sub.groupby(["dist", "n", "q"], as_index=False).agg(
-        reject_rate=("reject_rate", "mean"),
-    )
-    # Paleta distinguible para q=1 y q=2
-    q_colors = {1: "#E67E22", 2: "#2980B9"}   # naranja / azul
-    q_markers = {1: "s", 2: "o"}
 
-    dists = sorted(g["dist"].unique())
+    # argmin: promedio sobre pesos, separado por q
+    g_argmin = (
+        ha[ha["estimator"] == "argmin"]
+        .groupby(["dist", "n", "q"], as_index=False)
+        .agg(reject_rate=("reject_rate", "mean"))
+    )
+    # median y trimmed: promedio sobre q y w
+    g_robust = (
+        ha[ha["estimator"].isin(["median", "trimmed"])]
+        .groupby(["dist", "n", "estimator"], as_index=False)
+        .agg(reject_rate=("reject_rate", "mean"))
+    )
+
+    q_colors = {1: "#E67E22", 2: "#2980B9"}
+    q_markers = {1: "s", 2: "o"}
+    robust_styles = {
+        "median":  {"color": "#27AE60", "marker": "^", "linestyle": "--"},
+        "trimmed": {"color": "#8E44AD", "marker": "D", "linestyle": ":"},
+    }
+
+    dists = sorted(ha["dist"].unique())
     n_cols = min(3, len(dists))
     n_rows = int(np.ceil(len(dists) / n_cols))
     fig, axes = plt.subplots(
@@ -259,8 +270,8 @@ def plot_q1_vs_q2(summary: pd.DataFrame, outdir: Path) -> Path | None:
     )
     axes_flat = axes.flatten()
     for ax, d in zip(axes_flat, dists):
-        for q in sorted(g["q"].unique()):
-            s2 = g[(g["dist"] == d) & (g["q"] == q)].sort_values("n")
+        for q in sorted(g_argmin["q"].unique()):
+            s2 = g_argmin[(g_argmin["dist"] == d) & (g_argmin["q"] == q)].sort_values("n")
             if s2.empty:
                 continue
             ax.plot(
@@ -268,7 +279,19 @@ def plot_q1_vs_q2(summary: pd.DataFrame, outdir: Path) -> Path | None:
                 marker=q_markers.get(q, "o"),
                 color=q_colors.get(q, None),
                 linewidth=2,
-                label=f"q={q}",
+                label=f"argmin $q={q}$",
+            )
+        for est, sty in robust_styles.items():
+            s2 = g_robust[(g_robust["dist"] == d) & (g_robust["estimator"] == est)].sort_values("n")
+            if s2.empty:
+                continue
+            ax.plot(
+                s2["n"], s2["reject_rate"],
+                marker=sty["marker"],
+                color=sty["color"],
+                linestyle=sty["linestyle"],
+                linewidth=1.8,
+                label=est,
             )
         ax.set_xscale("log")
         ax.set_xlabel("n (log)")
@@ -277,9 +300,12 @@ def plot_q1_vs_q2(summary: pd.DataFrame, outdir: Path) -> Path | None:
         ax.grid(True, linestyle="--", alpha=0.5)
     for ax in axes_flat[len(dists):]:
         ax.set_visible(False)
-    axes[0, 0].set_ylabel("Potencia empírica (promedio sobre pesos)")
+    axes[0, 0].set_ylabel("Potencia empírica")
     axes_flat[0].legend(loc="best", fontsize=9)
-    fig.suptitle("S_n: comparación q=1 vs q=2 (estimador argmin)", y=1.02)
+    fig.suptitle(
+        r"$S_n$: comparación estimadores ($q=1,2$ argmin: prom.\ $w$; mediana/afeitada: prom.\ $q,w$)",
+        y=1.02,
+    )
     fig.tight_layout()
     out = outdir / "sn_compare_q.png"
     fig.savefig(out, dpi=150, bbox_inches="tight")
@@ -336,20 +362,40 @@ def plot_weights_compare(summary: pd.DataFrame, outdir: Path) -> Path | None:
 # Runtime
 # ---------------------------------------------------------------------------
 def plot_runtime_sn(summary: pd.DataFrame, outdir: Path) -> Path:
-    """Tiempo medio por test vs n, una curva por estimador."""
+    """Tiempo medio por test vs n: argmin q=1/q=2 separados; median/trimmed promediados."""
     df = summary.copy()
-    g = df.groupby(["n", "estimator"], as_index=False).agg(
-        mean_time_s=("mean_time_s", "mean"),
+
+    # argmin: separado por q, promedio sobre dists y w
+    argmin_g = (
+        df[df["estimator"] == "argmin"]
+        .groupby(["n", "q"], as_index=False)
+        .agg(mean_time_s=("mean_time_s", "mean"))
     )
+    # median y trimmed: promedio sobre q y w (casi idéntico para ambos q)
+    robust_g = (
+        df[df["estimator"].isin(["median", "trimmed"])]
+        .groupby(["n", "estimator"], as_index=False)
+        .agg(mean_time_s=("mean_time_s", "mean"))
+    )
+
+    q_colors = {1: "#E67E22", 2: "#2980B9"}
+    robust_colors = {"median": "#27AE60", "trimmed": "#8E44AD"}
+    robust_markers = {"median": "^", "trimmed": "D"}
+
     fig, ax = plt.subplots(figsize=(6.4, 4.2))
-    for est in sorted(g["estimator"].unique()):
-        s2 = g[g["estimator"] == est].sort_values("n")
-        ax.plot(s2["n"], s2["mean_time_s"], marker="o", linewidth=2, label=est)
+    for q in sorted(argmin_g["q"].unique()):
+        s2 = argmin_g[argmin_g["q"] == q].sort_values("n")
+        ax.plot(s2["n"], s2["mean_time_s"], marker="o", linewidth=2,
+                color=q_colors.get(q), label=f"argmin $q={q}$")
+    for est in sorted(robust_g["estimator"].unique()):
+        s2 = robust_g[robust_g["estimator"] == est].sort_values("n")
+        ax.plot(s2["n"], s2["mean_time_s"], marker=robust_markers[est],
+                linestyle="--", linewidth=1.8, color=robust_colors[est], label=est)
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("n (log)")
     ax.set_ylabel("Tiempo medio por test [s] (log)")
-    ax.set_title("Costo computacional del test S_n (promedio sobre q, w)")
+    ax.set_title(r"Costo computacional del test $S_n$ (argmin: prom.\ $w$; otros: prom.\ $q,w$)")
     ax.grid(True, which="both", linestyle="--", alpha=0.5)
     ax.legend()
     fig.tight_layout()
@@ -409,23 +455,26 @@ def plot_tn_vs_sn_power(
     summary_sn: pd.DataFrame,
     outdir: Path,
 ) -> Path | None:
-    """Potencia T_n vs mejor configuración de S_n, por distribución."""
+    """Potencia T_n (argmin) vs S_n argmin q=1 y q=2 (cada uno promediado sobre w)."""
     ha_tn = summary_tn[~summary_tn["under_h0"]].copy()
     ha_sn = summary_sn[~summary_sn["under_h0"]].copy()
     if ha_tn.empty or ha_sn.empty:
         return None
     tn = ha_tn[ha_tn["estimator"] == "argmin"].copy()
-    sn = ha_sn[ha_sn["estimator"] == "argmin"].copy()
-    if tn.empty or sn.empty:
+    sn_argmin = ha_sn[ha_sn["estimator"] == "argmin"].copy()
+    if tn.empty or sn_argmin.empty:
         return None
 
-    sn_best_qw = (
-        sn.groupby(["dist", "q", "weight"], as_index=False)["reject_rate"]
-          .mean()
-          .sort_values("reject_rate", ascending=False)
-          .drop_duplicates("dist")
+    # S_n argmin: promedio sobre w, separado por q
+    sn_g = sn_argmin.groupby(["dist", "n", "q"], as_index=False).agg(
+        reject_rate=("reject_rate", "mean"),
+        se_rate=("se_rate", "mean"),
     )
-    dists = sorted(set(tn["dist"]).intersection(sn["dist"]))
+
+    q_colors = {1: "#E67E22", 2: "#2980B9"}
+    q_markers = {1: "s", 2: "^"}
+
+    dists = sorted(set(tn["dist"]).intersection(sn_argmin["dist"]))
     n_cols = min(3, len(dists))
     n_rows = int(np.ceil(len(dists) / n_cols))
     fig, axes = plt.subplots(
@@ -438,16 +487,15 @@ def plot_tn_vs_sn_power(
         if not s_tn.empty:
             ax.errorbar(s_tn["n"], s_tn["reject_rate"], yerr=2 * s_tn["se_rate"],
                         marker="o", capsize=3, linewidth=2,
-                        label="T_n (argmin)", color="C0")
-        best_row = sn_best_qw[sn_best_qw["dist"] == d]
-        if not best_row.empty:
-            bq = int(best_row.iloc[0]["q"])
-            bw = best_row.iloc[0]["weight"]
-            s_sn = sn[(sn["dist"] == d) & (sn["q"] == bq) & (sn["weight"] == bw)
-                      ].sort_values("n")
+                        label=r"$T_n$ (argmin)", color="C0")
+        for q in [1, 2]:
+            s_sn = sn_g[(sn_g["dist"] == d) & (sn_g["q"] == q)].sort_values("n")
+            if s_sn.empty:
+                continue
             ax.errorbar(s_sn["n"], s_sn["reject_rate"], yerr=2 * s_sn["se_rate"],
-                        marker="s", capsize=3, linewidth=2,
-                        label=f"S_n best (q={bq}, {bw})", color="C1")
+                        marker=q_markers[q], capsize=3, linewidth=2,
+                        color=q_colors[q],
+                        label=rf"$S_n$ argmin $q={q}$ (prom. $w$)")
         ax.set_xscale("log")
         ax.set_xlabel("n (log)")
         ax.set_title(d)
@@ -457,7 +505,7 @@ def plot_tn_vs_sn_power(
         ax.set_visible(False)
     axes[0, 0].set_ylabel("Potencia empírica")
     axes_flat[0].legend(loc="best", fontsize=8)
-    fig.suptitle("Comparación T_n vs S_n (mejor (q, w))", y=1.02)
+    fig.suptitle(r"Comparación $T_n$ vs $S_n$ (argmin, $q=1$ y $q=2$, prom.\ $w$)", y=1.02)
     fig.tight_layout()
     out = outdir / "compare_tn_vs_sn_power.png"
     fig.savefig(out, dpi=150, bbox_inches="tight")

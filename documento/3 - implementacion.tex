@@ -227,7 +227,7 @@ def _sn_boot_batch(Y, thetas, w_fn, q, t_grid):
     return S_boot
 \end{lstlisting}
 
-Para el estimador argmin, se usa el método secante batcheado de la Sección~\ref{impl:argmin-Sn-secant}: el gradiente analítico de $S_n$ —ecuaciones~\eqref{eq:grad-Sn-q1} y~\eqref{eq:grad-Sn} para $q=1$ y $q=2$ respectivamente— se vectoriza sobre las $B$ réplicas simultáneamente, eliminando el bucle Python y logrando una reducción de $\approx\!8\times$ respecto al bucle secuencial con \texttt{L-BFGS-B}.
+Para el estimador argmin, el bootstrap sigue la estrategia de la Sección~\ref{impl:argmin-Sn-secant}: para $q=2$, la secante batcheada vectoriza el gradiente~\eqref{eq:grad-Sn} (continuo, $C^1$) sobre las $B$ réplicas simultáneamente, logrando una reducción de $\approx\!8\times$ frente al bucle secuencial con \texttt{L-BFGS-B}. Para $q=1$, el gradiente~\eqref{eq:grad-Sn-q1} es discontinuo (contiene $\mathrm{sgn}$) y haría divergir la secante; en su lugar se usa el grid vectorizado (\texttt{\_sn\_boot\_batch\_argmin}), que evalúa $M=80$ candidatos en tensor $(B,K,M)$ y toma el $\arg\min$ por fila.
 
 \subsection{Paralelización del estudio Monte Carlo}
 
@@ -245,7 +245,7 @@ def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
             'time_s': time.perf_counter() - t0,
             'under_h0': spec.under_h0}
 \end{lstlisting}
- Con 12 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=199$) corre en $\approx 1.5$ minutos y el de $S_n$ ($72\,000$ tests, $K=301$, $B=199$) en $\approx 10$--$15$ minutos. Las principales ganancias de velocidad son: (i) la vectorización del bootstrap de mediana y media afeitada sobre tensores $(B,K,n)$; (ii) el método secante batcheado para argmin (Sección~\ref{impl:argmin-Sn-secant}), que reduce $\approx\!8\times$ el tiempo por test respecto al bucle secuencial con \texttt{L-BFGS-B}; y (iii) la elección $B=199$ frente al $B=500$ considerado inicialmente.
+ Con 12 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=199$) corre en $\approx 1.5$ minutos y el de $S_n$ ($72\,000$ tests, $K=301$, $B=199$) en $\approx 10$--$15$ minutos. Las principales ganancias de velocidad son: (i) la vectorización del bootstrap de mediana y media afeitada sobre tensores $(B,K,n)$; (ii) la secante batcheada para argmin $q=2$ (Sección~\ref{impl:argmin-Sn-secant}), que reduce $\approx\!8\times$ el tiempo respecto al bucle secuencial con \texttt{L-BFGS-B}, y el grid vectorizado para argmin $q=1$ (gradiente discontinuo no admite la secante); y (iii) la elección $B=199$ frente al $B=500$ considerado inicialmente.
 
 \subsection{Verificación empírica con pruebas unitarias}
 

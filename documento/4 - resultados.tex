@@ -72,7 +72,7 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más p
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{../results/figures/sn_compare_q.png}
-  \caption{Comparación de potencia de $S_n$ con $q=1$ vs.\ $q=2$ (estimador argmin, promediado sobre las tres funciones de peso).}
+  \caption{Comparación de potencia de $S_n$: argmin $q=1$ y $q=2$ (cada uno promediado sobre las tres funciones de peso); mediana y media afeitada (promediados sobre $q$ y $w$).}
   \label{fig:sn-q}
 \end{figure}
 
@@ -83,7 +83,7 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más p
   \label{fig:sn-pesos}
 \end{figure}
 
-\paragraph{Efecto de $q$.} La Figura~\ref{fig:sn-q} muestra la comparación $q=1$ vs.\ $q=2$ con el estimador argmin (promediado sobre los tres pesos). $q=2$ domina bajo Pareto ($49\%$ vs.\ $30.5\%$ en $n=40$) y Weibull ($87\%$ vs.\ $64\%$ en $n=80$); $q=1$ es competitivo únicamente bajo Gamma ($54\%$ vs.\ $31\%$ en $n=40$, $90.5\%$ vs.\ $82\%$ en $n=80$). Para la \textbf{media afeitada} (no mostrada), $q=1$ tiene ventaja consistente bajo Gamma ($93\%$ vs.\ $74\%$ en $n=80$) y Weibull ($91\%$ vs.\ $88.5\%$ en $n=80$). En conjunto, $q=2$ es preferible cuando se usa argmin, mientras que $q=1$ puede competir con estimadores robustos del centro.
+\paragraph{Efecto de $q$.} La Figura~\ref{fig:sn-q} compara los cuatro estimadores: argmin $q=1$ y $q=2$ (cada uno promediado sobre los tres pesos), junto con mediana y media afeitada (promediados sobre $q$ y $w$). Para el \textbf{argmin}: $q=2$ domina bajo Pareto ($55\%$ vs.\ $32\%$ en $n=40$) y Weibull ($82\%$ vs.\ $49\%$ en $n=80$); $q=1$ es competitivo únicamente bajo Gamma ($50\%$ vs.\ $35\%$ en $n=40$, $83\%$ vs.\ $70\%$ en $n=80$). Para la \textbf{media afeitada}, $q=1$ tiene ventaja consistente bajo Gamma ($91\%$ vs.\ $70\%$ en $n=80$) y Weibull ($92\%$ vs.\ $83\%$ en $n=80$). En conjunto, $q=2$ es preferible cuando se usa argmin, mientras que $q=1$ puede competir con estimadores robustos del centro.
 
 \paragraph{Efecto de $w$.} La Figura~\ref{fig:sn-pesos} muestra que la elección de la función de peso tiene un impacto moderado. Las tres funciones $w_1$, $w_2$ y $w_3$ producen potencias similares en la mayoría de los escenarios. $w_2=\mathcal{N}(0,0.25)$ (más concentrada en bajas frecuencias) tiende a ser ligeramente inferior bajo Gamma y Weibull, sugeriendo que las señales de asimetría se ubican en frecuencias medias que $w_2$ pondera menos. $w_3$ (Laplace, colas pesadas) presenta comportamiento similar a $w_1$.
 
@@ -92,13 +92,13 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más p
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{../results/figures/compare_tn_vs_sn_power.png}
-  \caption{Comparación de potencia entre $T_n$ y $S_n$ (mejores configuraciones de cada test) bajo $H_a$.}
+  \caption{Comparación de potencia entre $T_n$ (argmin) y $S_n$ (argmin $q=1$ y $q=2$, cada uno promediado sobre $w$) bajo $H_a$.}
   \label{fig:compare-potencia}
 \end{figure}
 
-La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de cada test, ambas con estimador argmin: $T_n$ con Schuster-Narvarte, $S_n$ con $q=2$ y $w_1=\mathcal{N}(0,1)$ resuelto por L-BFGS-B. $S_n$ supera a $T_n$ en Gamma y Weibull para tamaños intermedios: la potencia de $S_n$ a $n=40$ bajo Gamma es $31\%$ frente al $25.7\%$ de $T_n$, y bajo Weibull a $n=80$ alcanza $87\%$ frente al $40.3\%$ de $T_n$. Para Pareto, $T_n$ alcanza $98.3\%$ a $n=80$ y $100\%$ a $n=160$; $S_n$ alcanza $92.5\%$ y $100\%$ respectivamente. 
+La Figura~\ref{fig:compare-potencia} compara $T_n$ (argmin, Schuster-Narvarte) con $S_n$ (argmin $q=1$ y $q=2$, ambos promediados sobre los tres pesos $w$). Bajo Gamma, $S_n$ con $q=1$ supera a $T_n$ en todos los tamaños: $50\%$ vs.\ $25.7\%$ en $n=40$ y $83\%$ vs.\ $59\%$ en $n=80$. Bajo Weibull, $S_n$ con $q=2$ es claramente superior a $T_n$: $82\%$ vs.\ $40\%$ en $n=80$. Para Pareto, $T_n$ domina: $98.3\%$ a $n=80$ frente al $82.7\%$ de $S_n$ con $q=2$.
 
-El poder de $S_n$ se explica porque la función característica captura la asimetría global , mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
+El poder de $S_n$ se explica porque la función característica captura la asimetría global, mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
 
 %--------------------------------------------------------------------------
 \subsection{Costo computacional}\label{sec:costo}
@@ -122,7 +122,7 @@ Los costos computacionales observados confirman el análisis teórico de la Secc
 \begin{itemize}
   \item Para $T_n$, la \textbf{mediana} es el estimador más rápido pues su cálculo es $\mathcal{O}(n\log n)$. La \textbf{media afeitada} cuesta $\approx 91$--$99$\,ms (overhead de \texttt{scipy.stats.trim\_mean}), prácticamente constante en $n$. El \textbf{argmin} (Schuster-Narvarte) es moderadamente más lento: $37$\,ms en $n=20$ a $80$\,ms en $n=160$, un factor~$2.2\times$ respecto a $n=20$ y solo $2.6\times$ más lento que la mediana en el peor caso. Esta escalabilidad favorable se debe a que el número de iteraciones $L$ crece como $\mathcal{O}(\log n)$ para distribuciones simétricas, por lo que el coste efectivo es $\mathcal{O}(n\log n)$ y no $\mathcal{O}(n^{2}\log n)$ como una búsqueda Walsh completa.
 
-  \item Para $S_n$ con $q=2$, el \textbf{argmin} cuesta $\approx 0.11$--$0.47$\,s para $n\in\{20,\dots,160\}$ gracias a L-BFGS-B con gradiente analítico: el costo no crece exponencialmente porque cada evaluación del par valor--gradiente es $\mathcal{O}(K)$ ($K=301$ puntos de cuadratura). Mediana y media afeitada cuestan $62$--$444$\,ms, con crecimiento suave en $n$ (vectorización en lote).
+  \item Para $S_n$, el \textbf{argmin} con $q=2$ cuesta $\approx 0.11$--$0.47$\,s gracias a la secante batcheada (gradiente $C^1$, $\mathcal{O}(K)$ por iteración). El \textbf{argmin} con $q=1$ es más lento ($\approx 0.83$--$1.31$\,s) pues el bootstrap usa grid vectorizado ($M=80$ candidatos; el gradiente discontinuo impide usar la secante). Mediana y media afeitada cuestan $62$--$444$\,ms, con crecimiento suave en $n$ (vectorización en lote).
 \end{itemize}
 
 
@@ -133,4 +133,4 @@ Los costos computacionales observados confirman el análisis teórico de la Secc
   \label{fig:compare-runtime}
 \end{figure}
 
-El tradeoff potencia--costo en $T_n$: con el algoritmo de Schuster-Narvarte, el argmin es solo $2$--$2.5\times$ más lento que la mediana pero consistentemente más potente para $n\ge 40$. La elección entre argmin y mediana pasa a ser una cuestión de nivel (argmin conservador, mediana ligeramente liberal bajo Uniforme) y no de costo. En $S_n$, el argmin también es competitivo en tiempo y el más potente (Figura~\ref{fig:compare-potencia}), gracias a la diferenciabilidad de $S_n$ que permite L-BFGS-B.
+El tradeoff potencia--costo en $T_n$: con el algoritmo de Schuster-Narvarte, el argmin es solo $2$--$2.5\times$ más lento que la mediana pero consistentemente más potente para $n\ge 40$. La elección entre argmin y mediana pasa a ser una cuestión de nivel (argmin conservador, mediana ligeramente liberal bajo Uniforme) y no de costo. En $S_n$, el argmin $q=2$ es competitivo en tiempo y el más potente bajo Pareto y Weibull (Figura~\ref{fig:compare-potencia}), gracias al gradiente $C^1$ que permite L-BFGS-B y la secante batcheada; el argmin $q=1$ es el más potente bajo Gamma, al costo de un bootstrap más lento (grid vectorizado).
