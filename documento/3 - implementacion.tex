@@ -1,6 +1,29 @@
 
 La traducción del diseño metodológico a código se hizo en Python, apoyándose en \texttt{NumPy} y \texttt{SciPy} para el cálculo numérico, \texttt{matplotlib} y \texttt{seaborn} para las gráficas, y el módulo \texttt{concurrent.futures} de la librería estándar para la paralelización del estudio Monte Carlo. El código completo y los notebooks de reproducción están disponibles en el repositorio del proyecto: \url{https://github.com/luistejon17/Proyecto2EstadisticaNP}.
 
+La Tabla~\ref{tab:impl-summary} resume el método empleado para cada par (estadístico, estimador~$\hat\theta$), tanto en la estimación puntual sobre la muestra original como en el bucle bootstrap.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Métodos de implementación para cada par (estadístico, estimador~$\hat\theta$). \emph{Estimación puntual}: método aplicado a la muestra original. \emph{Bootstrap}: método usado en cada una de las $B$ remuestras. Los tensores $(B,K,n)$ se procesan en mini-lotes para mantener el uso de RAM bajo $\sim\!200$\,MB.}
+\label{tab:impl-summary}
+\begin{tabular}{@{}lllp{4.6cm}p{4.6cm}@{}}
+\toprule
+Estadístico & $q$ & $\hat\theta$ & Estimación puntual & Bootstrap ($B$ réplicas) \\
+\midrule
+$T_n$ & -- & mediana  & \texttt{numpy.median}          & Bucle; $\hat\theta_b{=}$\texttt{numpy.median} \\
+$T_n$ & -- & afeitada & \texttt{trim\_mean(0.1)}        & Bucle; $\hat\theta_b{=}$\texttt{trim\_mean(0.1)} \\
+$T_n$ & -- & argmin   & Schuster-Narvarte, $O(Ln)$     & Schuster-Narvarte en cada remuestra \\
+\midrule
+$S_n$ & $1,2$ & mediana  & \texttt{numpy.median}       & Batch $(B,K,n)\!\to\!(B,K)$; mini-lotes \\
+$S_n$ & $1,2$ & afeitada & \texttt{trim\_mean(0.1)}     & Batch $(B,K,n)\!\to\!(B,K)$; mini-lotes \\
+$S_n$ & $1$   & argmin   & L-BFGS-B $+$ $\nabla_\theta S_n$~\eqref{eq:grad-Sn-q1} & Secante batcheado sobre $B$ réplicas \\
+$S_n$ & $2$   & argmin   & L-BFGS-B $+$ $\nabla_\theta S_n$~\eqref{eq:grad-Sn}    & Secante batcheado sobre $B$ réplicas \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Estadístico \texorpdfstring{$T_n$}{T\_n} (Schuster--Barker)}
 
 La diferencia $F_n(x)-sF_n(x;\theta)$ es una función escalera que solo cambia en los puntos del conjunto $\{X_i\}\cup\{2\theta-X_i\}$, por lo que el supremo se alcanza necesariamente en alguno de esos $2n$ puntos. Usando la identidad
@@ -93,28 +116,31 @@ Otro enfoque que intentamos fue hallar los $K$ promedios de Walsh más cercanos 
 
 \subsubsection{argmin de \texorpdfstring{$S_n$}{Sn}: L-BFGS-B con gradiente analítico}\label{impl:argmin-Sn}
 
-Para $q=2$, la Proposición~\ref{prop:leibniz-Sn} garantiza que $S_n$ es $C^1$ y proporciona la fórmula cerrada del gradiente. Esto habilita un esquema de quasi-Newton (Sección~\ref{sec:estim-theta}) que evita el barrido sobre toda una grilla. La rutina precomputa $(a_n,b_n,|c_n|)$ una sola vez ($\mathcal{O}(Kn)$) y cada iteración de \texttt{L-BFGS-B} cuesta $\mathcal{O}(K)$ — una llamada al par valor–gradiente:
+Para $q=2$, la Proposición~\ref{prop:leibniz-Sn} garantiza que $S_n$ es $C^1$ con gradiente~\eqref{eq:grad-Sn}. Para $q=1$, la Sección~\ref{sssec:grad-q1} extiende el resultado: $S_n$ es diferenciable en casi todo $\theta$ y su gradiente está dado por~\eqref{eq:grad-Sn-q1}. En ambos casos se usa \texttt{L-BFGS-B} con gradiente analítico: la rutina precomputa $(a_n,b_n,|c_n|)$ una sola vez ($\mathcal{O}(Kn)$) y cada iteración cuesta $\mathcal{O}(K)$.
 
 \begin{lstlisting}[language=Python]
+# q=1: gradiente usando identidad 1 - cos(u) = 2 sin^2(u/2)
+def _Sn_value_and_grad_q1(theta, a_n, b_n, abs_cn, w_vals, t_grid):
+    Phi_n = np.arctan2(b_n, a_n)
+    half = (Phi_n - t_grid * theta) / 2.0
+    S_n  = np.trapezoid(2*abs_cn*np.abs(np.sin(half))*w_vals, t_grid)
+    dS_n = np.trapezoid(-t_grid*abs_cn*np.sign(np.sin(half))
+                         *np.cos(half)*w_vals, t_grid)
+    return float(S_n), float(dS_n)
+
+# q=2: gradiente usando descomposicion A_n + i B_n
 def _Sn_value_and_grad_q2(theta, a_n, b_n, abs_cn, w_vals, t_grid):
-    # A_n y B_n son la parte real e imaginaria de c_n(t) * exp(-i t theta)
-    A = a_n * np.cos(t_grid * theta) + b_n * np.sin(t_grid * theta)
-    B = -a_n * np.sin(t_grid * theta) + b_n * np.cos(t_grid * theta)
-    # Valor: S_n = integral de 2 |c_n| (|c_n| - A) w dt
-    integrand = 2.0 * abs_cn * (abs_cn - A)
-    np.maximum(integrand, 0.0, out=integrand)        # estabilidad
-    S_n = np.trapezoid(integrand * w_vals, t_grid)
-    # Gradiente: dS/dtheta = -2 integral t |c_n| B(t,theta) w dt
-    dS_n = np.trapezoid(-2.0 * t_grid * abs_cn * B * w_vals, t_grid)
+    A = a_n*np.cos(t_grid*theta) + b_n*np.sin(t_grid*theta)
+    B = -a_n*np.sin(t_grid*theta) + b_n*np.cos(t_grid*theta)
+    S_n  = np.trapezoid(2*abs_cn*(abs_cn-A)*w_vals, t_grid)
+    dS_n = np.trapezoid(-2*t_grid*abs_cn*B*w_vals, t_grid)
     return float(S_n), float(dS_n)
 
 def theta_argmin_Sn(sample, w_fn, q=2, t_grid=None):
-    if q != 2:
-        return _theta_argmin_Sn_grid(sample, w_fn, q, ...)   # fallback
     a_n, b_n, abs_cn, w_vals = _Sn_precompute(sample, w_fn, t_grid)
+    grad_fn = _Sn_value_and_grad_q1 if q == 1 else _Sn_value_and_grad_q2
     res = minimize(
-        lambda th: _Sn_value_and_grad_q2(th[0], a_n, b_n, abs_cn,
-                                          w_vals, t_grid),
+        lambda th: grad_fn(th[0], a_n, b_n, abs_cn, w_vals, t_grid),
         x0=np.array([np.median(sample)]),
         jac=True, method='L-BFGS-B',
         bounds=[(sample.min()-pad, sample.max()+pad)],
@@ -124,26 +150,45 @@ def theta_argmin_Sn(sample, w_fn, q=2, t_grid=None):
 \end{lstlisting}
 
 El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero} sugiere que el verdadero centro es un punto estacionario asintótico, y la mediana es $\sqrt n$-consistente).
-\subsubsection{argmin de \texorpdfstring{$S_n$}{Sn} para \texorpdfstring{$q=1$}{q=1}: selección discreta con Pyomo}\label{impl:argmin-Sn-pyomo}
+\subsubsection{Método secante batcheado para argmin en el bootstrap}\label{impl:argmin-Sn-secant}
 
-Para $q=1$, el estadístico $S_n$ sigue siendo evaluable numéricamente, pero el criterio no es diferenciable en los puntos donde \(c_n(t)e^{-it\theta}-|c_n(t)|=0\).
-Por esta razón, no se usa el gradiente analítico de la Proposición~\ref{prop:leibniz-Sn}, que fue derivado específicamente para el caso $q=2$. En su lugar, se construye una grilla finita de candidatos para $\theta$, se evalúa $S_n(\theta)$ en cada candidato mediante la rutina vectorizada \texttt{Sn\_multi\_theta}, y luego se selecciona el candidato con menor valor objetivo.
+En el bootstrap, calcular $B=199$ minimizaciones de $S_n$ de forma secuencial con \texttt{L-BFGS-B} sería el cuello de botella. La solución es vectorizar el método de la secante (equivalente a \texttt{L-BFGS-B} en 1D) sobre todas las $B$ réplicas a la vez. La función \texttt{\_sn\_boot\_batch\_argmin\_secant} opera como sigue:
 
-Esta selección discreta se implementa opcionalmente con \texttt{Pyomo}. Si los candidatos son $\theta_1,\dots,\theta_m$ y los valores correspondientes del estadístico son $v_i=S_n(\theta_i)$, el problema se formula como el siguiente programa lineal entero mixto:
+\begin{enumerate}
+\item \textbf{Precompute batch}: genera la matriz de remuestras $Y\in\mathbb{R}^{B\times n}$ de golpe y calcula $(a_n^{(b)},b_n^{(b)},|c_n^{(b)}|,\Phi_n^{(b)})$ para todos los $b$ simultáneamente via tensores $(B,K,n)\to(B,K)$ en mini-lotes de $\approx\!200$\,MB.
+
+\item \textbf{Gradiente batcheado}: implementa $\nabla_\theta S_n$ (ecuaciones~\eqref{eq:grad-Sn-q1} y~\eqref{eq:grad-Sn} según $q$) como operación vectorizada $(B,K)\to(B,)$ con \texttt{numpy.trapezoid}.
+
+\item \textbf{Iteración de la secante}: actualiza los $B$ valores de $\theta$ simultáneamente:
 \[
-\min_{y_1,\dots,y_m} \sum_{i=1}^m v_i y_i,
-\qquad
-\sum_{i=1}^m y_i=1,
-\qquad
-y_i\in\{0,1\}.
+\theta_b^{(k+1)} = \theta_b^{(k)} - \frac{S_n'(\theta_b^{(k)})\,(\theta_b^{(k)}-\theta_b^{(k-1)})}{S_n'(\theta_b^{(k)})-S_n'(\theta_b^{(k-1)})},
 \]
-La variable binaria $y_i$ indica si el candidato $\theta_i$ es seleccionado. Como exactamente una variable debe tomar el valor $1$, la solución óptima escoge el candidato con menor valor de $S_n$.
+con fallback al descenso por gradiente cuando el denominador es pequeño, y recorte al bracket para garantizar acotación.
 
-En la implementación, \texttt{Pyomo} no se importa al cargar el paquete, sino únicamente cuando se invoca explícitamente el estimador \texttt{argmin\_pyomo}. El solver se selecciona automáticamente entre los disponibles en la lista
-\[
-\texttt{appsi\_highs},\quad \texttt{highs},\quad \texttt{glpk},\quad \texttt{cbc}.
-\]
-Si ninguno está instalado, la rutina informa el error y sugiere instalar un solver compatible, por ejemplo \texttt{highspy}. Esta estrategia permite incluir el caso $(q=1,\hat\theta_{\min})$ dentro del estudio, evitando el uso de derivadas y manteniendo una formulación reproducible del problema de selección del argmin.
+\item \textbf{Evaluación final}: calcula $S_n(Y_b;\theta_b^*)$ con los precomputes de (1), sin nueva llamada $O(Kn)$.
+\end{enumerate}
+
+\begin{lstlisting}[language=Python]
+def _grad(th):  # th: (B,) -> grad: (B,)
+    if q == 1:
+        half = (Phi_n - t_grid[None,:] * th[:,None]) / 2.0  # (B,K)
+        integ = -t_grid * abs_cn * np.sign(np.sin(half)) * np.cos(half) * w
+    else:
+        B_n = -a_n * np.sin(t_grid*th[:,None]) + b_n * np.cos(t_grid*th[:,None])
+        integ = -2.0 * t_grid * abs_cn * B_n * w
+    return np.trapezoid(integ, t_grid, axis=1)        # (B,)
+
+for _ in range(max_steps):
+    dg   = grad_curr - grad_prev                      # (B,)
+    dt   = thetas - th_prev
+    safe = np.abs(dg) > 1e-12 * (np.abs(grad_curr) + 1e-30)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        step = np.where(safe, grad_curr * dt / dg,
+                        0.1 * half_width * np.sign(grad_curr))
+    thetas = np.clip(thetas - step, lo, hi)
+\end{lstlisting}
+
+Este enfoque reduce el tiempo por test bootstrap de argmin en $\approx\!8\times$ respecto al bucle secuencial con \texttt{L-BFGS-B}, y en $\approx\!2\times$ respecto a la alternativa de grid vectorizado, y se aplica de forma idéntica para $q=1$ y $q=2$.
 
 
 \subsection{Procedimiento bootstrap}
@@ -196,11 +241,11 @@ def _sn_boot_batch(Y, thetas, w_fn, q, t_grid):
     return S_boot
 \end{lstlisting}
 
-Para el estimador argmin, la optimización iterativa (\texttt{L-BFGS-B}) impide vectorizar: se mantiene el bucle secuencial, con el punto de partida $x_0=\mathrm{mediana}(Y^{*(b)})$ recalculado en cada remuestra (la mediana de la remuestra es $\sqrt{n}$-consistente para el centro de $sF_n(\hat\theta)$).
+Para el estimador argmin, se usa el método secante batcheado de la Sección~\ref{impl:argmin-Sn-secant}: el gradiente analítico de $S_n$ —ecuaciones~\eqref{eq:grad-Sn-q1} y~\eqref{eq:grad-Sn} para $q=1$ y $q=2$ respectivamente— se vectoriza sobre las $B$ réplicas simultáneamente, eliminando el bucle Python y logrando una reducción de $\approx\!8\times$ respecto al bucle secuencial con \texttt{L-BFGS-B}.
 
 \subsection{Paralelización del estudio Monte Carlo}
 
-Cada celda del diseño experimental (distribución $\times$ $n$ $\times$ estimador $\times$ $(q,w)$ para $S_n$) requiere $R$ réplicas independientes; en total $18\,000$ tareas para $T_n$ y $60\,000$ para $S_n$ (la combinación $q{=}1$ con argmin se excluye, reduciendo de $72\,000$ a $60\,000$). Como cada réplica es independiente, se paralelizan con \texttt{ProcessPoolExecutor} usando $\#\text{cores}-1$ workers. Para garantizar reproducibilidad y evitar correlación entre semillas, a cada tarea $k$ se le asigna la semilla $\texttt{seed} + k$:
+Cada celda del diseño experimental (distribución $\times$ $n$ $\times$ estimador $\times$ $(q,w)$ para $S_n$) requiere $R$ réplicas independientes; en total $18\,000$ tareas para $T_n$ (5 distribuciones $\times$ 4 tamaños $\times$ 3 estimadores $\times$ 300 réplicas) y $72\,000$ para $S_n$ (5 $\times$ 4 $\times$ 3 estimadores $\times$ 2 valores de $q$ $\times$ 3 pesos $\times$ 200 réplicas), incluyendo la combinación $(q{=}1,\hat\theta_{\min})$ gracias al gradiente analítico. Como cada réplica es independiente, se paralelizan con \texttt{ProcessPoolExecutor} usando todos los cores disponibles. Para garantizar reproducibilidad y evitar correlación entre semillas, a cada tarea $k$ se le asigna la semilla $\texttt{seed} + k$:
 
 \begin{lstlisting}[language=Python]
 def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
@@ -214,7 +259,7 @@ def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
             'time_s': time.perf_counter() - t0,
             'under_h0': spec.under_h0}
 \end{lstlisting}
- Con 11 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=199$) corre en $\approx 1.5$ minutos (gracias al algoritmo exacto de Schuster-Narvarte para el argmin) y el de $S_n$ ($60\,000$ tests, $K=301$, $B=199$) en $\approx 20$--$30$ minutos. La reducción de $B=500$ a $B=199$ y la vectorización del bucle bootstrap para los estimadores mediana y media afeitada (eliminando el bucle de Python y evaluando $S_n$ en lote sobre matrices $(B,K,n)$) son las principales ganancias de velocidad.
+ Con 12 cores activos, el estudio completo de $T_n$ ($18\,000$ tests, $B=199$) corre en $\approx 1.5$ minutos y el de $S_n$ ($72\,000$ tests, $K=301$, $B=199$) en $\approx 10$--$15$ minutos. Las principales ganancias de velocidad son: (i) la vectorización del bootstrap de mediana y media afeitada sobre tensores $(B,K,n)$; (ii) el método secante batcheado para argmin (Sección~\ref{impl:argmin-Sn-secant}), que reduce $\approx\!8\times$ el tiempo por test respecto al bucle secuencial con \texttt{L-BFGS-B}; y (iii) la elección $B=199$ frente al $B=500$ considerado inicialmente.
 
 \subsection{Verificación empírica con pruebas unitarias}
 
