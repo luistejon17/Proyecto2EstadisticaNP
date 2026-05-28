@@ -27,11 +27,11 @@ Para \(S_n\) con \(q=2\), se implementó una versión basada en \texttt{L-BFGS-B
 
 Este método sí fue conservado para el caso \(q=2\), porque mostró buen desempeño numérico y redujo considerablemente el costo de calcular \(\hat\theta_{\min}\). Sin embargo, no se extendió como método principal al caso \(q=1\), debido a la no diferenciabilidad del criterio en algunos puntos.
 
-\subsection*{Gradiente formal para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=1$}{q=1}}
+\subsection*{Gradiente para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=1$}{q=1}}
 
 También se exploró una extensión formal del enfoque de gradiente al caso \(q=1\). Usando la identidad \(1-\cos u=2\sin^2(u/2)\), el integrando de \(S_n\) puede escribirse en términos de \(\left|\sin((\Phi_n(t)-t\theta)/2)\right|\). Esto sugiere una derivada formal que involucra funciones signo.
 
-Aunque esta expresión puede ser útil como aproximación numérica, no define un gradiente clásico en los puntos donde el seno se anula. En consecuencia, el criterio puede presentar esquinas o puntos de no diferenciabilidad. Por esta razón, el uso directo de métodos quasi-Newton para \(q=1\) se consideró menos estable y fue descartado como implementación principal.
+Aunque esta expresión puede ser útil como aproximación numérica, no define un gradiente en los puntos donde el seno se anula. En consecuencia, el criterio puede presentar esquinas o puntos de no diferenciabilidad. Por esta razón, el uso directo de métodos quasi-Newton para \(q=1\) se consideró menos estable y fue descartado como implementación principal.
 
 \subsection*{Selección discreta con \texorpdfstring{\texttt{Pyomo}}{Pyomo} para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=1$}{q=1}}
 
@@ -47,7 +47,4 @@ En esta formulación, \(y_i=1\) indica que el candidato \(\theta_i\) fue elegido
 
 Aunque esta implementación era conceptualmente clara y evitaba usar derivadas, fue descartada en el estudio principal porque produjo un sesgo alto en la estimación del centro para \(q=1\). Este sesgo parece estar asociado a la discretización de la grilla y a la sensibilidad del criterio \(S_n\) cuando se usa la norma absoluta. Por tanto, la versión con \texttt{Pyomo} se dejó como implementación exploratoria, pero no como opción principal para los resultados finales.
 
-\subsection*{Conclusión}
-
-Los métodos explorados permitieron comparar distintas formas de calcular estimadores por argmin. Para \(T_n\), la búsqueda local en promedios de Walsh fue reemplazada por el algoritmo exacto de Schuster-Narvarte, que evita ventanas heurísticas y resultó más eficiente. Para \(S_n\), la búsqueda grilla--Brent fue útil como referencia, pero fue menos eficiente que \texttt{L-BFGS-B} en el caso \(q=2\). Finalmente, para \(q=1\), tanto el gradiente formal como la formulación con \texttt{Pyomo} presentaron dificultades: el primero por no diferenciabilidad y el segundo por sesgo empírico alto. Por estas razones, estos enfoques se documentan aquí como intentos alternativos, pero no se usan como base principal de las conclusiones del proyecto.
 
