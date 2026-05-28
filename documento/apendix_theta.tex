@@ -1,0 +1,75 @@
+\newpage
+\section*{Apéndice - Intentos alternativos para estimadores por argmin}
+\addcontentsline{toc}{section}{Apéndice - Intentos alternativos para estimadores por argmin}
+\label{ap:argmin-descartados}
+
+En esta sección se documentan algunos enfoques explorados para calcular estimadores por argmin del centro de simetría. Estos métodos no fueron usados en la versión final del estudio principal, ya sea por mayor costo computacional, menor estabilidad numérica o porque fueron reemplazados por una implementación más simple y robusta.
+
+\subsection*{Ventana de promedios de Walsh alrededor de la mediana}
+
+Un primer enfoque para calcular \(\hat\theta_{\min}\) en el estadístico \(T_n\) consistió en evitar la enumeración completa de los \(\mathcal{O}(n^2)\) promedios de Walsh. La idea era tomar solo los \(K\) promedios de Walsh más cercanos a la mediana muestral, o a un estimador inicial del centro, y buscar el mínimo de \(T_n\) dentro de esa ventana.
+
+Este enfoque se basa en la intuición de que, bajo simetría, el minimizador debería estar cerca de un centro robusto como la mediana. En las pruebas preliminares, la ventana con \(K=8n\) solía encontrar buenos candidatos. Sin embargo, el método seguía requiriendo construir, ordenar o filtrar una cantidad considerable de candidatos, y luego evaluar \(T_n\) sobre ellos.
+
+Aunque el enfoque funcionó en varios casos, resultó menos eficiente que el algoritmo de Schuster-Narvarte. En promedio, fue entre \(4\) y \(400\) veces más lento, dependiendo de \(n\) y de la muestra. Por esta razón, fue descartado en favor del algoritmo exacto descrito en la Sección~\ref{impl:argmin-Tn}.
+
+\subsection*{Gradiente analítico para \texorpdfstring{$S_n$}{Sn} con \texorpdfstring{$q=1$}{q=1}}
+
+También se exploró extender el método basado en gradiente al caso \(q=1\). Formalmente, usando la identidad \(1-\cos(u)=2\sin^2(u/2)\), el integrando puede escribirse de manera que aparece una expresión proporcional a \(|\sin((\Phi_n(t)-t\theta)/2)|\). Esto sugiere una derivada formal de la forma
+\[
+\frac{d}{d\theta}
+\left[
+2|c_n(t)|\left|\sin\left(\frac{\Phi_n(t)-t\theta}{2}\right)\right|
+\right],
+\]
+lo cual conduce a una expresión con funciones signo.
+
+En código, el cálculo se implementó de la siguiente manera:
+
+\begin{lstlisting}[language=Python]
+def _Sn_value_and_grad_q1(theta, a_n, b_n, abs_cn, w_vals, t_grid):
+    Phi_n = np.arctan2(b_n, a_n)
+    half = (Phi_n - t_grid * theta) / 2.0
+    S_n  = np.trapezoid(2*abs_cn*np.abs(np.sin(half))*w_vals, t_grid)
+    dS_n = np.trapezoid(-t_grid*abs_cn*np.sign(np.sin(half))
+                         *np.cos(half)*w_vals, t_grid)
+    return float(S_n), float(dS_n)
+\end{lstlisting}
+
+Sin embargo, esta expresión no define un gradiente clásico en los puntos donde \(\sin((\Phi_n(t)-t\theta)/2)=0\). En consecuencia, el criterio para \(q=1\) puede presentar puntos de no diferenciabilidad, lo que vuelve menos estable el uso directo de métodos quasi-Newton. Por esta razón, en la implementación final se prefirió resolver el caso \(q=1\) mediante una búsqueda discreta con \texttt{Pyomo}, evitando depender de derivadas en puntos problemáticos.
+
+\subsection*{Método de la secante batcheado para el bootstrap de \texorpdfstring{$S_n$}{Sn}}
+
+Otro intento consistió en acelerar el cálculo de \(\hat\theta_{\min}\) dentro del bootstrap para \(S_n\). Como cada prueba requiere recalcular el estimador en \(B\) remuestras, una implementación secuencial con \texttt{L-BFGS-B} puede convertirse en un cuello de botella.
+
+La estrategia propuesta fue vectorizar una iteración tipo secante sobre todas las remuestras bootstrap simultáneamente. Para cada remuestra \(b\), se actualizaba
+\[
+\theta_b^{(k+1)}
+=
+\theta_b^{(k)}
+-
+\frac{
+S_n'(\theta_b^{(k)})
+\left(\theta_b^{(k)}-\theta_b^{(k-1)}\right)
+}{
+S_n'(\theta_b^{(k)})-S_n'(\theta_b^{(k-1)})
+}.
+\]
+Esta actualización se aplicaba en lote a los \(B\) valores de \(\theta_b\), usando operaciones vectorizadas de \texttt{NumPy}. Además, se incluían mecanismos de seguridad: fallback a un paso de descenso cuando el denominador era pequeño y recorte del iterado a un intervalo permitido.
+
+\begin{lstlisting}[language=Python]
+for _ in range(max_steps):
+    dg   = grad_curr - grad_prev
+    dt   = thetas - th_prev
+    safe = np.abs(dg) > 1e-12 * (np.abs(grad_curr) + 1e-30)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        step = np.where(safe, grad_curr * dt / dg,
+                        0.1 * half_width * np.sign(grad_curr))
+    thetas = np.clip(thetas - step, lo, hi)
+\end{lstlisting}
+
+Este método redujo el tiempo de cómputo frente al bucle secuencial, pero fue descartado como opción principal porque introducía mayor complejidad algorítmica y más parámetros heurísticos: elección del intervalo, tolerancias, fallback y control de pasos. Para mantener la implementación principal más transparente y reproducible, se prefirió usar \texttt{L-BFGS-B} para \(q=2\) y \texttt{Pyomo} para \(q=1\).
+
+\subsection*{Conclusión del apéndice}
+
+Los intentos anteriores fueron útiles para entender la estructura numérica de los estimadores por argmin. La búsqueda local en promedios de Walsh mostró que el minimizador de \(T_n\) está fuertemente ligado a la geometría discreta de la muestra, pero fue superada por el algoritmo exacto de Schuster-Narvarte. El gradiente formal para \(q=1\) permitió explorar métodos rápidos para \(S_n\), pero la no diferenciabilidad del criterio hizo preferible una estrategia discreta. Finalmente, la secante batcheada ofreció mejoras de tiempo, pero a costa de mayor complejidad y menor claridad metodológica.
