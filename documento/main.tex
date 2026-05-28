@@ -73,56 +73,30 @@
 \input{4 - resultados}
 
 % =========================================================
-\section{Discusión}
+\newpage
+\section{Conclusiones}
 \input{5 - discusion}
 
 % =========================================================
-\section{Conclusiones}
-\input{6 - conclusiones}
 
 % =========================================================
 \newpage
-\section*{Apéndice - Calidad de los estimadores del centro de simetría}
+\section*{Apéndices}
+\addcontentsline{toc}{section}{Apéndices}
+\appendix
+
+\section{Calidad de los estimadores del centro de simetría}
+\label{apendix_qualiti_theta_estimators}
 \input{7 - apendice}
 
-\section*{Apéndice - Intentos alternativos para estimadores por argmin}
+\newpage
+\section{Apéndice - Intentos alternativos para estimadores por argmin}
 \input{apendix_theta}
 
 \newpage
 \bibliography{ref}
 \bibliographystyle{plain}
 
-\newpage
-\section*{Checklist del Proyecto 2: Estadística No Paramétrica}
-
-\subsection*{Fase 1: Estructura y Configuración del Repositorio}
-\begin{itemize}
-    \item[\textbf{[$\checkmark$]}] Separar la lógica de ejecución en Jupyter Notebooks.
-    \item[\textbf{[$\checkmark$]}] Revisar que la estructura modular del código sea clara y navegable.
-\end{itemize}
-
-\subsection*{Fase 2: Implementación Matemática}
-\begin{itemize}
-    \item[\textbf{[$\checkmark$]}] Revisar que la simetrización $sF_n(\theta)$ y el estadístico $T_n$ estén correctamente implementados; contrastar con cálculo manual en muestra pequeña simétrica.
-    \item[\textbf{[$\checkmark$]}] Revisar que $c_n(t)$ y el estadístico $S_n$ estén correctos para $q=1$ y $q=2$; verificar que $c_s(t)=\|c_n(t)\|$.
-    \item[\textbf{[$\checkmark$]}] Revisar los tres estimadores del centro de simetría (argmin, mediana, media afeitada) para ambos tests.
-    \item[\textbf{[$\checkmark$]}] Revisar el procedimiento bootstrap de $T_n$: verificar que las remuestras se generan de $sF_n(\tilde\theta)$ y que el p-valor se calcula correctamente.
-    \item[\textbf{[$\checkmark$]}] Revisar el procedimiento bootstrap de $S_n$ y las funciones de peso $w(t)$ candidatas.
-\end{itemize}
-
-\subsection*{Fase 3: Diseño y Ejecución de Simulaciones}
-\begin{itemize}
-    \item[\textbf{[$\checkmark$]}] Realizar estudio piloto para fijar los tamaños muestrales $n$ adecuados.
-    \item[\textbf{[$\checkmark$]}] Diseñar la matriz experimental completa: 2 tests $\times$ 3 estimadores $\times$ $w(t)$ candidatas $\times$ $q\in\{1,2\}$ $\times$ distribuciones $\times$ tamaños $n$.
-    \item[\textbf{[$\checkmark$]}] Ejecutar simulaciones definitivas con $B=199$ y $R$ réplicas Monte Carlo acordadas.
-\end{itemize}
-
-\subsection*{Fase 4: Visualización y Gráficos}
-\begin{itemize}
-    \item[\textbf{[$\checkmark$]}] Heatmap de potencia empírica por test, estimador de $\theta$ y distribución alternativa.
-    \item[\textbf{[$\checkmark$]}] Comparativa de potencia para distintas $w(t)$ y para $q=1$ vs.\ $q=2$ en $S_n$.
-    \item[\textbf{[$\checkmark$]}] Densidades teóricas de las distribuciones empleadas (ilustrativo).
-\end{itemize}
 
 \subsection*{Fase 5: Redacción del Informe}
 \begin{itemize}
@@ -141,26 +115,6 @@
 \end{itemize}
 
 
-\vspace{2cm}
-\section*{Pendientes}
-
-\subsection*{Marco teórico}
-\begin{itemize}
-    \item[\textbf{[\checkmark]}] Revisar la Sección 1.3.2.
-    \item[\textbf{[\checkmark]}] Revisar la Sección 1.3.3, especialmente la parte del método quasi-Newton.
-    \item[\textbf{[\checkmark]}] Agregar el teorema de bootstrap del paper.
-\end{itemize}
-
-\subsection*{Metodología}
-\begin{itemize}
-    \item[\textbf{[$\checkmark$]}] Revisar la Sección 2.3, especialmente lo relacionado con los estimadores por argmin.
-\end{itemize}
-
-\subsection*{Implementación}
-\begin{itemize}
-    \item[\textbf{[\checkmark]}] Revisar toda la implementación.
-    \item[\textbf{[\checkmark]}] Entender la corrección de continuidad.
-\end{itemize}
 
 
 

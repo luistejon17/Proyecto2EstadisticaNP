@@ -174,7 +174,7 @@ La existencia del gradiente \eqref{eq:grad-Sn} permite emplear métodos de optim
 \theta^{(k)}-\eta_k S_n'(\theta^{(k)}),
 \qquad k=0,1,2,\dots,
 \]
-donde \(\eta_k>0\) es un tamaño de paso. Sin embargo, en este caso usamos \texttt{L-BFGS-B}, un método quasi-Newton de memoria limitada que aproxima a partir de diferencias sucesivas entre iterados y gradientes, y que selecciona el paso mediante una búsqueda lineal \cite{nocedal2006numerical}.
+donde \(\eta_k>0\) es un tamaño de paso. Sin embargo, en este caso usamos \texttt{L-BFGS-B}, un método quasi-Newton de memoria limitada que aproxima a partir de diferencias sucesivas entre iterados y gradientes, y que selecciona el paso mediante una búsqueda lineal..
 
 Para un solo parámetro, este aplica el método de la secante sobre la curvatura local de \(S_n\) \eqref{secant_method}, aunque el algoritmo \texttt{L-BFGS-B} incluye además una estrategia de búsqueda lineal y restricciones de caja. Por esto último, este método se considera una aproximación quasi-Newton estabilizada.
 

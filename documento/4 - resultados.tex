@@ -96,21 +96,23 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más p
   \label{fig:compare-potencia}
 \end{figure}
 
-La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de cada test, ambas con estimador argmin: $T_n$ con Schuster-Narvarte, $S_n$ con $q=2$ y $w_1=\mathcal{N}(0,1)$ resuelto por L-BFGS-B. $S_n$ supera a $T_n$ en Gamma y Weibull para tamaños intermedios: la potencia de $S_n$ a $n=40$ bajo Gamma es $31\%$ frente al $25.7\%$ de $T_n$, y bajo Weibull a $n=80$ alcanza $87\%$ frente al $40.3\%$ de $T_n$. Para Pareto, $T_n$ alcanza $98.3\%$ a $n=80$ y $100\%$ a $n=160$; $S_n$ alcanza $92.5\%$ y $100\%$ respectivamente. El poder de $S_n$ se explica porque la función característica captura la asimetría global , mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
+La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de cada test, ambas con estimador argmin: $T_n$ con Schuster-Narvarte, $S_n$ con $q=2$ y $w_1=\mathcal{N}(0,1)$ resuelto por L-BFGS-B. $S_n$ supera a $T_n$ en Gamma y Weibull para tamaños intermedios: la potencia de $S_n$ a $n=40$ bajo Gamma es $31\%$ frente al $25.7\%$ de $T_n$, y bajo Weibull a $n=80$ alcanza $87\%$ frente al $40.3\%$ de $T_n$. Para Pareto, $T_n$ alcanza $98.3\%$ a $n=80$ y $100\%$ a $n=160$; $S_n$ alcanza $92.5\%$ y $100\%$ respectivamente. 
+
+El poder de $S_n$ se explica porque la función característica captura la asimetría global , mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
 
 %--------------------------------------------------------------------------
 \subsection{Costo computacional}\label{sec:costo}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\textwidth]{../results/figures/tn_runtime.png}
+  \includegraphics[width=0.5\textwidth]{../results/figures/tn_runtime.png}
   \caption{Tiempo de ejecución de $T_n$ por test (segundos) para los tres estimadores y $n\in\{20,40,80,160\}$.}
   \label{fig:tn-runtime}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\textwidth]{../results/figures/sn_runtime.png}
+  \includegraphics[width=0.5\textwidth]{../results/figures/sn_runtime.png}
   \caption{Tiempo de ejecución de $S_n$ por test (segundos).}
   \label{fig:sn-runtime}
 \end{figure}
@@ -118,17 +120,11 @@ La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de ca
 Los costos computacionales observados confirman el análisis teórico de la Sección~\ref{sec:estim-theta}:
 
 \begin{itemize}
-  \item Para $T_n$, la \textbf{mediana} es el estimador más rápido ($\approx 25$--$31$\,ms independientemente de $n$), pues su cálculo es $\mathcal{O}(n\log n)$. La \textbf{media afeitada} cuesta $\approx 91$--$99$\,ms (overhead de \texttt{scipy.stats.trim\_mean}), prácticamente constante en $n$. El \textbf{argmin} (Schuster-Narvarte) es moderadamente más lento: $37$\,ms en $n=20$ a $80$\,ms en $n=160$, un factor~$2.2\times$ respecto a $n=20$ y solo $2.6\times$ más lento que la mediana en el peor caso. Esta escalabilidad favorable se debe a que el número de iteraciones $L$ crece como $\mathcal{O}(\log n)$ para distribuciones simétricas, por lo que el coste efectivo es $\mathcal{O}(n\log n)$ y no $\mathcal{O}(n^{5/2}\log n)$ como una búsqueda Walsh completa.
+  \item Para $T_n$, la \textbf{mediana} es el estimador más rápido pues su cálculo es $\mathcal{O}(n\log n)$. La \textbf{media afeitada} cuesta $\approx 91$--$99$\,ms (overhead de \texttt{scipy.stats.trim\_mean}), prácticamente constante en $n$. El \textbf{argmin} (Schuster-Narvarte) es moderadamente más lento: $37$\,ms en $n=20$ a $80$\,ms en $n=160$, un factor~$2.2\times$ respecto a $n=20$ y solo $2.6\times$ más lento que la mediana en el peor caso. Esta escalabilidad favorable se debe a que el número de iteraciones $L$ crece como $\mathcal{O}(\log n)$ para distribuciones simétricas, por lo que el coste efectivo es $\mathcal{O}(n\log n)$ y no $\mathcal{O}(n^{2}\log n)$ como una búsqueda Walsh completa.
 
   \item Para $S_n$ con $q=2$, el \textbf{argmin} cuesta $\approx 0.11$--$0.47$\,s para $n\in\{20,\dots,160\}$ gracias a L-BFGS-B con gradiente analítico: el costo no crece exponencialmente porque cada evaluación del par valor--gradiente es $\mathcal{O}(K)$ ($K=301$ puntos de cuadratura). Mediana y media afeitada cuestan $62$--$444$\,ms, con crecimiento suave en $n$ (vectorización en lote).
 \end{itemize}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.85\textwidth]{../results/figures/tn_power_vs_cost.png}
-  \caption{Tradeoff potencia--costo para $T_n$: potencia a $n=160$ vs.\ tiempo medio de ejecución por test.}
-  \label{fig:tradeoff-tn}
-\end{figure}
 
 \begin{figure}[H]
   \centering
@@ -137,4 +133,4 @@ Los costos computacionales observados confirman el análisis teórico de la Secc
   \label{fig:compare-runtime}
 \end{figure}
 
-La Figura~\ref{fig:tradeoff-tn} ilustra el tradeoff potencia--costo en $T_n$: con el algoritmo de Schuster-Narvarte, el argmin es solo $2$--$2.5\times$ más lento que la mediana pero consistentemente más potente para $n\ge 40$, invirtiéndose la relación que existía con implementaciones de búsqueda Walsh de costo $\mathcal{O}(n^{5/2}\log n)$. La elección entre argmin y mediana pasa a ser una cuestión de nivel (argmin conservador, mediana ligeramente liberal bajo Uniforme) y no de costo. En $S_n$, el argmin también es competitivo en tiempo y el más potente (Figura~\ref{fig:compare-potencia}), gracias a la diferenciabilidad de $S_n$ que permite L-BFGS-B.
+El tradeoff potencia--costo en $T_n$: con el algoritmo de Schuster-Narvarte, el argmin es solo $2$--$2.5\times$ más lento que la mediana pero consistentemente más potente para $n\ge 40$. La elección entre argmin y mediana pasa a ser una cuestión de nivel (argmin conservador, mediana ligeramente liberal bajo Uniforme) y no de costo. En $S_n$, el argmin también es competitivo en tiempo y el más potente (Figura~\ref{fig:compare-potencia}), gracias a la diferenciabilidad de $S_n$ que permite L-BFGS-B.

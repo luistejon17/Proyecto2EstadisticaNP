@@ -47,6 +47,8 @@ Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker~\c
     Para $S_n$, la Sección~\ref{sssec:grad-q1} demuestra que el estadístico es diferenciable en casi todo $\theta$ para $q=1$ y $q=2$, con gradientes analíticos cerrados (\eqref{eq:grad-Sn-q1} para $q=1$, \eqref{eq:grad-Sn} para $q=2$). En la \emph{estimación puntual} (muestra original), ambos casos usan \texttt{L-BFGS-B} con gradiente analítico. En el \emph{bootstrap}, el gradiente de $S_n$ para $q=1$ es discontinuo (contiene $\mathrm{sgn}$), lo que hace divergir la secante; por ello, para $q=1$ el bootstrap de argmin usa un grid vectorizado, mientras que para $q=2$ se usa la secante batcheada. La Sección~\ref{impl:argmin-Sn-secant} detalla ambas estrategias.
 \end{itemize}
 
+
+\newpage
 \subsection{Funciones de peso para $S_n$}
 
 La integral \eqref{eq:Sn} depende de $q$ y de $w$. Se consideran los dos exponentes $q\in\{1,2\}$ y tres densidades simétricas. Para $q=2$, el criterio es diferenciable respecto a $\theta$ y se usa el gradiente analítico de \eqref{eq:grad-Sn}. Para $q=1$, el integrando contiene una norma absoluta y a primera vista puede no ser diferenciable en los puntos donde \(c_n(t)e^{-it\theta}-|c_n(t)|=0\).
