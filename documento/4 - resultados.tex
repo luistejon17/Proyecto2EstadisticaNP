@@ -12,9 +12,9 @@ Las Figuras~\ref{fig:tn-tipo1} y \ref{fig:sn-tipo1} muestran las tasas de rechaz
   \label{fig:tn-tipo1}
 \end{figure}
 
-El estimador \textbf{argmin} es conservador, se evidencia que las tasas de rechazo oscilan entre $0.7\%$ y $3\%$ en todos los $n$ y distribuciones nulas (Uniforme y Cauchy), siempre por debajo del $5\%$ nominal. Nótese que minimizar $T_n$ sobre los datos observados reduce el estadístico, por lo que $T_n^{\text{obs}}$ tiende a ser pequeño y el bootstrap (generado de $sF_n(\hat\theta_{\min})$, exactamente simétrica) produce remuestras con estadísticos igualmente pequeños; el rechazo solo ocurre cuando la asimetría es muy pronunciada.
+El estimador \textbf{argmin} es conservador, se evidencia que las tasas de rechazo oscilan entre $0.7\%$ y $3\%$ en todos los $n$ y distribuciones nulas (Uniforme y Cauchy), siempre por debajo del $5\%$ nominal. Nótese que minimizar $T_n$ sobre los datos observados reduce el estadístico, por lo que $T_n^{\text{obs}}$ tiende a ser pequeño y el bootstrap (generado de $sF_n(\hat\theta_{\min})$, exactamente simétrica) produce remuestras con estadísticos igualmente pequeños. Es decir, el rechazo solo ocurre cuando la asimetría es muy pronunciada.
 
-El estimador \textbf{mediana} controla el nivel de forma aceptable bajo Cauchy ($2$--$3\%$), pero resulta ligeramente liberal bajo Uniforme ($6$--$9\%$), superando las bandas de un error estándar Monte Carlo para $n\ge 40$. La \textbf{media afeitada} es marcadamente conservadora bajo Uniforme ($0.3$--$3.3\%$) y se aproxima al nivel nominal bajo Cauchy ($3$--$7\%$). Las discrepancias observadas son coherentes con variabilidad Monte Carlo ($\mathrm{SE}_R\approx 1.3\%$ para $R=300$).
+El estimador \textbf{mediana} controla el nivel de forma aceptable bajo Cauchy ($2$--$3\%$), pero resulta ligeramente liberal bajo Uniforme ($6$--$9\%$), superando las bandas de un error estándar para $n\ge 40$. La \textbf{media afeitada} es marcadamente conservadora bajo Uniforme ($0.3$--$3.3\%$) y se aproxima al nivel nominal bajo Cauchy ($3$--$7\%$). Las discrepancias observadas son coherentes con variabilidad Monte Carlo ($\mathrm{SE}_R\approx 1.3\%$ para $R=300$).
 
 \subsubsection*{Test \texorpdfstring{$S_n$}{Sn}}
 
@@ -55,7 +55,7 @@ La Figura~\ref{fig:tn-pval-h0} muestra los histogramas de p-valores bajo $H_0$ p
   \label{fig:tn-potencia}
 \end{figure}
 
-Los patrones de potencia de $T_n$ muestran que el estimador argmin, pese a su conservatismo bajo $H_0$, es el más potente para $n\ge 40$:
+Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más potente para $n\ge 40$:
 
 \begin{itemize}
   \item \textbf{Argmin}: potencia más alta en las tres distribuciones alternativas. Para Gamma$(2,1)$ alcanza $25.7\%$ con $n=40$ y $98.7\%$ con $n=160$; para Pareto$(3,1)$ llega a $68.7\%$ con $n=40$ y $100\%$ con $n=160$; para Weibull$(1.5,1)$, cuya asimetría es más sutil, la potencia es $18.7\%$ con $n=40$ y $91\%$ con $n=160$. La ventaja del argmin frente a los estimadores robustos crece con $n$, lo que sugiere que cuando la estimación del centro es exacta el test detecta mejor la asimetría.
