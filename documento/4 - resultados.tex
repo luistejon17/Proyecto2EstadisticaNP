@@ -14,7 +14,7 @@ Las Figuras~\ref{fig:tn-tipo1} y \ref{fig:sn-tipo1} muestran las tasas de rechaz
 
 El estimador \textbf{argmin} es conservador, se evidencia que las tasas de rechazo oscilan entre $0.7\%$ y $3\%$ en todos los $n$ y distribuciones nulas (Uniforme y Cauchy), siempre por debajo del $5\%$ nominal. Nótese que minimizar $T_n$ sobre los datos observados reduce el estadístico, por lo que $T_n^{\text{obs}}$ tiende a ser pequeño y el bootstrap (generado de $sF_n(\hat\theta_{\min})$, exactamente simétrica) produce remuestras con estadísticos igualmente pequeños. Es decir, el rechazo solo ocurre cuando la asimetría es muy pronunciada.
 
-El estimador \textbf{mediana} controla el nivel de forma aceptable bajo Cauchy ($2$--$3\%$), pero resulta ligeramente liberal bajo Uniforme ($6$--$9\%$), superando las bandas de un error estándar para $n\ge 40$. La \textbf{media afeitada} es marcadamente conservadora bajo Uniforme ($0.3$--$3.3\%$) y se aproxima al nivel nominal bajo Cauchy ($3$--$7\%$). Las discrepancias observadas son coherentes con variabilidad Monte Carlo ($\mathrm{SE}_R\approx 1.3\%$ para $R=300$).
+El estimador \textbf{mediana} controla el nivel de forma aceptable bajo Cauchy ($1.3$--$2.3\%$), pero resulta ligeramente liberal bajo Uniforme ($6.3$--$9\%$), superando las bandas de un error estándar para $n\ge 40$. La \textbf{media afeitada} es marcadamente conservadora bajo Uniforme ($0.3$--$3.3\%$) y se aproxima al nivel nominal bajo Cauchy ($2.3$--$6.7\%$). Las discrepancias observadas son coherentes con variabilidad Monte Carlo ($\mathrm{SE}_R\approx 1.3\%$ para $R=300$).
 
 \subsubsection*{Test \texorpdfstring{$S_n$}{Sn}}
 
@@ -41,7 +41,7 @@ La Figura~\ref{fig:tn-pval-h0} muestra los histogramas de p-valores bajo $H_0$ p
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.85\textwidth]{../results/figures/tn_pvalue_h0.png}
-  \caption{Distribución de los p-valores de $T_n$ (mediana) bajo $H_0$ para $n\in\{20,40,80,160\}$.}
+  \caption{Distribución de los p-valores de $T_n$ (mediana) bajo $H_0$ para $n=160$.}
   \label{fig:tn-pval-h0}
 \end{figure}
 
@@ -83,7 +83,7 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más p
   \label{fig:sn-pesos}
 \end{figure}
 
-\paragraph{Efecto de $q$.} La Figura~\ref{fig:sn-q} muestra que $q=2$ es generalmente más potente que $q=1$ para los estimadores mediana y media afeitada, salvo en Gamma con mediana. Esto es consistente con la interpretación de que $q=1$ penaliza linealmente las desviaciones de simetría en $c_n(t)e^{-it\hat\theta}$, siendo más sensible a discrepancias moderadas, mientras que $q=2$ amplifica las grandes. Con media afeitada, $q=1$ supera a $q=2$ especialmente bajo Weibull ($100\%$ vs.\ $99.5\%$ en $n=160$) y Pareto ($100\%$ vs.\ $100\%$ en $n=160$, con ventaja a $n$ menores).
+\paragraph{Efecto de $q$.} La Figura~\ref{fig:sn-q} muestra que $q=1$ es generalmente más potente que $q=2$ para los estimadores mediana y media afeitada. Esto es consistente con la interpretación de que $q=1$ penaliza linealmente las desviaciones de simetría en $c_n(t)e^{-it\hat\theta}$, siendo más sensible a discrepancias moderadas y distribuidas, mientras que $q=2$ amplifica solo las grandes. Con media afeitada, $q=1$ supera a $q=2$ especialmente bajo Weibull ($91\%$ vs.\ $88.5\%$ en $n=80$; $50\%$ vs.\ $42\%$ en $n=40$) y Gamma ($93\%$ vs.\ $74\%$ en $n=80$). Para mediana bajo Gamma, $q=2$ puede superar a $q=1$ en tamaños intermedios ($39\%$ vs.\ $31.5\%$ en $n=40$), aunque $q=1$ recupera ventaja a $n=160$ ($99\%$ vs.\ $94.5\%$).
 
 \paragraph{Efecto de $w$.} La Figura~\ref{fig:sn-pesos} muestra que la elección de la función de peso tiene un impacto moderado. Las tres funciones $w_1$, $w_2$ y $w_3$ producen potencias similares en la mayoría de los escenarios. $w_2=\mathcal{N}(0,0.25)$ (más concentrada en bajas frecuencias) tiende a ser ligeramente inferior bajo Gamma y Weibull, sugeriendo que las señales de asimetría se ubican en frecuencias medias que $w_2$ pondera menos. $w_3$ (Laplace, colas pesadas) presenta comportamiento similar a $w_1$.
 
@@ -96,7 +96,7 @@ Los patrones de potencia de $T_n$ muestran que el estimador argmin, es el más p
   \label{fig:compare-potencia}
 \end{figure}
 
-La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de cada test, ambas con estimador argmin: $T_n$ con Schuster-Narvarte, $S_n$ con $q=2$ y $w_1=\mathcal{N}(0,1)$ resuelto por L-BFGS-B. $S_n$ supera a $T_n$ en Gamma y Weibull para tamaños intermedios: la potencia de $S_n$ a $n=40$ bajo Gamma es $47.5\%$ frente al $25.7\%$ de $T_n$, y bajo Weibull a $n=80$ alcanza $92\%$ frente al $40.3\%$ de $T_n$. Para Pareto ambos tests alcanzan potencia $\approx 100\%$ en $n=80$ y $n=160$. El poder de $S_n$ se explica porque la función característica captura la asimetría global , mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
+La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de cada test, ambas con estimador argmin: $T_n$ con Schuster-Narvarte, $S_n$ con $q=2$ y $w_1=\mathcal{N}(0,1)$ resuelto por L-BFGS-B. $S_n$ supera a $T_n$ en Gamma y Weibull para tamaños intermedios: la potencia de $S_n$ a $n=40$ bajo Gamma es $31\%$ frente al $25.7\%$ de $T_n$, y bajo Weibull a $n=80$ alcanza $87\%$ frente al $40.3\%$ de $T_n$. Para Pareto, $T_n$ alcanza $98.3\%$ a $n=80$ y $100\%$ a $n=160$; $S_n$ alcanza $92.5\%$ y $100\%$ respectivamente. El poder de $S_n$ se explica porque la función característica captura la asimetría global , mientras que $T_n$ solo compara la cdf empírica con su simetrización, siendo más sensible a la moda de la distribución que a las colas.
 
 %--------------------------------------------------------------------------
 \subsection{Costo computacional}\label{sec:costo}
@@ -118,9 +118,9 @@ La Figura~\ref{fig:compare-potencia} confronta las mejores configuraciones de ca
 Los costos computacionales observados confirman el análisis teórico de la Sección~\ref{sec:estim-theta}:
 
 \begin{itemize}
-  \item Para $T_n$, la \textbf{mediana} es el estimador más rápido ($\approx 23$--$27$\,ms independientemente de $n$), pues su cálculo es $\mathcal{O}(n\log n)$. La \textbf{media afeitada} cuesta $\approx 83$--$86$\,ms (overhead de \texttt{scipy.stats.trim\_mean}), prácticamente constante en $n$. El \textbf{argmin} (Schuster-Narvarte) es moderadamente más lento: $33$\,ms en $n=20$ a $66$\,ms en $n=160$, un factor~$2\times$ respecto a $n=20$ y solo $2.5\times$ más lento que la mediana en el peor caso. Esta escalabilidad favorable se debe a que el número de iteraciones $L$ crece como $\mathcal{O}(\log n)$ para distribuciones simétricas, por lo que el coste efectivo es $\mathcal{O}(n\log n)$ y no $\mathcal{O}(n^{5/2}\log n)$ como una búsqueda Walsh completa.
+  \item Para $T_n$, la \textbf{mediana} es el estimador más rápido ($\approx 25$--$31$\,ms independientemente de $n$), pues su cálculo es $\mathcal{O}(n\log n)$. La \textbf{media afeitada} cuesta $\approx 91$--$99$\,ms (overhead de \texttt{scipy.stats.trim\_mean}), prácticamente constante en $n$. El \textbf{argmin} (Schuster-Narvarte) es moderadamente más lento: $37$\,ms en $n=20$ a $80$\,ms en $n=160$, un factor~$2.2\times$ respecto a $n=20$ y solo $2.6\times$ más lento que la mediana en el peor caso. Esta escalabilidad favorable se debe a que el número de iteraciones $L$ crece como $\mathcal{O}(\log n)$ para distribuciones simétricas, por lo que el coste efectivo es $\mathcal{O}(n\log n)$ y no $\mathcal{O}(n^{5/2}\log n)$ como una búsqueda Walsh completa.
 
-  \item Para $S_n$ con $q=2$, el \textbf{argmin} cuesta $\approx 0.3$--$0.7$\,s para $n\in\{20,\dots,160\}$ gracias a L-BFGS-B con gradiente analítico: el costo no crece exponencialmente porque cada evaluación del par valor--gradiente es $\mathcal{O}(K)$ ($K=301$ puntos de cuadratura). Mediana y media afeitada cuestan $50$--$400$\,ms, con crecimiento suave en $n$ (vectorización en lote).
+  \item Para $S_n$ con $q=2$, el \textbf{argmin} cuesta $\approx 0.11$--$0.47$\,s para $n\in\{20,\dots,160\}$ gracias a L-BFGS-B con gradiente analítico: el costo no crece exponencialmente porque cada evaluación del par valor--gradiente es $\mathcal{O}(K)$ ($K=301$ puntos de cuadratura). Mediana y media afeitada cuestan $62$--$444$\,ms, con crecimiento suave en $n$ (vectorización en lote).
 \end{itemize}
 
 \begin{figure}[H]
