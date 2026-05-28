@@ -36,7 +36,7 @@ def _Sn_value_and_grad_q1(theta, a_n, b_n, abs_cn, w_vals, t_grid):
     return float(S_n), float(dS_n)
 \end{lstlisting}
 
-Sin embargo, esta expresión no define un gradiente clásico en los puntos donde \(\sin((\Phi_n(t)-t\theta)/2)=0\). En consecuencia, el criterio para \(q=1\) puede presentar puntos de no diferenciabilidad, lo que vuelve menos estable el uso directo de métodos quasi-Newton. Por esta razón, en la implementación final se prefirió resolver el caso \(q=1\) mediante una búsqueda discreta con \texttt{Pyomo}, evitando depender de derivadas en puntos problemáticos.
+Sin embargo, esta expresión no define un gradiente clásico en los puntos donde \(\sin((\Phi_n(t)-t\theta)/2)=0\). En consecuencia, el criterio para \(q=1\) puede presentar puntos de no diferenciabilidad. En la implementación final, este gradiente se usa con \texttt{L-BFGS-B} para la \emph{estimación puntual} sobre la muestra original (funciona bien en la práctica). Sin embargo, en el \emph{bootstrap} la discontinuidad del gradiente hace divergir la secante batcheada (el paso $\Delta\theta \propto 1/dg$ explota cuando los gradientes de dos iterados consecutivos casi no cambian), por lo que el bootstrap de argmin para $q=1$ usa el grid vectorizado \texttt{\_sn\_boot\_batch\_argmin}.
 
 \subsection*{Método de la secante batcheado para el bootstrap de \texorpdfstring{$S_n$}{Sn}}
 
@@ -68,11 +68,11 @@ for _ in range(max_steps):
     thetas = np.clip(thetas - step, lo, hi)
 \end{lstlisting}
 
-Este método redujo el tiempo de cómputo frente al bucle secuencial, pero fue descartado como opción principal porque introducía mayor complejidad algorítmica y más parámetros heurísticos: elección del intervalo, tolerancias, fallback y control de pasos. Para mantener la implementación principal más transparente y reproducible, se prefirió usar \texttt{L-BFGS-B} para \(q=2\) y \texttt{Pyomo} para \(q=1\).
+Este método redujo el tiempo de cómputo frente al bucle secuencial y se adoptó como implementación final para $q=2$ en el bootstrap. Para $q=1$ no se usa la secante, porque el gradiente discontinuo causa divergencia; en su lugar se usa el grid vectorizado.
 
 \subsection*{Conclusión del apéndice}
 
-Los intentos anteriores fueron útiles para entender la estructura numérica de los estimadores por argmin. La búsqueda local en promedios de Walsh mostró que el minimizador de \(T_n\) está fuertemente ligado a la geometría discreta de la muestra, pero fue superada por el algoritmo exacto de Schuster-Narvarte. El gradiente formal para \(q=1\) permitió explorar métodos rápidos para \(S_n\), pero la no diferenciabilidad del criterio hizo preferible una estrategia discreta. Finalmente, la secante batcheada ofreció mejoras de tiempo, pero a costa de mayor complejidad y menor claridad metodológica.
+Los intentos anteriores fueron útiles para entender la estructura numérica de los estimadores por argmin. La búsqueda local en promedios de Walsh mostró que el minimizador de \(T_n\) está fuertemente ligado a la geometría discreta de la muestra, pero fue superada por el algoritmo exacto de Schuster-Narvarte. El gradiente formal para \(q=1\) resultó útil: se usa con \texttt{L-BFGS-B} para la estimación puntual, aunque en el bootstrap su discontinuidad obliga a recurrir al grid vectorizado. La secante batcheada se adoptó como método final para el bootstrap de argmin con $q=2$, donde el gradiente es continuo y la convergencia es fiable.
 
 
 

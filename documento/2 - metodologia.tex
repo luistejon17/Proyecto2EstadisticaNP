@@ -44,7 +44,7 @@ Se evalúan los tres estimadores de $\theta$ propuestos por Schuster y Barker~\c
     
     \item $\hat\theta_{\min}$: minimizador de $T_n$ (resp.\ $S_n$). La Sección~\ref{sec:estim-theta} detalla los esquemas numéricos utilizados. Para $T_n$, se usa el algoritmo combinatorio exacto de Schuster-Narvarte (Sección~\ref{impl:argmin-Tn}) tanto sobre la muestra original como en cada remuestra bootstrap: las remuestras provienen de $sF_n(\hat\theta)$, que es exactamente simétrica, por lo que el algoritmo converge en pocas iteraciones y la búsqueda es exacta y eficiente.
 
-    Para $S_n$, la Sección~\ref{sssec:grad-q1} demuestra que el estadístico es diferenciable en casi todo $\theta$ para $q=1$ y $q=2$, con gradientes analíticos cerrados (\eqref{eq:grad-Sn-q1} para $q=1$, \eqref{eq:grad-Sn} para $q=2$). En ambos casos se usa \texttt{L-BFGS-B} con gradiente analítico, lo que incluye la combinación $(q=1,\hat\theta_{\min})$ con el mismo esquema numérico que $q=2$. La Sección~\ref{impl:argmin-Sn} detalla la implementación.
+    Para $S_n$, la Sección~\ref{sssec:grad-q1} demuestra que el estadístico es diferenciable en casi todo $\theta$ para $q=1$ y $q=2$, con gradientes analíticos cerrados (\eqref{eq:grad-Sn-q1} para $q=1$, \eqref{eq:grad-Sn} para $q=2$). En la \emph{estimación puntual} (muestra original), ambos casos usan \texttt{L-BFGS-B} con gradiente analítico. En el \emph{bootstrap}, el gradiente de $S_n$ para $q=1$ es discontinuo (contiene $\mathrm{sgn}$), lo que hace divergir la secante; por ello, para $q=1$ el bootstrap de argmin usa un grid vectorizado, mientras que para $q=2$ se usa la secante batcheada. La Sección~\ref{impl:argmin-Sn-secant} detalla ambas estrategias.
 \end{itemize}
 
 \subsection{Funciones de peso para $S_n$}

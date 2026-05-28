@@ -18,7 +18,7 @@ $T_n$ & -- & argmin   & Schuster-Narvarte, $O(Ln)$     & Schuster-Narvarte en ca
 \midrule
 $S_n$ & $1,2$ & mediana  & \texttt{numpy.median}       & Batch $(B,K,n)\!\to\!(B,K)$; mini-lotes \\
 $S_n$ & $1,2$ & afeitada & \texttt{trim\_mean(0.1)}     & Batch $(B,K,n)\!\to\!(B,K)$; mini-lotes \\
-$S_n$ & $1$   & argmin   & L-BFGS-B $+$ $\nabla_\theta S_n$~\eqref{eq:grad-Sn-q1} & Secante batcheado sobre $B$ réplicas \\
+$S_n$ & $1$   & argmin   & L-BFGS-B $+$ $\nabla_\theta S_n$~\eqref{eq:grad-Sn-q1} & Grid vectorizado $(B,K,M)$; mini-lotes \\
 $S_n$ & $2$   & argmin   & L-BFGS-B $+$ $\nabla_\theta S_n$~\eqref{eq:grad-Sn}    & Secante batcheado sobre $B$ réplicas \\
 \bottomrule
 \end{tabular}
@@ -150,45 +150,31 @@ def theta_argmin_Sn(sample, w_fn, q=2, t_grid=None):
 \end{lstlisting}
 
 El punto de partida es la mediana muestral (Corolario~\ref{cor:H0-gradient-zero} sugiere que el verdadero centro es un punto estacionario asintótico, y la mediana es $\sqrt n$-consistente).
-\subsubsection{Método secante batcheado para argmin en el bootstrap}\label{impl:argmin-Sn-secant}
+\subsubsection{Bootstrap de argmin: secante batcheada ($q=2$) y grid vectorizado ($q=1$)}\label{impl:argmin-Sn-secant}
 
-En el bootstrap, calcular $B=199$ minimizaciones de $S_n$ de forma secuencial con \texttt{L-BFGS-B} sería el cuello de botella. La solución es vectorizar el método de la secante (equivalente a \texttt{L-BFGS-B} en 1D) sobre todas las $B$ réplicas a la vez. La función \texttt{\_sn\_boot\_batch\_argmin\_secant} opera como sigue:
+Calcular $B=199$ minimizaciones de $S_n$ de forma secuencial con \texttt{L-BFGS-B} sería el cuello de botella del bootstrap. La estrategia depende de $q$:
 
-\begin{enumerate}
-\item \textbf{Precompute batch}: genera la matriz de remuestras $Y\in\mathbb{R}^{B\times n}$ de golpe y calcula $(a_n^{(b)},b_n^{(b)},|c_n^{(b)}|,\Phi_n^{(b)})$ para todos los $b$ simultáneamente via tensores $(B,K,n)\to(B,K)$ en mini-lotes de $\approx\!200$\,MB.
-
-\item \textbf{Gradiente batcheado}: implementa $\nabla_\theta S_n$ (ecuaciones~\eqref{eq:grad-Sn-q1} y~\eqref{eq:grad-Sn} según $q$) como operación vectorizada $(B,K)\to(B,)$ con \texttt{numpy.trapezoid}.
-
-\item \textbf{Iteración de la secante}: actualiza los $B$ valores de $\theta$ simultáneamente:
+\paragraph{$q=2$: secante batcheada.} El gradiente~\eqref{eq:grad-Sn} es continuo ($C^1$), lo que permite vectorizar el método de la secante sobre las $B$ réplicas a la vez (\texttt{\_sn\_boot\_batch\_argmin\_secant}): se precalculan $(a_n^{(b)},b_n^{(b)},|c_n^{(b)}|)$ como tensores $(B,K)$, se inicializa $\theta_b=\mathrm{mediana}(Y^{*(b)})$ y se itera
 \[
 \theta_b^{(k+1)} = \theta_b^{(k)} - \frac{S_n'(\theta_b^{(k)})\,(\theta_b^{(k)}-\theta_b^{(k-1)})}{S_n'(\theta_b^{(k)})-S_n'(\theta_b^{(k-1)})},
 \]
-con fallback al descenso por gradiente cuando el denominador es pequeño, y recorte al bracket para garantizar acotación.
-
-\item \textbf{Evaluación final}: calcula $S_n(Y_b;\theta_b^*)$ con los precomputes de (1), sin nueva llamada $O(Kn)$.
-\end{enumerate}
+con fallback a descenso por gradiente cuando el denominador es pequeño. Este esquema es $\approx\!8\times$ más rápido que el bucle secuencial con \texttt{L-BFGS-B}.
 
 \begin{lstlisting}[language=Python]
-def _grad(th):  # th: (B,) -> grad: (B,)
-    if q == 1:
-        half = (Phi_n - t_grid[None,:] * th[:,None]) / 2.0  # (B,K)
-        integ = -t_grid * abs_cn * np.sign(np.sin(half)) * np.cos(half) * w
-    else:
-        B_n = -a_n * np.sin(t_grid*th[:,None]) + b_n * np.cos(t_grid*th[:,None])
-        integ = -2.0 * t_grid * abs_cn * B_n * w
-    return np.trapezoid(integ, t_grid, axis=1)        # (B,)
-
-for _ in range(max_steps):
-    dg   = grad_curr - grad_prev                      # (B,)
-    dt   = thetas - th_prev
-    safe = np.abs(dg) > 1e-12 * (np.abs(grad_curr) + 1e-30)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        step = np.where(safe, grad_curr * dt / dg,
-                        0.1 * half_width * np.sign(grad_curr))
-    thetas = np.clip(thetas - step, lo, hi)
+def _grad_q2(th):   # th: (B,) -> (B,)
+    B_n = -a_n*np.sin(t_grid*th[:,None]) + b_n*np.cos(t_grid*th[:,None])
+    return np.trapezoid(-2*t_grid*abs_cn*B_n*w, t_grid, axis=1)
 \end{lstlisting}
 
-Este enfoque reduce el tiempo por test bootstrap de argmin en $\approx\!8\times$ respecto al bucle secuencial con \texttt{L-BFGS-B}, y en $\approx\!2\times$ respecto a la alternativa de grid vectorizado, y se aplica de forma idéntica para $q=1$ y $q=2$.
+\paragraph{$q=1$: grid vectorizado.} El gradiente~\eqref{eq:grad-Sn-q1} contiene $\mathrm{sgn}(\sin(\cdot))$, que es discontinuo. En la práctica, cuando $dg = S_n'(\theta^{(k)})-S_n'(\theta^{(k-1)})\approx 0$ el paso de la secante diverge y $\theta_b^*$ converge al extremo del bracket, arrojando $S_\text{boot}\approx 1$ y anulando la potencia del test. Por ello, para $q=1$ se usa \texttt{\_sn\_boot\_batch\_argmin}: una grilla de $M=80$ candidatos en el bracket, evaluación batch $(B,K,M)$ y $\arg\min$ por fila.
+
+\begin{lstlisting}[language=Python]
+# bootstrap argmin: despacho segun q
+if q == 2:
+    S_boot = _sn_boot_batch_argmin_secant(Y_boot, w_fn, q, t_grid, bracket)
+else:   # q == 1: gradiente discontinuo, usar grid
+    S_boot = _sn_boot_batch_argmin(Y_boot, w_fn, q, t_grid, bracket)
+\end{lstlisting}
 
 
 \subsection{Procedimiento bootstrap}
@@ -245,7 +231,7 @@ Para el estimador argmin, se usa el método secante batcheado de la Sección~\re
 
 \subsection{Paralelización del estudio Monte Carlo}
 
-Cada celda del diseño experimental (distribución $\times$ $n$ $\times$ estimador $\times$ $(q,w)$ para $S_n$) requiere $R$ réplicas independientes; en total $18\,000$ tareas para $T_n$ (5 distribuciones $\times$ 4 tamaños $\times$ 3 estimadores $\times$ 300 réplicas) y $72\,000$ para $S_n$ (5 $\times$ 4 $\times$ 3 estimadores $\times$ 2 valores de $q$ $\times$ 3 pesos $\times$ 200 réplicas), incluyendo la combinación $(q{=}1,\hat\theta_{\min})$ gracias al gradiente analítico. Como cada réplica es independiente, se paralelizan con \texttt{ProcessPoolExecutor} usando todos los cores disponibles. Para garantizar reproducibilidad y evitar correlación entre semillas, a cada tarea $k$ se le asigna la semilla $\texttt{seed} + k$:
+Cada celda del diseño experimental (distribución $\times$ $n$ $\times$ estimador $\times$ $(q,w)$ para $S_n$) requiere $R$ réplicas independientes; en total $18\,000$ tareas para $T_n$ (5 distribuciones $\times$ 4 tamaños $\times$ 3 estimadores $\times$ 300 réplicas) y $72\,000$ para $S_n$ (5 $\times$ 4 $\times$ 3 estimadores $\times$ 2 valores de $q$ $\times$ 3 pesos $\times$ 200 réplicas), incluyendo la combinación $(q{=}1,\hat\theta_{\min})$, cuya estimación puntual usa gradiente analítico y cuyo bootstrap usa grid vectorizado. Como cada réplica es independiente, se paralelizan con \texttt{ProcessPoolExecutor} usando todos los cores disponibles. Para garantizar reproducibilidad y evitar correlación entre semillas, a cada tarea $k$ se le asigna la semilla $\texttt{seed} + k$:
 
 \begin{lstlisting}[language=Python]
 def _single_replica(spec_idx, n, estimator, B, base_seed, task_idx):
