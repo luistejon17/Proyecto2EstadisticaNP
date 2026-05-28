@@ -370,6 +370,8 @@ def plot_pvalue_distribution_h0_sn(df: pd.DataFrame, outdir: Path) -> Path | Non
     sub = h0[(h0["estimator"] == "argmin") & (h0["q"] == 2)].copy()
     if sub.empty:
         sub = h0.copy()
+    n_max = int(sub["n"].max())
+    sub = sub[sub["n"] == n_max]
     dists = sorted(sub["dist"].unique())
     weights = sorted(sub["weight"].unique())
     fig, axes = plt.subplots(
@@ -391,7 +393,7 @@ def plot_pvalue_distribution_h0_sn(df: pd.DataFrame, outdir: Path) -> Path | Non
         ax.set_xlabel("p-valor")
     for ax in axes[:, 0]:
         ax.set_ylabel("densidad")
-    fig.suptitle("Distribución del p-valor bajo H_0 — S_n (argmin, q=2)", y=1.02)
+    fig.suptitle(f"Distribución del p-valor bajo $H_0$ — $S_n$ (argmin, $q=2$, $n={n_max}$)", y=1.02)
     fig.tight_layout()
     out = outdir / "sn_pvalue_h0.png"
     fig.savefig(out, dpi=150, bbox_inches="tight")
