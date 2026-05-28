@@ -30,7 +30,7 @@ $(\Rightarrow)$ Si $Y:=X-\theta\overset{d}{=}-Y=\theta-X$, de la igualdad $\varp
 $(\Leftarrow)$ Si $\varphi_X(t)=e^{it\theta}c_0(t)$ con $c_0$ real, entonces $\varphi_Y(t):=e^{-it\theta}\varphi_X(t)=c_0(t)$ es real, luego $\varphi_Y(t)=\overline{\varphi_Y(t)}=\varphi_Y(-t)$. Por unicidad de la función característica, $Y\overset{d}{=}-Y$, es decir $X-\theta\overset{d}{=}-(X-\theta)$.
 \end{proof}
 
-Dada una muestra $X_1,\dots,X_n$, la función característica empírica es $c_n(t):=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$, el estadístico de penalización considerado en este trabajo es
+Dada una muestra $X_1,\dots,X_n$, la función característica empírica es $c_n(t):=\frac{1}{n}\sum_{j=1}^{n}e^{itX_j}$ y, por el Teorema~\ref{thm:fc}, bajo simetría $c_n(t)\,e^{-it\hat\theta}$ debe ser aproximadamente real. Tomando como ``simetrización'' $c_s(t)=|c_n(t)|$, el estadístico de penalización considerado en este proyecto es
 \begin{equation}\label{eq:Sn}
 S_n \;=\; \int_{-\infty}^{\infty}\bigl\|c_n(t)e^{-it\hat\theta}-c_s(t)\bigr\|^q\,w(t)\,dt,
 \end{equation}
@@ -43,7 +43,7 @@ Ambos estadísticos requieren un estimador $\hat\theta$ del centro. Consideramos
 \hat\theta_{\min} \;=\; \arg\min_{\theta\in\R} M_n(\theta),
 \qquad M_n\in\{T_n,\,S_n\}.
 \]
-Los dos primeros son explícitos y fáciles de calcular; el tercero exige una optimización numérica, debido a que el bootstrap repite $B{+}1$ veces el cálculo de $\hat\theta_{\min}$ por test. En las siguientes dos secciones se explica cómo la estructura matemática de cada estadístico permite diseñar un  estimador eficiente de este argmin.
+Los dos primeros son explícitos y fáciles de calcular; el tercero exige una optimización numérica debido a que el bootstrap repite $B{+}1$ veces el cálculo de $\hat\theta_{\min}$ por test. En las siguientes dos secciones se explica cómo la estructura matemática de cada estadístico permite diseñar un  estimador eficiente de este argmin.
 
 \subsubsection{Argmin de $T_n$}
 
@@ -199,7 +199,7 @@ donde $\Phi_n(t)=\arg c_n(t)$. Derivando bajo el signo integral con el mismo arg
 \frac{\partial S_n}{\partial\theta}\bigg|_{q=1}(\theta) \;=\; -\int_{-\infty}^{\infty} t\,|c_n(t)|\;\mathrm{sgn}\!\left(\sin\frac{\Phi_n(t)-t\theta}{2}\right)\cos\!\left(\frac{\Phi_n(t)-t\theta}{2}\right) w(t)\,dt.
 \end{equation}
 
-Esta expresión existe para casi todo $\theta$: los ceros del seno forman un conjunto de medida cero en $t$ para cada $\theta$ fijo, de modo que el integrando es acotado e integrable. En consecuencia, $S_n(\cdot)$ para $q=1$ es diferenciable en casi todo punto y el método de la secante —implementado vía \texttt{L-BFGS-B}— puede aplicarse directamente usando \eqref{eq:grad-Sn-q1}, eliminando la necesidad de la búsqueda en grilla utilizada anteriormente.
+Esta expresión existe para casi todo $\theta$: los ceros del seno forman un conjunto de medida cero en $t$ para cada $\theta$ fijo, de modo que el integrando es acotado e integrable. En consecuencia, $S_n(\cdot)$ para $q=1$ es diferenciable en casi todo punto y el método de la secante, implementado vía \texttt{L-BFGS-B}, puede aplicarse directamente usando \eqref{eq:grad-Sn-q1}, eliminando la necesidad de la búsqueda en grilla utilizada anteriormente.
 
 \begin{comment}
 \subsubsection{Iteración de quasi-Newton}
