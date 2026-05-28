@@ -518,26 +518,48 @@ def plot_tn_vs_sn_runtime(
     summary_sn: pd.DataFrame,
     outdir: Path,
 ) -> Path:
-    """Tiempo medio por test: T_n vs S_n por estimador."""
+    """Tiempo T_n vs S_n: argmin q=1/q=2 de S_n separados; median/trimmed promediados."""
     tn_g = summary_tn.groupby(["n", "estimator"], as_index=False).agg(
         mean_time_s=("mean_time_s", "mean"))
-    sn_g = summary_sn.groupby(["n", "estimator"], as_index=False).agg(
-        mean_time_s=("mean_time_s", "mean"))
-    fig, ax = plt.subplots(figsize=(7.0, 4.5))
-    colors = {"argmin": "C0", "median": "C1", "trimmed": "C2"}
-    for est in sorted(set(tn_g["estimator"]).intersection(sn_g["estimator"])):
-        col = colors.get(est, "k")
+    # S_n argmin: separado por q
+    sn_argmin_g = (
+        summary_sn[summary_sn["estimator"] == "argmin"]
+        .groupby(["n", "q"], as_index=False)
+        .agg(mean_time_s=("mean_time_s", "mean"))
+    )
+    # S_n median/trimmed: promedio sobre q (idéntico para q=1 y q=2)
+    sn_robust_g = (
+        summary_sn[summary_sn["estimator"].isin(["median", "trimmed"])]
+        .groupby(["n", "estimator"], as_index=False)
+        .agg(mean_time_s=("mean_time_s", "mean"))
+    )
+
+    fig, ax = plt.subplots(figsize=(7.5, 4.8))
+    tn_colors = {"argmin": "C0", "median": "C1", "trimmed": "C2"}
+    # T_n curves
+    for est in sorted(tn_g["estimator"].unique()):
         s1 = tn_g[tn_g["estimator"] == est].sort_values("n")
-        s2 = sn_g[sn_g["estimator"] == est].sort_values("n")
         ax.plot(s1["n"], s1["mean_time_s"], marker="o", linestyle="-",
-                linewidth=2, color=col, label=f"T_n | {est}")
+                linewidth=2, color=tn_colors.get(est, "k"), label=f"$T_n$ | {est}")
+    # S_n argmin q=1 and q=2
+    q_colors = {1: "#E67E22", 2: "#2980B9"}
+    for q in sorted(sn_argmin_g["q"].unique()):
+        s2 = sn_argmin_g[sn_argmin_g["q"] == q].sort_values("n")
         ax.plot(s2["n"], s2["mean_time_s"], marker="s", linestyle="--",
-                linewidth=2, color=col, label=f"S_n | {est}")
+                linewidth=2, color=q_colors.get(q),
+                label=rf"$S_n$ | argmin $q={q}$")
+    # S_n median and trimmed
+    robust_colors = {"median": "C1", "trimmed": "C2"}
+    for est in sorted(sn_robust_g["estimator"].unique()):
+        s2 = sn_robust_g[sn_robust_g["estimator"] == est].sort_values("n")
+        ax.plot(s2["n"], s2["mean_time_s"], marker="D", linestyle=":",
+                linewidth=1.8, color=robust_colors.get(est, "k"),
+                label=f"$S_n$ | {est}")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("n (log)")
     ax.set_ylabel("Tiempo medio por test [s] (log)")
-    ax.set_title("Costo computacional: T_n vs S_n")
+    ax.set_title(r"Costo computacional: $T_n$ vs $S_n$ ($S_n$ argmin $q=1/2$ separados)")
     ax.grid(True, which="both", linestyle="--", alpha=0.5)
     ax.legend(fontsize=8, ncol=2)
     fig.tight_layout()
